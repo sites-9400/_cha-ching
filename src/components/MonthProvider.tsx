@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { currentMonthKey } from "../lib/clock";
 import { eventsCol, monthDoc, monthLines, templateIncomes, templateLines } from "../lib/paths";
 import { writeMonth } from "../lib/repo";
@@ -27,16 +27,18 @@ export default function MonthProvider({ children }: { children: React.ReactNode 
   const incomes = useCollection<Income>(templateIncomes());
   const template = useCollection<TemplateLine>(templateLines());
   const events = useCollection<EventItem>(eventsCol());
-  const [generating, setGenerating] = useState(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     // monthMeta === null means the doc doesn't exist yet → generate it once.
-    if (monthMeta === null && !generating && template.length > 0 && incomes.length > 0) {
-      setGenerating(true);
+    if (monthMeta === null && !startedRef.current && template.length > 0 && incomes.length > 0) {
+      startedRef.current = true;
       const generated = generateMonthLines(template, events, monthKey);
-      void writeMonth(monthKey, generated, incomes).finally(() => setGenerating(false));
+      void writeMonth(monthKey, generated, incomes).catch(() => {
+        startedRef.current = false;
+      });
     }
-  }, [monthMeta, generating, template, events, incomes, monthKey]);
+  }, [monthMeta, template, events, incomes, monthKey]);
 
   const ready = monthMeta !== undefined && !(monthMeta === null) && lines.length > 0;
   return (
