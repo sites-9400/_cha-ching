@@ -53,7 +53,7 @@ export default function PinPad() {
 
   return (
     <main className="min-h-screen bg-emerald-950 text-emerald-50 flex flex-col items-center justify-center gap-6 p-6">
-      <h1 className="text-2xl font-bold">Cha-Ching 🤑</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Cha-Ching</h1>
       <p className="text-emerald-300">{title}</p>
       <div className="flex gap-3" aria-label="PIN progress">
         {Array.from({ length: 6 }, (_, i) => (
