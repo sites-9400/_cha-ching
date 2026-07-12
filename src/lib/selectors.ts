@@ -13,9 +13,9 @@ export function cutoffSummary(
   incomes: Income[],
   cutoff: 1 | 2,
 ): CutoffSummary {
-  const inCut = (xs: { cutoff: 1 | 2 }[]) => xs.filter((x) => x.cutoff === cutoff);
-  const income = inCut(incomes).reduce((s, i) => s + (i as Income).amount, 0);
-  const cutLines = inCut(lines) as MonthLine[];
+  const inCut = <T extends { cutoff: 1 | 2 }>(xs: T[]): T[] => xs.filter((x) => x.cutoff === cutoff);
+  const income = inCut(incomes).reduce((s, i) => s + i.amount, 0);
+  const cutLines = inCut(lines);
   const planned = cutLines.reduce((s, l) => s + l.amount, 0);
   const ticked = cutLines.filter((l) => l.status !== "").reduce((s, l) => s + l.amount, 0);
   return { income, planned, ticked, surplus: income - planned };
