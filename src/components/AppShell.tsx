@@ -3,6 +3,7 @@ import TabBar, { type TabId } from "./TabBar";
 import MonthProvider from "./MonthProvider";
 import ThisMonth from "./ThisMonth";
 import QuickAdd from "./QuickAdd";
+import Debts from "./Debts";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -19,7 +20,7 @@ export default function AppShell() {
     <MonthProvider>
       <div className="min-h-screen bg-stone-100 text-stone-900 pb-16 max-w-md mx-auto">
         {tab === "month" && <ThisMonth />}
-        {tab === "debts" && <Placeholder title="Debts" />}
+        {tab === "debts" && <Debts />}
         {tab === "add" && <QuickAdd />}
         {tab === "dashboard" && <Placeholder title="Stats" />}
         {tab === "settings" && <Placeholder title="Settings" />}
