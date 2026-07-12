@@ -1,5 +1,7 @@
 import { useState } from "react";
 import TabBar, { type TabId } from "./TabBar";
+import MonthProvider from "./MonthProvider";
+import ThisMonth from "./ThisMonth";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -13,13 +15,15 @@ function Placeholder({ title }: { title: string }) {
 export default function AppShell() {
   const [tab, setTab] = useState<TabId>("month");
   return (
-    <div className="min-h-screen bg-stone-100 text-stone-900 pb-16 max-w-md mx-auto">
-      {tab === "month" && <Placeholder title="This Month" />}
-      {tab === "debts" && <Placeholder title="Debts" />}
-      {tab === "add" && <Placeholder title="Quick Add" />}
-      {tab === "dashboard" && <Placeholder title="Stats" />}
-      {tab === "settings" && <Placeholder title="Settings" />}
-      <TabBar active={tab} onChange={setTab} />
-    </div>
+    <MonthProvider>
+      <div className="min-h-screen bg-stone-100 text-stone-900 pb-16 max-w-md mx-auto">
+        {tab === "month" && <ThisMonth />}
+        {tab === "debts" && <Placeholder title="Debts" />}
+        {tab === "add" && <Placeholder title="Quick Add" />}
+        {tab === "dashboard" && <Placeholder title="Stats" />}
+        {tab === "settings" && <Placeholder title="Settings" />}
+        <TabBar active={tab} onChange={setTab} />
+      </div>
+    </MonthProvider>
   );
 }
