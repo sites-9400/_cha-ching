@@ -3,3 +3,6 @@ dist
 .firebase
 *.local
 users-export.json
+
+# Dropbox sync conflict artifacts
+*conflicted copy*

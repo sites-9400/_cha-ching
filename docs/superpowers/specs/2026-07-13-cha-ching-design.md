@@ -99,9 +99,8 @@ adding Jude without a migration).
 ```
 households/main
   meta            { savingsBalance, savingsFloor: 100000, currency: "PHP" }
-  template/
-    lines/{id}    { name, amount, channel, cutoff: 1|2, incomeSource, order }
-    incomes/{id}  { name, amount, day: 13|25|29, cutoff }
+  template-lines/{id}   { name, amount, channel, cutoff: 1|2, incomeSource, order, debtId? }
+  template-incomes/{id} { name, amount, day, cutoff }
   months/{YYYY-MM}
     lines/{id}    { name, amount, channel, cutoff, status: ""|"PAID"|"RECEIVED"
                     |"TRANSFERRED"|"SENT", paidDate, oneOff: bool,
@@ -117,6 +116,8 @@ households/main
   events/{id}     { name, amount, month: "YYYY-MM", channel?, note }
   categories/{id} { name, order }
 ```
+
+> Implementation note (M1): template collections are flat (template-lines, template-incomes) rather than nested under a template doc, to avoid a phantom parent document. All paths are centralized in src/lib/paths.ts.
 
 **Derived, never stored:** cutoff totals, surplus, free cash, debt totals,
 debt-free date, category breakdowns. Computed in a `selectors.ts` module —

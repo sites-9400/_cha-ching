@@ -2,7 +2,7 @@ import { collection, onSnapshot, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "../lib/firebase";
 import { peso } from "../lib/format";
-import { HH } from "../lib/paths";
+import { templateIncomes, templateLines } from "../lib/paths";
 import { cutoffSummary } from "../lib/selectors";
 import type { Income, MonthLine, TemplateLine } from "../lib/types";
 
@@ -23,10 +23,10 @@ export default function MonthPreview() {
   const [incomes, setIncomes] = useState<Income[]>([]);
 
   useEffect(() => {
-    const un1 = onSnapshot(query(collection(db, `${HH}/template-lines`)), (snap) =>
+    const un1 = onSnapshot(query(collection(db, templateLines())), (snap) =>
       setLines(snap.docs.map((d) => d.data() as TemplateLine).sort((a, b) => a.order - b.order)),
     );
-    const un2 = onSnapshot(query(collection(db, `${HH}/template-incomes`)), (snap) =>
+    const un2 = onSnapshot(query(collection(db, templateIncomes())), (snap) =>
       setIncomes(snap.docs.map((d) => d.data() as Income)),
     );
     return () => {
