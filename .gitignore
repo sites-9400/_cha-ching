@@ -6,3 +6,6 @@ users-export.json
 
 # Dropbox sync conflict artifacts
 *conflicted copy*
+
+# Playwright MCP scratch
+.playwright-mcp
