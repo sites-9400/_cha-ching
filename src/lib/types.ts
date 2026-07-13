@@ -34,6 +34,7 @@ export interface Debt {
   startingBalance: number;
   currentBalance: number;
   dueDay?: number;
+  minimum?: number;
   payoffOrder: number;
   channel: Channel;
   isBNPL: boolean;

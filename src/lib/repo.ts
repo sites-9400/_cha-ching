@@ -39,6 +39,11 @@ export async function deleteExpense(id: string): Promise<void> {
   await deleteDoc(doc(db, expensesCol(), id));
 }
 
+/** Set a debt's monthly minimum payment. */
+export async function setDebtMinimum(debtId: string, amount: number): Promise<void> {
+  await updateDoc(doc(db, debtsCol(), debtId), { minimum: amount });
+}
+
 /** Record a debt payment: append to history + decrement the balance atomically. */
 export async function logDebtPayment(
   debtId: string, amount: number, monthKey: string,

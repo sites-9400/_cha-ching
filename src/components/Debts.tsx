@@ -4,7 +4,7 @@ import { channelChipSafe } from "../lib/channels";
 import { currentMonthKey, monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
-import { logDebtPayment } from "../lib/repo";
+import { logDebtPayment, setDebtMinimum } from "../lib/repo";
 import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
 import type { Debt } from "../lib/types";
 
@@ -14,6 +14,15 @@ export default function Debts() {
   const debts = useCollection<Debt>(debtsCol());
   const [payingId, setPayingId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
+  const [minEditId, setMinEditId] = useState<string | null>(null);
+  const [minValue, setMinValue] = useState("");
+
+  async function saveMin(id: string) {
+    const v = Number(minValue);
+    if (v >= 0) await setDebtMinimum(id, v);
+    setMinEditId(null);
+    setMinValue("");
+  }
 
   const active = [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const totals = debtTotals(debts);
@@ -48,6 +57,31 @@ export default function Debts() {
               </div>
               <div className="h-2 rounded-full bg-stone-100 my-2 overflow-hidden">
                 <div className={`h-full ${d.isBNPL ? "bg-emerald-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-stone-500 mb-1">
+                {minEditId === d.id ? (
+                  <span className="flex items-center gap-1">
+                    <span>Min ₱</span>
+                    <input
+                      type="number" inputMode="decimal" autoFocus
+                      value={minValue} onChange={(e) => setMinValue(e.target.value)}
+                      className="w-20 border-b border-stone-300 outline-none tabular-nums"
+                    />
+                    <button onClick={() => void saveMin(d.id)} className="font-semibold text-emerald-700 px-1">Save</button>
+                    <button onClick={() => { setMinEditId(null); setMinValue(""); }} className="text-stone-400">✕</button>
+                  </span>
+                ) : d.minimum != null ? (
+                  <button onClick={() => { setMinEditId(d.id); setMinValue(String(d.minimum)); }}>
+                    Min {peso(d.minimum)} · edit
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setMinEditId(d.id); setMinValue(""); }}
+                    className="text-amber-600 font-medium"
+                  >
+                    Set minimum
+                  </button>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${channelChipSafe(d.channel)}`}>
