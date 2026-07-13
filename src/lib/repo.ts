@@ -3,11 +3,11 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
-  categoriesCol, debtPayments, debtsCol, expensesCol, fundsCol, monthDoc, monthLines,
-  templateIncomes, templateLines,
+  categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol, monthDoc,
+  monthLines, templateIncomes, templateLines,
 } from "./paths";
 import type {
-  Category, Debt, Income, LineStatus, MonthLine, SinkingFund, TemplateLine,
+  Category, Debt, EventItem, Income, LineStatus, MonthLine, SinkingFund, TemplateLine,
 } from "./types";
 
 /** Toggle/set one month line's status. */
@@ -129,4 +129,14 @@ export async function updateFund(id: string, patch: Partial<SinkingFund>): Promi
 }
 export async function deleteFund(id: string): Promise<void> {
   await deleteDoc(doc(db, fundsCol(), id));
+}
+
+export async function addEvent(e: Omit<EventItem, "id">): Promise<void> {
+  await setDoc(doc(collection(db, eventsCol())), e);
+}
+export async function updateEvent(id: string, patch: Partial<EventItem>): Promise<void> {
+  await updateDoc(doc(db, eventsCol(), id), patch);
+}
+export async function deleteEvent(id: string): Promise<void> {
+  await deleteDoc(doc(db, eventsCol(), id));
 }
