@@ -56,28 +56,44 @@ export default function Debts() {
               <div className="h-2 rounded-full bg-stone-100 my-2 overflow-hidden">
                 <div className={`h-full ${d.isBNPL ? "bg-emerald-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
               </div>
-              <div className="flex items-center justify-between text-[11px] text-stone-500 mb-1">
+              <div className="mb-2">
                 {minEditId === d.id ? (
-                  <span className="flex items-center gap-1">
-                    <span>Min ₱</span>
-                    <input
-                      type="number" inputMode="decimal" autoFocus
-                      value={minValue} onChange={(e) => setMinValue(e.target.value)}
-                      className="w-20 border-b border-stone-300 outline-none tabular-nums"
-                    />
-                    <button onClick={() => void saveMin(d.id)} className="font-semibold text-emerald-700 px-1">Save</button>
-                    <button onClick={() => { setMinEditId(null); setMinValue(""); }} className="text-stone-400">✕</button>
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center border border-stone-300 rounded-lg px-2 py-1 text-sm">
+                      <span className="text-stone-400">₱</span>
+                      <input
+                        type="number" inputMode="decimal" autoFocus placeholder="min"
+                        value={minValue} onChange={(e) => setMinValue(e.target.value)}
+                        className="w-16 outline-none tabular-nums ml-0.5"
+                      />
+                    </div>
+                    <button
+                      onClick={() => void saveMin(d.id)}
+                      className="text-xs font-semibold text-white bg-emerald-600 rounded-lg px-3 py-1.5"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => { setMinEditId(null); setMinValue(""); }}
+                      className="text-xs font-medium text-stone-500 bg-stone-100 rounded-lg px-3 py-1.5"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 ) : d.minimum != null ? (
-                  <button onClick={() => { setMinEditId(d.id); setMinValue(String(d.minimum)); }}>
-                    Min {peso(d.minimum)} · edit
+                  <button
+                    onClick={() => { setMinEditId(d.id); setMinValue(String(d.minimum)); }}
+                    className="inline-flex items-center gap-1.5 text-xs text-stone-600 bg-stone-100 rounded-full pl-3 pr-2 py-1"
+                  >
+                    Min {peso(d.minimum)}
+                    <span className="text-emerald-700 font-semibold">Edit</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => { setMinEditId(d.id); setMinValue(""); }}
-                    className="text-amber-600 font-medium"
+                    className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1"
                   >
-                    Set minimum
+                    + Set minimum
                   </button>
                 )}
               </div>
