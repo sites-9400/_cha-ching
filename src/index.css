@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+/* iOS Safari zooms the page when a focused input's font-size is < 16px.
+   Force 16px on form controls only on iOS (the -webkit-touch-callout query
+   targets iOS Safari), so the layout keeps its Tailwind sizes elsewhere. */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
