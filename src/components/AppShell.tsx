@@ -4,6 +4,7 @@ import MonthProvider from "./MonthProvider";
 import ThisMonth from "./ThisMonth";
 import QuickAdd from "./QuickAdd";
 import Debts from "./Debts";
+import Settings from "./Settings";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -23,7 +24,7 @@ export default function AppShell() {
         {tab === "debts" && <Debts />}
         {tab === "add" && <QuickAdd />}
         {tab === "dashboard" && <Placeholder title="Stats" />}
-        {tab === "settings" && <Placeholder title="Settings" />}
+        {tab === "settings" && <Settings />}
         <TabBar active={tab} onChange={setTab} />
       </div>
     </MonthProvider>

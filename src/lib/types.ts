@@ -57,3 +57,7 @@ export interface SinkingFund {
   releaseMonths: number[]; // e.g. [3, 6, 9, 12]
   balance: number;
 }
+
+export interface Category { id: string; name: string; order: number }
+
+export interface Meta { savingsBalance: number; savingsFloor: number; currency: string }

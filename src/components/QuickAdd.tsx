@@ -4,9 +4,8 @@ import { channelChipSafe, CHANNELS } from "../lib/channels";
 import { peso } from "../lib/format";
 import { categoriesCol, expensesCol } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
-import type { Channel } from "../lib/types";
+import type { Category, Channel } from "../lib/types";
 
-interface Category { id: string; name: string; order: number }
 interface Expense extends ExpenseInput { id: string }
 
 export default function QuickAdd() {
