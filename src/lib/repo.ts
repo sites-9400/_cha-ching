@@ -1,11 +1,13 @@
 import {
-  collection, deleteDoc, doc, getDocs, increment, setDoc, updateDoc, writeBatch,
+  collection, deleteDoc, doc, getDoc, getDocs, increment, setDoc, updateDoc, writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
   categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol, metaDoc,
-  monthDoc, monthLines, templateIncomes, templateLines,
+  monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "./paths";
+import { reconcileLines } from "./reconcile";
+import { generateMonthLines } from "./selectors";
 import type {
   Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, TemplateLine,
 } from "./types";
@@ -151,4 +153,54 @@ export async function deleteEvent(id: string): Promise<void> {
 /** Patch the household meta (savingsBalance, floor, currency) on the root doc. */
 export async function updateMeta(patch: Partial<Meta>): Promise<void> {
   await updateDoc(doc(db, metaDoc()), patch);
+}
+
+// ── Month lifecycle (M6) ─────────────────────────────────────────────────────
+
+/** Add a one-off month line (oneOff:true) to a month. */
+export async function addMonthLine(monthKey: string, line: Omit<MonthLine, "id">): Promise<void> {
+  await setDoc(doc(collection(db, monthLines(monthKey))), line);
+}
+export async function deleteMonthLine(monthKey: string, id: string): Promise<void> {
+  await deleteDoc(doc(db, monthLines(monthKey), id));
+}
+/** Add a one-off income to a month's incomes subcollection. */
+export async function addMonthIncome(monthKey: string, income: Omit<Income, "id">): Promise<void> {
+  await setDoc(doc(collection(db, monthIncomes(monthKey))), income);
+}
+export async function deleteMonthIncome(monthKey: string, id: string): Promise<void> {
+  await deleteDoc(doc(db, monthIncomes(monthKey), id));
+}
+
+/** Reconcile a month's template-derived lines to the current template (keeps ticks + one-offs). */
+export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
+  const [tSnap, mSnap] = await Promise.all([
+    getDocs(collection(db, templateLines())),
+    getDocs(collection(db, monthLines(monthKey))),
+  ]);
+  const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
+  const lines = mSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as MonthLine[];
+  const { upserts, deletes } = reconcileLines(template, lines);
+  const batch = writeBatch(db);
+  for (const l of upserts) {
+    const { id, ...rest } = l;
+    batch.set(doc(db, monthLines(monthKey), id), rest);
+  }
+  for (const id of deletes) batch.delete(doc(db, monthLines(monthKey), id));
+  await batch.commit();
+}
+
+/** Generate a not-yet-existing month for real (used by "Start this month"). Idempotent. */
+export async function startMonth(monthKey: string): Promise<void> {
+  const metaRef = doc(db, monthDoc(monthKey));
+  if ((await getDoc(metaRef)).exists()) return;
+  const [tSnap, eSnap, iSnap] = await Promise.all([
+    getDocs(collection(db, templateLines())),
+    getDocs(collection(db, eventsCol())),
+    getDocs(collection(db, templateIncomes())),
+  ]);
+  const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
+  const events = eSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as EventItem[];
+  const incomes = iSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Income[];
+  await writeMonth(monthKey, generateMonthLines(template, events, monthKey), incomes);
 }

@@ -15,6 +15,7 @@ export const expensesCol = (): string => col("expenses");
 
 export const monthDoc = (key: string): string => `${col("months")}/${key}`;
 export const monthLines = (key: string): string => `${monthDoc(key)}/lines`;
+export const monthIncomes = (key: string): string => `${monthDoc(key)}/incomes`;
 
 /** The household root doc itself holds meta (savingsBalance, floor, currency). */
 export const metaDoc = (): string => HH;
