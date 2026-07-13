@@ -4,6 +4,7 @@ import DebtsEditor from "./settings/DebtsEditor";
 import TemplateEditor from "./settings/TemplateEditor";
 import IncomesEditor from "./settings/IncomesEditor";
 import CategoriesEditor from "./settings/CategoriesEditor";
+import FundsEditor from "./settings/FundsEditor";
 
 type Section =
   | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "pin" | "export";
@@ -59,5 +60,6 @@ function Editor({ section }: { section: Section }) {
   if (section === "template") return <TemplateEditor />;
   if (section === "incomes") return <IncomesEditor />;
   if (section === "categories") return <CategoriesEditor />;
+  if (section === "funds") return <FundsEditor />;
   return <div className="text-stone-500 text-sm">{section} editor — coming in a later step.</div>;
 }
