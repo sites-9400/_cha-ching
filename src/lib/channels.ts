@@ -2,7 +2,7 @@ import type { Channel } from "./types";
 
 export const CHANNELS: readonly Channel[] = [
   "CIMB", "GCASH", "MARIBANK", "MAYA", "RCBC",
-  "RCBC CREDIT", "CASH", "WISE/KLOOK", "RCBC SAVINGS",
+  "RCBC CREDIT", "CASH", "WISE", "RCBC SAVINGS",
   "LANDBANK", "UNIONBANK",
 ];
 
@@ -14,11 +14,15 @@ const CHIP: Record<string, string> = {
   RCBC: "bg-blue-200 text-blue-950",
   "RCBC CREDIT": "bg-yellow-200 text-yellow-950",
   CASH: "bg-gray-200 text-gray-800",
-  "WISE/KLOOK": "bg-emerald-200 text-emerald-950",
+  WISE: "bg-emerald-200 text-emerald-950",
+  "WISE/KLOOK": "bg-emerald-200 text-emerald-950", // legacy alias for existing data
   "RCBC SAVINGS": "bg-cyan-200 text-cyan-950",
   LANDBANK: "bg-green-700 text-green-50",
   UNIONBANK: "bg-orange-600 text-orange-50",
 };
+
+/** Display label for a channel — normalizes the legacy "WISE/KLOOK" to "WISE". */
+export const channelLabel = (c: string): string => (c === "WISE/KLOOK" ? "WISE" : c);
 
 /** Swatch palette for custom accounts — key → chip classes. */
 export const CHIP_PALETTE: { key: string; className: string }[] = [

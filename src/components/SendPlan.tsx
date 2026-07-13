@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useDoc } from "../hooks/useDoc";
+import { metaDoc } from "../lib/paths";
 import { peso } from "../lib/format";
 import { cutoffAllocation, fundingByChannel, paidByDebt } from "../lib/funding";
-import type { Debt, MonthLine } from "../lib/types";
+import type { Debt, Meta, MonthLine } from "../lib/types";
 import type { PaymentRec } from "./DebtPlan";
 import { useAccounts } from "./AccountsProvider";
 
@@ -12,13 +14,15 @@ export default function SendPlan({
   freeCash: number; debts: Debt[]; payments: PaymentRec[]; lines: MonthLine[];
   monthKey: string; cutoff: 1 | 2;
 }) {
-  const { chip } = useAccounts();
+  const { chip, label } = useAccounts();
+  const meta = useDoc<Meta>(metaDoc());
+  const incomeChannel = meta?.incomeChannel;
   const [mode, setMode] = useState<"remaining" | "full">("remaining");
 
   const paid = paidByDebt(payments, monthKey, cutoff);
   const alloc = cutoffAllocation(freeCash, debts, paid, cutoff);
   const paidDebts = new Set([...paid.keys()]);
-  const sends = fundingByChannel(lines, alloc.lines, paidDebts, mode);
+  const sends = fundingByChannel(lines, alloc.lines, paidDebts, mode, incomeChannel);
   const grandTotal = sends.reduce((s, x) => s + x.total, 0);
 
   if (sends.length === 0) return null;
@@ -42,13 +46,13 @@ export default function SendPlan({
       <ul className="flex flex-col gap-1.5">
         {sends.map((s) => (
           <li key={s.channel} className="flex items-center justify-between gap-2 text-sm">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(s.channel)}`}>{s.channel}</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(s.channel)}`}>{label(s.channel)}</span>
             <span className="font-bold tabular-nums">{peso(s.total)}</span>
           </li>
         ))}
       </ul>
       <p className="mt-2 text-xs flex justify-between text-stone-400">
-        <span>{mode === "remaining" ? "Still to send" : "Cutoff total"}</span>
+        <span>{mode === "remaining" ? "Still to send" : "Cutoff total"}{incomeChannel ? ` (from ${label(incomeChannel)})` : ""}</span>
         <span className="font-semibold tabular-nums text-stone-600">{peso(grandTotal)}</span>
       </p>
     </div>

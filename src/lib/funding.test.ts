@@ -58,4 +58,13 @@ describe("fundingByChannel", () => {
     const out = fundingByChannel([{ channel: "MAYA", amount: 100, status: "PAID" }], [], new Set(), "remaining");
     expect(out).toEqual([]);
   });
+
+  it("excludes the income channel (salary already lands there)", () => {
+    const l = [
+      { channel: "WISE", amount: 8000, status: "" }, // income account — skip
+      { channel: "CIMB", amount: 3000, status: "" },
+    ];
+    const out = fundingByChannel(l, [], new Set(), "full", "WISE");
+    expect(out).toEqual([{ channel: "CIMB", total: 3000 }]);
+  });
 });

@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { channelLabel } from "../lib/channels";
 import { accountsCol } from "../lib/paths";
 import { mergeAccounts, type AccountInfo } from "../lib/accounts";
 import type { Account, Channel } from "../lib/types";
@@ -9,6 +10,7 @@ interface AccountsCtx {
   infos: AccountInfo[]; // merged built-in + custom
   names: Channel[]; // for channel pickers
   chip: (name: string) => string;
+  label: (name: string) => string; // display name (normalizes legacy WISE/KLOOK → WISE)
   numberOf: (name: string) => string | undefined;
 }
 const Ctx = createContext<AccountsCtx | null>(null);
@@ -29,6 +31,7 @@ export default function AccountsProvider({ children }: { children: React.ReactNo
       infos,
       names: infos.map((i) => i.name),
       chip: (name) => byName.get(name)?.chip ?? "bg-gray-200 text-gray-800",
+      label: (name) => channelLabel(name),
       numberOf: (name) => byName.get(name)?.number,
     };
   }, [accounts]);

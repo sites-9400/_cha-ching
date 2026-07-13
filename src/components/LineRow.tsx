@@ -8,7 +8,7 @@ export default function LineRow(
   { monthKey, line, readOnly = false, onDelete, onEdit }:
   { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void; onEdit?: () => void },
 ) {
-  const { chip } = useAccounts();
+  const { chip, label } = useAccounts();
   const ticked = line.status !== "";
   const nextStatus = ticked ? "" : "PAID";
 
@@ -55,7 +55,7 @@ export default function LineRow(
       <span className="flex items-center gap-2 shrink-0">
         <span className="text-sm font-semibold tabular-nums">{peso(line.amount)}</span>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(line.channel)}`}>
-          {line.channel}
+          {label(line.channel)}
         </span>
         {onDelete && <button onClick={onDelete} className="text-stone-300 text-xs pl-1">✕</button>}
       </span>

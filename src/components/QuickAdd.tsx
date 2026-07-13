@@ -9,7 +9,7 @@ import { useAccounts } from "./AccountsProvider";
 interface Expense extends ExpenseInput { id: string }
 
 export default function QuickAdd() {
-  const { names: CHANNELS, chip } = useAccounts();
+  const { names: CHANNELS, chip, label } = useAccounts();
   const categories = useCollection<Category>(categoriesCol());
   const expenses = useCollection<Expense>(expensesCol());
   const [amount, setAmount] = useState("");
@@ -102,7 +102,7 @@ export default function QuickAdd() {
         {recent.map((e) => (
           <li key={e.id} className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 min-w-0">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{e.channel}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{label(e.channel)}</span>
               <span className="text-sm truncate">{e.category}{e.note ? ` · ${e.note}` : ""}</span>
             </span>
             <span className="flex items-center gap-2 shrink-0">

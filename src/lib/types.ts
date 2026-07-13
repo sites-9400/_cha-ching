@@ -1,6 +1,6 @@
 export type BuiltinChannel =
   | "CIMB" | "GCASH" | "MARIBANK" | "MAYA" | "RCBC"
-  | "RCBC CREDIT" | "CASH" | "WISE/KLOOK" | "RCBC SAVINGS"
+  | "RCBC CREDIT" | "CASH" | "WISE" | "RCBC SAVINGS"
   | "LANDBANK" | "UNIONBANK";
 
 /** A payment channel / account. Built-ins are known literals; custom accounts
@@ -76,4 +76,9 @@ export interface SinkingFund {
 
 export interface Category { id: string; name: string; order: number }
 
-export interface Meta { savingsBalance: number; savingsFloor: number; currency: string }
+export interface Meta {
+  savingsBalance: number;
+  savingsFloor: number;
+  currency: string;
+  incomeChannel?: string; // account where salary lands; netted out of the send calculator
+}

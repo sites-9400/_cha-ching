@@ -1,35 +1,53 @@
 import { useState } from "react";
-import { CHIP_PALETTE, paletteChip } from "../../lib/channels";
-import { addAccount, deleteAccount, setAccountNumber, updateAccount } from "../../lib/repo";
-import type { Account } from "../../lib/types";
+import { useDoc } from "../../hooks/useDoc";
+import { metaDoc } from "../../lib/paths";
+import { CHIP_PALETTE, channelLabel, paletteChip } from "../../lib/channels";
+import { addAccount, deleteAccount, setAccountNumber, updateAccount, updateMeta } from "../../lib/repo";
+import type { Account, Meta } from "../../lib/types";
 import type { AccountInfo } from "../../lib/accounts";
 import { useAccounts } from "../AccountsProvider";
 import ConfirmDialog from "../ConfirmDialog";
 
 export default function AccountsEditor() {
   const { infos, accounts } = useAccounts();
+  const meta = useDoc<Meta>(metaDoc());
+  const incomeChannel = meta?.incomeChannel;
   const [editing, setEditing] = useState<AccountInfo | "new" | null>(null);
 
   if (editing) {
     return <Form target={editing} accounts={accounts} onDone={() => setEditing(null)} />;
   }
 
+  const toggleIncome = (name: string) =>
+    void updateMeta({ incomeChannel: incomeChannel === name ? "" : name });
+
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Accounts</h2>
-      <p className="text-xs text-stone-400 mb-3">Your account numbers for transfers — tap to edit.</p>
+      <p className="text-xs text-stone-400 mb-3">
+        Account numbers for transfers — tap to edit. Tap ★ to mark where your income lands
+        (it's netted out of the send calculator).
+      </p>
       <ul className="flex flex-col gap-2">
-        {infos.map((a) => (
-          <li key={String(a.name)}>
-            <button onClick={() => setEditing(a)} className="w-full bg-white rounded-xl shadow p-3 flex items-center gap-3 text-left">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${a.chip}`}>{a.name}</span>
-              <span className={`flex-1 text-sm tabular-nums ${a.number ? "text-stone-700" : "text-stone-400"}`}>
-                {a.number ?? "add number"}
-              </span>
-              <span className="text-stone-300 text-xs">edit</span>
-            </button>
-          </li>
-        ))}
+        {infos.map((a) => {
+          const isIncome = incomeChannel === String(a.name);
+          return (
+            <li key={String(a.name)} className="bg-white rounded-xl shadow flex items-center">
+              <button onClick={() => setEditing(a)} className="flex-1 p-3 flex items-center gap-3 text-left min-w-0">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${a.chip}`}>{channelLabel(String(a.name))}</span>
+                <span className={`flex-1 text-sm tabular-nums truncate ${a.number ? "text-stone-700" : "text-stone-400"}`}>
+                  {a.number ?? "add number"}
+                </span>
+                <span className="text-stone-300 text-xs">edit</span>
+              </button>
+              <button
+                onClick={() => toggleIncome(String(a.name))}
+                aria-label="Mark as income account"
+                className={`px-3 py-3 text-lg ${isIncome ? "text-amber-500" : "text-stone-200"}`}
+              >★</button>
+            </li>
+          );
+        })}
       </ul>
       <button onClick={() => setEditing("new")} className="mt-3 text-sm font-semibold text-emerald-700">+ Add account</button>
     </div>

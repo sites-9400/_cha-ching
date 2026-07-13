@@ -15,7 +15,7 @@ import { useAccounts } from "./AccountsProvider";
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; projection basis until history exists
 
 export default function Debts() {
-  const { chip } = useAccounts();
+  const { chip, label } = useAccounts();
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const thisMonth = currentMonthKey();
@@ -113,7 +113,7 @@ export default function Debts() {
                 ))}
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(d.channel)}`}>
-                  {d.channel}
+                  {label(d.channel)}
                 </span>
                 <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-emerald-700">
                   Log payment

@@ -19,7 +19,7 @@ export default function DebtPlan({
   unplanned?: number; readOnly?: boolean;
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
-  const { chip } = useAccounts();
+  const { chip, label } = useAccounts();
 
   // Allocate on start-of-cutoff balances so a completed payment ticks off instead of
   // spilling its money onto the next debt (shared with the send calculator).
@@ -52,7 +52,7 @@ export default function DebtPlan({
                 <span className={paid ? "text-emerald-600" : "text-stone-300"}>✓</span>
                 <span className={`truncate ${paid ? "line-through text-stone-400" : "font-medium"}`}>{l.name}</span>
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${chip(l.channel)}`}>
-                  {l.channel}
+                  {label(l.channel)}
                 </span>
                 <span className="text-[10px] text-stone-400">{KIND_LABEL[l.kind]}</span>
               </button>

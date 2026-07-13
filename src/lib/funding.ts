@@ -38,17 +38,22 @@ export interface ChannelSend { channel: string; total: number }
 /**
  * How much to send to each channel for a cutoff = its expense lines + the debt
  * allocations routed through that channel. "remaining" skips ticked lines and
- * debts already paid this cutoff; "full" counts everything. Sorted desc, zeros
- * omitted. Pure.
+ * debts already paid this cutoff; "full" counts everything. The `incomeChannel`
+ * (where salary lands) is excluded — that money is already there. Sorted desc,
+ * zeros omitted. Pure.
  */
 export function fundingByChannel(
   lines: readonly { channel: string; amount: number; status: string }[],
   alloc: readonly { channel: string; amount: number; debtId: string }[],
   paidDebts: Set<string>,
   mode: "remaining" | "full",
+  incomeChannel?: string,
 ): ChannelSend[] {
   const byChannel = new Map<string, number>();
-  const add = (ch: string, amt: number) => byChannel.set(ch, (byChannel.get(ch) ?? 0) + amt);
+  const add = (ch: string, amt: number) => {
+    if (incomeChannel && ch === incomeChannel) return; // already in the income account
+    byChannel.set(ch, (byChannel.get(ch) ?? 0) + amt);
+  };
 
   for (const l of lines) {
     if (mode === "remaining" && l.status !== "") continue;
