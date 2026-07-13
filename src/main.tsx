@@ -8,3 +8,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>,
 );
+
+// Register the service worker for offline app-shell (production builds only —
+// avoids interfering with Vite's dev HMR).
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* offline shell is a progressive enhancement; ignore registration failures */
+    });
+  });
+}
