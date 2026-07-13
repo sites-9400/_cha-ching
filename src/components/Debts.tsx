@@ -1,19 +1,23 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { channelChipSafe } from "../lib/channels";
 import { currentMonthKey, monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
-import { logDebtPayment, setDebtMinimum } from "../lib/repo";
+import { logDebtPayment, setDebtMinimum, undoDebtPayment } from "../lib/repo";
 import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
 import { cutoffForDueDay } from "../lib/allocate";
 import type { Debt } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
+import type { PaymentRec } from "./DebtPlan";
 
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; projection basis until history exists
 
 export default function Debts() {
   const debts = useCollection<Debt>(debtsCol());
+  const payments = useCollectionGroup<PaymentRec>("payments");
+  const thisMonth = currentMonthKey();
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const [minEditId, setMinEditId] = useState<string | null>(null);
   const [minValue, setMinValue] = useState("");
@@ -77,6 +81,19 @@ export default function Debts() {
                   </button>
                 )}
               </div>
+              {payments
+                .filter((p) => p.debtId === d.id && p.monthKey === thisMonth)
+                .map((p) => (
+                  <div key={p.id} className="flex items-center justify-between text-[11px] text-stone-500">
+                    <span>Paid {peso(p.amount)} · cutoff {p.cutoff}</span>
+                    <button
+                      onClick={() => void undoDebtPayment(d.id, p.id, p.amount)}
+                      className="text-red-500 font-medium"
+                    >
+                      Undo
+                    </button>
+                  </div>
+                ))}
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${channelChipSafe(d.channel)}`}>
                   {d.channel}
