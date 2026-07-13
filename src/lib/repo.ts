@@ -2,8 +2,10 @@ import {
   collection, deleteDoc, doc, getDocs, increment, setDoc, updateDoc, writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { debtPayments, debtsCol, expensesCol, monthDoc, monthLines } from "./paths";
-import type { Debt, Income, LineStatus, MonthLine } from "./types";
+import {
+  debtPayments, debtsCol, expensesCol, monthDoc, monthLines, templateIncomes, templateLines,
+} from "./paths";
+import type { Debt, Income, LineStatus, MonthLine, TemplateLine } from "./types";
 
 /** Toggle/set one month line's status. */
 export async function setLineStatus(
@@ -85,4 +87,23 @@ export async function deleteDebt(id: string): Promise<void> {
   pays.forEach((p) => batch.delete(p.ref));
   batch.delete(doc(db, debtsCol(), id));
   await batch.commit();
+}
+
+export async function addTemplateLine(l: Omit<TemplateLine, "id">): Promise<void> {
+  await setDoc(doc(collection(db, templateLines())), l);
+}
+export async function updateTemplateLine(id: string, patch: Partial<TemplateLine>): Promise<void> {
+  await updateDoc(doc(db, templateLines(), id), patch);
+}
+export async function deleteTemplateLine(id: string): Promise<void> {
+  await deleteDoc(doc(db, templateLines(), id));
+}
+export async function addTemplateIncome(i: Omit<Income, "id">): Promise<void> {
+  await setDoc(doc(collection(db, templateIncomes())), i);
+}
+export async function updateTemplateIncome(id: string, patch: Partial<Income>): Promise<void> {
+  await updateDoc(doc(db, templateIncomes(), id), patch);
+}
+export async function deleteTemplateIncome(id: string): Promise<void> {
+  await deleteDoc(doc(db, templateIncomes(), id));
 }
