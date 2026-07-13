@@ -1,11 +1,18 @@
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { cutoffSummary } from "../lib/selectors";
+import { useCollection } from "../hooks/useCollection";
+import { useCollectionGroup } from "../hooks/useCollectionGroup";
+import { debtsCol } from "../lib/paths";
+import type { Debt } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import LineRow from "./LineRow";
+import DebtPlan, { type PaymentRec } from "./DebtPlan";
 
 export default function ThisMonth() {
   const { monthKey, lines, incomes, ready } = useMonth();
+  const debts = useCollection<Debt>(debtsCol());
+  const payments = useCollectionGroup<PaymentRec>("payments");
 
   if (!ready) {
     return <div className="p-6 text-center text-stone-500">Setting up {monthLabel(monthKey)}…</div>;
@@ -31,6 +38,13 @@ export default function ThisMonth() {
                 <LineRow key={l.id} monthKey={monthKey} line={l} />
               ))}
             </ul>
+            <DebtPlan
+              freeCash={s.surplus}
+              debts={debts}
+              payments={payments}
+              monthKey={monthKey}
+              cutoff={cutoff}
+            />
             <p className="mt-3 text-sm flex justify-between font-semibold">
               <span>Income {peso(s.income)}</span>
               <span className="text-emerald-700">Surplus {peso(s.surplus)}</span>
