@@ -1,8 +1,11 @@
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
 } from "firebase/auth";
 import { auth } from "./firebase";
 
@@ -23,6 +26,15 @@ export async function setupPin(pin: string): Promise<void> {
 
 export async function lock(): Promise<void> {
   await signOut(auth);
+}
+
+/** Re-authenticate with the current PIN, then set a new one. Throws on wrong current PIN. */
+export async function changePin(currentPin: string, newPin: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Not signed in");
+  const cred = EmailAuthProvider.credential(EMAIL, toPassword(currentPin));
+  await reauthenticateWithCredential(user, cred);
+  await updatePassword(user, toPassword(newPin));
 }
 
 /** Subscribe to signed-in state; returns unsubscribe. */
