@@ -44,14 +44,24 @@ export async function setDebtMinimum(debtId: string, amount: number): Promise<vo
   await updateDoc(doc(db, debtsCol(), debtId), { minimum: amount });
 }
 
-/** Record a debt payment: append to history + decrement the balance atomically. */
+/** Record a debt payment: append to history (with cutoff) + decrement balance atomically. */
 export async function logDebtPayment(
-  debtId: string, amount: number, monthKey: string,
+  debtId: string, amount: number, monthKey: string, cutoff: 1 | 2,
 ): Promise<void> {
   const batch = writeBatch(db);
   batch.set(doc(collection(db, debtPayments(debtId))), {
-    amount, date: new Date().toISOString(), monthKey,
+    amount, date: new Date().toISOString(), monthKey, cutoff,
   });
   batch.update(doc(db, debtsCol(), debtId), { currentBalance: increment(-amount) });
+  await batch.commit();
+}
+
+/** Undo a payment: delete the payment doc + restore the balance atomically. */
+export async function undoDebtPayment(
+  debtId: string, paymentId: string, amount: number,
+): Promise<void> {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, debtPayments(debtId), paymentId));
+  batch.update(doc(db, debtsCol(), debtId), { currentBalance: increment(amount) });
   await batch.commit();
 }

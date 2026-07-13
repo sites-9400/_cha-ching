@@ -30,7 +30,7 @@ export default function Debts() {
 
   async function pay(id: string) {
     const v = Number(amount);
-    if (v > 0) await logDebtPayment(id, v, currentMonthKey());
+    if (v > 0) await logDebtPayment(id, v, currentMonthKey(), 2);
     setPayingId(null);
     setAmount("");
   }
