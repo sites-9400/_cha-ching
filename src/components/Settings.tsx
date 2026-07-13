@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { lock } from "../lib/pinAuth";
+import DebtsEditor from "./settings/DebtsEditor";
 
 type Section =
   | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "pin" | "export";
@@ -51,5 +52,6 @@ export default function Settings() {
 }
 
 function Editor({ section }: { section: Section }) {
+  if (section === "debts") return <DebtsEditor />;
   return <div className="text-stone-500 text-sm">{section} editor — coming in a later step.</div>;
 }

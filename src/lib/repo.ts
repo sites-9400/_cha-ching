@@ -1,9 +1,9 @@
 import {
-  collection, deleteDoc, doc, increment, setDoc, updateDoc, writeBatch,
+  collection, deleteDoc, doc, getDocs, increment, setDoc, updateDoc, writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { debtPayments, debtsCol, expensesCol, monthDoc, monthLines } from "./paths";
-import type { Income, LineStatus, MonthLine } from "./types";
+import type { Debt, Income, LineStatus, MonthLine } from "./types";
 
 /** Toggle/set one month line's status. */
 export async function setLineStatus(
@@ -63,5 +63,26 @@ export async function undoDebtPayment(
   const batch = writeBatch(db);
   batch.delete(doc(db, debtPayments(debtId), paymentId));
   batch.update(doc(db, debtsCol(), debtId), { currentBalance: increment(amount) });
+  await batch.commit();
+}
+
+// ── Settings CRUD (M3b) ──────────────────────────────────────────────────────
+
+/** Create a debt with a generated id. */
+export async function addDebt(d: Omit<Debt, "id">): Promise<void> {
+  await setDoc(doc(collection(db, debtsCol())), d);
+}
+
+/** Patch a debt's fields. */
+export async function updateDebt(id: string, patch: Partial<Debt>): Promise<void> {
+  await updateDoc(doc(db, debtsCol(), id), patch);
+}
+
+/** Hard-delete a debt AND its payments subcollection in one batch (no orphaned ghosts). */
+export async function deleteDebt(id: string): Promise<void> {
+  const batch = writeBatch(db);
+  const pays = await getDocs(collection(db, debtPayments(id)));
+  pays.forEach((p) => batch.delete(p.ref));
+  batch.delete(doc(db, debtsCol(), id));
   await batch.commit();
 }
