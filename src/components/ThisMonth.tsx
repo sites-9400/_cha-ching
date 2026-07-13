@@ -29,9 +29,13 @@ export default function ThisMonth() {
   const projected = mode === "projected";
 
   const header = (
-    <div className="flex items-center justify-between mb-4">
-      <button onClick={goPrev} className="text-emerald-700 text-lg px-2">‹</button>
-      <div className="text-center">
+    <div className="flex items-center justify-center gap-2 mb-4">
+      <button
+        onClick={goPrev}
+        aria-label="Previous month"
+        className="h-10 w-10 flex items-center justify-center rounded-full bg-white shadow text-emerald-700 text-xl active:bg-stone-100"
+      >‹</button>
+      <div className="text-center min-w-[9rem]">
         <h1 className="text-xl font-bold leading-tight">{monthLabel(viewedKey)}</h1>
         {mode !== "current" && (
           <span className="text-[11px] uppercase tracking-wide text-stone-400">
@@ -39,7 +43,11 @@ export default function ThisMonth() {
           </span>
         )}
       </div>
-      <button onClick={goNext} className="text-emerald-700 text-lg px-2">›</button>
+      <button
+        onClick={goNext}
+        aria-label="Next month"
+        className="h-10 w-10 flex items-center justify-center rounded-full bg-white shadow text-emerald-700 text-xl active:bg-stone-100"
+      >›</button>
     </div>
   );
 
