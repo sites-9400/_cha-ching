@@ -2,18 +2,20 @@ import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { currentMonthKey, monthIndex } from "../lib/clock";
-import { debtsCol, fundsCol, metaDoc } from "../lib/paths";
+import { debtsCol, expensesCol, fundsCol, metaDoc } from "../lib/paths";
 import { updateMeta } from "../lib/repo";
 import { debtTotals } from "../lib/selectors";
 import type { Debt, Meta, SinkingFund } from "../lib/types";
 import type { PaymentRec } from "./DebtPlan";
 import SavingsMeter from "./dashboard/SavingsMeter";
 import FundTiles from "./dashboard/FundTiles";
+import CategoryBars, { type DashExpense } from "./dashboard/CategoryBars";
 
 export default function Dashboard() {
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const funds = useCollection<SinkingFund>(fundsCol());
+  const expenses = useCollection<DashExpense>(expensesCol());
   const meta = useDoc<Meta>(metaDoc());
 
   const monthKey = currentMonthKey();
@@ -35,6 +37,8 @@ export default function Dashboard() {
         <p className="text-2xl font-bold tabular-nums">{blitz.toLocaleString("en-PH", { style: "currency", currency: "PHP" })}</p>
         <p className="text-xs text-stone-400">interest-bearing (curve coming next)</p>
       </section>
+
+      <CategoryBars expenses={expenses} monthKey={monthKey} />
 
       <FundTiles funds={funds} monthIndex={monthIndex(monthKey)} />
     </main>
