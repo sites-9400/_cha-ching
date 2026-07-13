@@ -6,14 +6,16 @@ import IncomesEditor from "./settings/IncomesEditor";
 import CategoriesEditor from "./settings/CategoriesEditor";
 import FundsEditor from "./settings/FundsEditor";
 import EventsEditor from "./settings/EventsEditor";
+import AccountsEditor from "./settings/AccountsEditor";
 import ChangePin from "./settings/ChangePin";
 import ExportData from "./settings/ExportData";
 
 type Section =
-  | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "pin" | "export";
+  | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "accounts" | "pin" | "export";
 
 const ROWS: { id: Section; label: string }[] = [
   { id: "debts", label: "Debts" },
+  { id: "accounts", label: "Accounts" },
   { id: "template", label: "Template lines" },
   { id: "incomes", label: "Income sources" },
   { id: "categories", label: "Categories" },
@@ -65,6 +67,7 @@ function Editor({ section }: { section: Section }) {
   if (section === "categories") return <CategoriesEditor />;
   if (section === "funds") return <FundsEditor />;
   if (section === "events") return <EventsEditor />;
+  if (section === "accounts") return <AccountsEditor />;
   if (section === "pin") return <ChangePin />;
   if (section === "export") return <ExportData />;
   return <div className="text-stone-500 text-sm">{section} editor — coming in a later step.</div>;

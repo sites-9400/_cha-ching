@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../../hooks/useCollection";
-import { CHANNELS } from "../../lib/channels";
+import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey } from "../../lib/clock";
 import { peso } from "../../lib/format";
 import { monthLines, templateLines } from "../../lib/paths";
@@ -68,6 +68,7 @@ export default function TemplateEditor() {
 }
 
 function Form({ line, onDone, onCancel }: { line: TemplateLine | Omit<TemplateLine, "id">; onDone: () => void | Promise<void>; onCancel: () => void }) {
+  const { names: CHANNELS } = useAccounts();
   const [f, setF] = useState(line);
   const id = "id" in line ? line.id : null;
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });

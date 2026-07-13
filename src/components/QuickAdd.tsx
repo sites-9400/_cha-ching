@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { channelChipSafe, CHANNELS } from "../lib/channels";
 import { peso } from "../lib/format";
 import { categoriesCol, expensesCol } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
 import type { Category, Channel } from "../lib/types";
+import { useAccounts } from "./AccountsProvider";
 
 interface Expense extends ExpenseInput { id: string }
 
 export default function QuickAdd() {
+  const { names: CHANNELS, chip } = useAccounts();
   const categories = useCollection<Category>(categoriesCol());
   const expenses = useCollection<Expense>(expensesCol());
   const [amount, setAmount] = useState("");
@@ -58,7 +59,7 @@ export default function QuickAdd() {
             <button
               key={c} onClick={() => setChannel(c)}
               className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-                channel === c ? channelChipSafe(c) : "bg-stone-100 text-stone-400"
+                channel === c ? chip(c) : "bg-stone-100 text-stone-400"
               }`}
             >{c}</button>
           ))}

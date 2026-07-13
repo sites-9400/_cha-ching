@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { CHANNELS } from "../lib/channels";
 import { addMonthIncome, addMonthLine } from "../lib/repo";
 import type { Channel } from "../lib/types";
+import { useAccounts } from "./AccountsProvider";
 
 export default function AddOneOff({ monthKey, onClose }: { monthKey: string; onClose: () => void }) {
+  const { names: CHANNELS } = useAccounts();
   const [kind, setKind] = useState<"expense" | "income">("expense");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");

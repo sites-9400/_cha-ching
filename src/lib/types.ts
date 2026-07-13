@@ -1,8 +1,22 @@
-export type Channel =
+export type BuiltinChannel =
   | "CIMB" | "GCASH" | "MARIBANK" | "MAYA" | "RCBC"
-  | "RCBC CREDIT" | "CASH" | "WISE/KLOOK" | "RCBC SAVINGS";
+  | "RCBC CREDIT" | "CASH" | "WISE/KLOOK" | "RCBC SAVINGS"
+  | "LANDBANK" | "UNIONBANK";
+
+/** A payment channel / account. Built-ins are known literals; custom accounts
+ *  (added in Settings) are any other string. The `& {}` keeps literal
+ *  autocomplete while still accepting arbitrary custom names. */
+export type Channel = BuiltinChannel | (string & {});
 
 export type LineStatus = "" | "PAID" | "RECEIVED" | "TRANSFERRED" | "SENT";
+
+/** A custom account or a number/color override for a built-in, stored in Firestore. */
+export interface Account {
+  id: string;
+  name: string;
+  number?: string;
+  color?: string; // palette key (custom accounts only); built-ins use their fixed chip
+}
 
 export interface TemplateLine {
   id: string;

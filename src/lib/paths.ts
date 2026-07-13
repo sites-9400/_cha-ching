@@ -12,6 +12,7 @@ export const eventsCol = (): string => col("events");
 export const fundsCol = (): string => col("sinkingFunds");
 export const categoriesCol = (): string => col("categories");
 export const expensesCol = (): string => col("expenses");
+export const accountsCol = (): string => col("accounts");
 
 export const monthDoc = (key: string): string => `${col("months")}/${key}`;
 export const monthLines = (key: string): string => `${monthDoc(key)}/lines`;

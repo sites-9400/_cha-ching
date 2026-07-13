@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { channelChipSafe } from "../lib/channels";
+import { useAccounts } from "./AccountsProvider";
 import { peso } from "../lib/format";
 import { logDebtPayment } from "../lib/repo";
 import { allocateCutoff } from "../lib/allocate";
@@ -19,6 +19,7 @@ export default function DebtPlan({
   unplanned?: number; readOnly?: boolean;
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
+  const { chip } = useAccounts();
   const alloc = allocateCutoff(freeCash, debts, cutoff);
 
   const isPaid = (debtId: string) =>
@@ -44,7 +45,7 @@ export default function DebtPlan({
               >
                 <span className={paid ? "text-emerald-600" : "text-stone-300"}>✓</span>
                 <span className={`truncate ${paid ? "line-through text-stone-400" : "font-medium"}`}>{l.name}</span>
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${channelChipSafe(l.channel)}`}>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${chip(l.channel)}`}>
                   {l.channel}
                 </span>
                 <span className="text-[10px] text-stone-400">{KIND_LABEL[l.kind]}</span>

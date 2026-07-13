@@ -3,13 +3,13 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
-  categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol, metaDoc,
-  monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
+  accountsCol, categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
+  metaDoc, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "./paths";
 import { reconcileLines } from "./reconcile";
 import { generateMonthLines } from "./selectors";
 import type {
-  Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, TemplateLine,
+  Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, TemplateLine,
 } from "./types";
 
 /** Toggle/set one month line's status. */
@@ -153,6 +153,23 @@ export async function deleteEvent(id: string): Promise<void> {
 /** Patch the household meta (savingsBalance, floor, currency) on the root doc. */
 export async function updateMeta(patch: Partial<Meta>): Promise<void> {
   await updateDoc(doc(db, metaDoc()), patch);
+}
+
+// ── Accounts (custom channels + account numbers) ─────────────────────────────
+
+export async function addAccount(a: Omit<Account, "id">): Promise<void> {
+  await setDoc(doc(collection(db, accountsCol())), a);
+}
+export async function updateAccount(id: string, patch: Partial<Account>): Promise<void> {
+  await updateDoc(doc(db, accountsCol(), id), patch);
+}
+export async function deleteAccount(id: string): Promise<void> {
+  await deleteDoc(doc(db, accountsCol(), id));
+}
+/** Set/override an account's number: patch an existing doc or create one by name. */
+export async function setAccountNumber(existing: Account | undefined, name: string, number: string): Promise<void> {
+  if (existing) await updateDoc(doc(db, accountsCol(), existing.id), { number });
+  else await setDoc(doc(collection(db, accountsCol())), { name, number });
 }
 
 // ── Month lifecycle (M6) ─────────────────────────────────────────────────────

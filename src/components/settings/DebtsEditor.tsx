@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../../hooks/useCollection";
-import { CHANNELS } from "../../lib/channels";
+import { useAccounts } from "../AccountsProvider";
 import { peso } from "../../lib/format";
 import { debtsCol } from "../../lib/paths";
 import { addDebt, updateDebt, deleteDebt } from "../../lib/repo";
@@ -59,6 +59,7 @@ export default function DebtsEditor() {
 }
 
 function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () => void }) {
+  const { names: CHANNELS } = useAccounts();
   const [f, setF] = useState(debt);
   const id = "id" in debt ? debt.id : null;
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });

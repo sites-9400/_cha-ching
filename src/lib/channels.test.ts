@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { CHANNELS, channelChip, channelChipSafe } from "./channels";
 
 describe("channels", () => {
-  it("lists all nine channels", () => {
-    expect(CHANNELS).toHaveLength(9);
+  it("lists the built-in channels incl. LANDBANK and UNIONBANK", () => {
+    expect(CHANNELS).toHaveLength(11);
     expect(CHANNELS).toContain("CIMB");
     expect(CHANNELS).toContain("RCBC SAVINGS");
+    expect(CHANNELS).toContain("LANDBANK");
+    expect(CHANNELS).toContain("UNIONBANK");
   });
   it("returns the exact chip classes per channel", () => {
     expect(channelChip("CIMB")).toBe("bg-red-900 text-red-50");

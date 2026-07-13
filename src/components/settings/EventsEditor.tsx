@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../../hooks/useCollection";
-import { CHANNELS } from "../../lib/channels";
+import { useAccounts } from "../AccountsProvider";
 import { peso } from "../../lib/format";
 import { eventsCol } from "../../lib/paths";
 import { addEvent, updateEvent, deleteEvent } from "../../lib/repo";
@@ -43,6 +43,7 @@ export default function EventsEditor() {
 }
 
 function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: () => void }) {
+  const { names: CHANNELS } = useAccounts();
   const [f, setF] = useState(ev);
   const id = "id" in ev ? ev.id : null;
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });

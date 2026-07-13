@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
-import { channelChipSafe } from "../lib/channels";
 import { currentMonthKey, monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
@@ -11,10 +10,12 @@ import { cutoffForDueDay } from "../lib/allocate";
 import type { Debt } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
 import type { PaymentRec } from "./DebtPlan";
+import { useAccounts } from "./AccountsProvider";
 
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; projection basis until history exists
 
 export default function Debts() {
+  const { chip } = useAccounts();
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const thisMonth = currentMonthKey();
@@ -111,7 +112,7 @@ export default function Debts() {
                   </div>
                 ))}
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${channelChipSafe(d.channel)}`}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(d.channel)}`}>
                   {d.channel}
                 </span>
                 <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-emerald-700">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AppShell from "./components/AppShell";
+import AccountsProvider from "./components/AccountsProvider";
 import PinPad from "./components/PinPad";
 import { watchAuth } from "./lib/pinAuth";
 
@@ -8,5 +9,9 @@ export default function App() {
   useEffect(() => watchAuth(setSignedIn), []);
   if (signedIn === null) return null;
   if (!signedIn) return <PinPad />;
-  return <AppShell />;
+  return (
+    <AccountsProvider>
+      <AppShell />
+    </AccountsProvider>
+  );
 }

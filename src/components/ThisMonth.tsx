@@ -117,12 +117,13 @@ export default function ThisMonth() {
             )}
             <ul className="divide-y divide-stone-100">
               {cutLines.map((l) => (
-                <li key={l.id} className="flex items-center">
-                  <div className="flex-1"><LineRow monthKey={viewedKey} line={l} readOnly={!editable} /></div>
-                  {editable && l.oneOff && (
-                    <button onClick={() => void deleteMonthLine(viewedKey, l.id)} className="text-stone-300 text-xs px-2">✕</button>
-                  )}
-                </li>
+                <LineRow
+                  key={l.id}
+                  monthKey={viewedKey}
+                  line={l}
+                  readOnly={!editable}
+                  onDelete={editable && l.oneOff ? () => void deleteMonthLine(viewedKey, l.id) : undefined}
+                />
               ))}
             </ul>
 
