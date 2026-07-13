@@ -39,15 +39,27 @@ This milestone makes the month a navigable, living thing:
 `addMonths(viewedKey, ±1)`. Mode is derived by comparing `viewedKey` to the current
 key:
 
-- **Past** (`viewedKey < current`, month doc exists) → its saved lines/incomes,
-  rendered **read-only** (no status toggles, no add, no debt-plan pay).
-- **Current** (`viewedKey === current`) → today's behaviour: editable, auto-generated
-  if missing, tap-to-pay, one-off adds, RECEIVED ticks.
-- **Future or never-generated** (`viewedKey > current`, or any month with no doc) →
-  a **projection** labelled "Projected", computed live and **never written**.
+- **Past** (`viewedKey < current`) → read-only history: its saved lines/incomes if
+  the month exists, else a read-only projection (a month that was skipped). No
+  status toggles, adds, or pay.
+- **Current** (`viewedKey === current`) → editable: auto-generated if missing,
+  tap-to-pay, one-off adds, RECEIVED ticks.
+- **Future, not yet started** (`viewedKey > current`, no month doc) → a
+  **projection** labelled "Projected", computed live and never written, with a
+  **"Start {Month}"** button.
+- **Future, started** (`viewedKey > current`, month doc exists) → **editable**, just
+  like the current month. Reached by pressing "Start {Month}" on a projection (or by
+  arriving there naturally later).
 
-Only the **current** month auto-generates (unchanged `MonthProvider` rule). Future
-months are never auto-created by merely viewing them.
+So **editable** = the current month, or any future month that has been started;
+**projected** = a future month with no doc yet; **past** = read-only. Only the
+current month **auto**-generates; future months are created only by an explicit
+**Start**, never by merely viewing them.
+
+**Start this month** — the "Start {Month}" button calls `startMonth(key)`, which
+writes the month for real (`generateMonthLines(template, events, key)` +
+`writeMonth`), turning the projection into an editable month you can prep ahead of
+time. Idempotent: arriving at that month later never regenerates it.
 
 ## Projection (read-only, computed live)
 
@@ -97,8 +109,9 @@ Expense / Income toggle:
   raises that cutoff's income/surplus without recurring. Gets the same RECEIVED tick
   (its id feeds `receivedIncomes`).
 
-Both are deletable (`deleteMonthLine`, `deleteMonthIncome`) from the current month.
-Adding/deleting is disabled on past/future months.
+Both are deletable (`deleteMonthLine`, `deleteMonthIncome`) from any **editable**
+month (current or started-future). Adding/deleting is disabled on past and
+projected (unstarted-future) months.
 
 ## Template → current-month reconcile
 
@@ -131,16 +144,16 @@ lines need reconciling.)
   isCurrent, lines, incomes, ready }`, subscribing to the *viewed* month's
   lines/incomes/meta (subscriptions re-run when `viewedKey` changes). Current-month
   auto-generation logic unchanged, gated to `viewedKey === currentKey`.
-- **`ThisMonth`** — month header + arrows; read-only vs editable by mode; projected
-  rendering path; "+ Add one-off" and "Sync from template" on the current month; a
-  "Projected — assumes you follow the plan" banner on future months.
+- **`ThisMonth`** — month header + arrows; read-only / editable / projected by mode;
+  "+ Add one-off" and "Sync from template" on editable months; a "Projected — assumes
+  you follow the plan" banner + **"Start {Month}"** button on projected months.
 - **`AddOneOff`** dialog — Expense/Income toggle + fields (name, amount, channel,
   cutoff; day for income).
 - **`project.ts`** — `applyAllocation`, `simulateBalances` (pure, tested).
 - **`repo.ts`** — `addMonthLine`, `deleteMonthLine`, `addMonthIncome`,
-  `deleteMonthIncome`, `syncMonthFromTemplate`.
+  `deleteMonthIncome`, `syncMonthFromTemplate`, `startMonth`.
 - **`TemplateEditor`** — calls `syncMonthFromTemplate(currentMonthKey())` after
-  save/delete.
+  save; on **delete**, warns (naming a PAID counterpart) before delete + reconcile.
 
 ## Error handling
 
@@ -149,11 +162,12 @@ lines need reconciling.)
   regenerates or clears a month. It is idempotent (a no-op when already in sync).
 - Projection never writes to Firestore.
 - One-off add rejects blank name / non-positive amount.
-- Deleting a template line removes its current-month counterpart during reconcile
-  regardless of status (the line no longer exists in the plan). Any debt payment
-  already logged from that line stays recorded — payments live in the debt's own
-  history, independent of the line — so nothing financial is lost, only the planned
-  row disappears.
+- **Deleting a template line warns first.** The `TemplateEditor` delete confirm
+  checks the current month for a counterpart line; if one exists the dialog says it
+  will also be removed from the current month, and **names it as PAID** when it is,
+  so a recorded tick is never discarded silently. Only on confirm does the delete +
+  reconcile run. (Any debt payment already logged from that line stays in the debt's
+  own history regardless — payments are independent of the line.)
 
 ## Testing & verification
 
@@ -173,10 +187,13 @@ lines need reconciling.)
 1. `project.ts` (`applyAllocation`, `simulateBalances`) + `reconcileLines` pure fns
    with tests.
 2. Data model + repo: `monthIncomes` path; `addMonthLine`/`deleteMonthLine`/
-   `addMonthIncome`/`deleteMonthIncome`; `syncMonthFromTemplate`.
-3. `MonthProvider` rework: viewed month + modes + month-scoped incomes subscription.
-4. `ThisMonth`: nav header + read-only/editable modes + merged incomes.
-5. Projection rendering (future months) with the forward-simulated plan + caveat banner.
-6. `AddOneOff` dialog (expense + income) wired to the current month.
-7. Template reconcile trigger in `TemplateEditor` + manual "Sync from template" button.
+   `addMonthIncome`/`deleteMonthIncome`; `syncMonthFromTemplate`; `startMonth`.
+3. `MonthProvider` rework: viewed month + modes (incl. started-future) + month-scoped
+   incomes subscription.
+4. `ThisMonth`: nav header + read-only/editable/projected modes + merged incomes.
+5. Projection rendering (future months) with the forward-simulated plan + caveat
+   banner + **"Start {Month}"** button.
+6. `AddOneOff` dialog (expense + income) wired to editable months.
+7. Template reconcile: auto-trigger after template save; **delete-warns** flow +
+   manual "Sync from template" button.
 8. Live verification + deploy.
