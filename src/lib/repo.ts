@@ -18,6 +18,13 @@ export async function setLineStatus(
   await updateDoc(ref, { status, paidDate: status === "" ? "" : new Date().toISOString() });
 }
 
+/** Tick/untick an income line as RECEIVED for a month (stored on the month meta doc). */
+export async function setIncomeReceived(
+  monthKey: string, incomeId: string, received: boolean,
+): Promise<void> {
+  await updateDoc(doc(db, monthDoc(monthKey)), { [`receivedIncomes.${incomeId}`]: received });
+}
+
 /** Create a month: its meta doc + all line docs, in one batch. */
 export async function writeMonth(
   monthKey: string, lines: MonthLine[], incomes: Income[],
