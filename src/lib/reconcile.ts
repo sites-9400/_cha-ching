@@ -20,6 +20,7 @@ export function reconcileLines(
         id: t.id, name: t.name, amount: t.amount, channel: t.channel, cutoff: t.cutoff,
         order: t.order, oneOff: false,
         status: existing?.status ?? "",
+        ...(t.debtId ? { debtId: t.debtId } : {}),
         ...(existing?.paidDate ? { paidDate: existing.paidDate } : {}),
       };
     });

@@ -19,6 +19,10 @@ describe("reconcileLines", () => {
     const { upserts } = reconcileLines([T({ id: "new", name: "Gym", amount: 500 })], []);
     expect(upserts[0]).toMatchObject({ id: "new", name: "Gym", amount: 500, status: "", oneOff: false });
   });
+  it("carries the template line's debtId through to the month line", () => {
+    const { upserts } = reconcileLines([T({ id: "rent", name: "Rent", debtId: "d9" })], []);
+    expect(upserts[0].debtId).toBe("d9");
+  });
   it("deletes a template-derived line whose template is gone", () => {
     const { deletes } = reconcileLines([], [M({ id: "gone" })]);
     expect(deletes).toEqual(["gone"]);

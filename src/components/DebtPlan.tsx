@@ -20,10 +20,25 @@ export default function DebtPlan({
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const { chip } = useAccounts();
-  const alloc = allocateCutoff(freeCash, debts, cutoff);
 
-  const isPaid = (debtId: string) =>
-    payments.some((p) => p.debtId === debtId && p.monthKey === monthKey && p.cutoff === cutoff);
+  // Debt payments already made in THIS month + cutoff, per debt.
+  const paidByDebt = new Map<string, number>();
+  for (const p of payments) {
+    if (p.monthKey === monthKey && p.cutoff === cutoff) {
+      paidByDebt.set(p.debtId, (paidByDebt.get(p.debtId) ?? 0) + p.amount);
+    }
+  }
+  // Allocate on start-of-cutoff balances (restore what this cutoff's payments already
+  // cleared) so a completed payment ticks off instead of spilling its money onto the
+  // next debt. Live balances remain the source of truth for the actual debt.
+  const planDebts = debts.map((d) =>
+    paidByDebt.has(d.id) ? { ...d, currentBalance: d.currentBalance + (paidByDebt.get(d.id) ?? 0) } : d,
+  );
+  const alloc = allocateCutoff(freeCash, planDebts, cutoff);
+  const paidTotal = [...paidByDebt.values()].reduce((s, n) => s + n, 0);
+  const remaining = Math.max(0, freeCash - paidTotal);
+
+  const isPaid = (debtId: string) => (paidByDebt.get(debtId) ?? 0) > 0;
 
   if (alloc.lines.length === 0 && alloc.shortfall === 0) return null;
 
@@ -32,6 +47,7 @@ export default function DebtPlan({
       <p className="text-xs font-semibold text-stone-500 mb-2">
         DEBT PLAN · free cash {peso(freeCash)}
         {unplanned > 0 && <span className="font-normal text-stone-400"> (after {peso(unplanned)} unplanned)</span>}
+        {paidTotal > 0 && <span className="font-normal text-emerald-600"> · {peso(remaining)} left</span>}
       </p>
       <ul className="flex flex-col gap-1.5">
         {alloc.lines.map((l) => {
