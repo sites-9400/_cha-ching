@@ -46,6 +46,7 @@ export interface EventItem {
   name: string;
   amount: number;
   month: string; // "YYYY-MM"
+  cutoff?: 1 | 2; // which cutoff the one-off lands in; defaults to 2
   channel?: Channel;
   note?: string;
 }

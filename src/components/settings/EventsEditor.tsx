@@ -25,7 +25,7 @@ export default function EventsEditor() {
         {sorted.map((e) => (
           <li key={e.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
             <button onClick={() => setEditing(e)} className="flex-1 flex items-center justify-between min-w-0">
-              <span className="truncate text-sm">{e.month} · {e.name}</span>
+              <span className="truncate text-sm">{e.month} · C{e.cutoff ?? 2} · {e.name}</span>
               <span className="text-sm tabular-nums">{peso(e.amount)}</span>
             </button>
             <button onClick={() => setConfirmId(e.id)} className="text-red-500 text-xs px-1">✕</button>
@@ -63,6 +63,12 @@ function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: (
       </label>
       <label className="flex items-center justify-between text-sm">Month (YYYY-MM)
         <input placeholder="2026-08" value={f.month} onChange={(e) => set("month", e.target.value)} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+      </label>
+      <label className="flex items-center justify-between text-sm">Cutoff
+        <select value={f.cutoff ?? 2} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm border-b border-stone-300 outline-none">
+          <option value={1}>1st cutoff</option>
+          <option value={2}>2nd cutoff</option>
+        </select>
       </label>
       <label className="flex items-center justify-between text-sm">Channel (optional)
         <select value={f.channel ?? ""} onChange={(e) => set("channel", (e.target.value || undefined) as Channel | undefined)} className="text-sm border-b border-stone-300 outline-none">

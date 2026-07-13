@@ -60,7 +60,7 @@ export function projectDebtFreeMonth(
   return addMonths(fromMonth, Math.ceil(blitz / monthlyPaydown) - 1);
 }
 
-/** Rollover: template copy (status blank) + this month's events as one-off lines (cutoff 2). */
+/** Rollover: template copy (status blank) + this month's events as one-off lines (per event's cutoff, default 2). */
 export function generateMonthLines(
   template: TemplateLine[],
   events: EventItem[],
@@ -74,7 +74,7 @@ export function generateMonthLines(
       name: e.name,
       amount: e.amount,
       channel: e.channel ?? "CASH",
-      cutoff: 2,
+      cutoff: e.cutoff ?? 2,
       order: 1000 + i,
       status: "",
       oneOff: true,

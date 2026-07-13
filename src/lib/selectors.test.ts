@@ -103,6 +103,15 @@ describe("generateMonthLines", () => {
     const lines = generateMonthLines(template, events, "2026-09");
     expect(lines.map((l) => l.name)).toEqual(["Rent", "Mama bday"]);
   });
+  it("honors an event's chosen cutoff, defaulting to 2 when unset", () => {
+    const evs: EventItem[] = [
+      { id: "c1", name: "Payday bonus spend", amount: 3000, month: "2026-08", cutoff: 1 },
+      { id: "c2", name: "Rent-week trip", amount: 4000, month: "2026-08" }, // no cutoff → 2
+    ];
+    const lines = generateMonthLines([], evs, "2026-08");
+    expect(lines.find((l) => l.name === "Payday bonus spend")).toMatchObject({ cutoff: 1 });
+    expect(lines.find((l) => l.name === "Rent-week trip")).toMatchObject({ cutoff: 2 });
+  });
 });
 
 describe("fundStateFor", () => {
