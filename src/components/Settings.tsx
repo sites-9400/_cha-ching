@@ -7,6 +7,7 @@ import CategoriesEditor from "./settings/CategoriesEditor";
 import FundsEditor from "./settings/FundsEditor";
 import EventsEditor from "./settings/EventsEditor";
 import ChangePin from "./settings/ChangePin";
+import ExportData from "./settings/ExportData";
 
 type Section =
   | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "pin" | "export";
@@ -65,5 +66,6 @@ function Editor({ section }: { section: Section }) {
   if (section === "funds") return <FundsEditor />;
   if (section === "events") return <EventsEditor />;
   if (section === "pin") return <ChangePin />;
+  if (section === "export") return <ExportData />;
   return <div className="text-stone-500 text-sm">{section} editor — coming in a later step.</div>;
 }
