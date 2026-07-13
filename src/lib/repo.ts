@@ -3,11 +3,11 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
-  categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol, monthDoc,
-  monthLines, templateIncomes, templateLines,
+  categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol, metaDoc,
+  monthDoc, monthLines, templateIncomes, templateLines,
 } from "./paths";
 import type {
-  Category, Debt, EventItem, Income, LineStatus, MonthLine, SinkingFund, TemplateLine,
+  Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, TemplateLine,
 } from "./types";
 
 /** Toggle/set one month line's status. */
@@ -146,4 +146,9 @@ export async function updateEvent(id: string, patch: Partial<EventItem>): Promis
 }
 export async function deleteEvent(id: string): Promise<void> {
   await deleteDoc(doc(db, eventsCol(), id));
+}
+
+/** Patch the household meta (savingsBalance, floor, currency) on the root doc. */
+export async function updateMeta(patch: Partial<Meta>): Promise<void> {
+  await updateDoc(doc(db, metaDoc()), patch);
 }

@@ -5,15 +5,7 @@ import ThisMonth from "./ThisMonth";
 import QuickAdd from "./QuickAdd";
 import Debts from "./Debts";
 import Settings from "./Settings";
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="p-6 text-center text-stone-500">
-      <h1 className="text-lg font-bold text-stone-800 mb-2">{title}</h1>
-      <p className="text-sm">Coming in a later step.</p>
-    </div>
-  );
-}
+import Dashboard from "./Dashboard";
 
 export default function AppShell() {
   const [tab, setTab] = useState<TabId>("month");
@@ -23,7 +15,7 @@ export default function AppShell() {
         {tab === "month" && <ThisMonth />}
         {tab === "debts" && <Debts />}
         {tab === "add" && <QuickAdd />}
-        {tab === "dashboard" && <Placeholder title="Stats" />}
+        {tab === "dashboard" && <Dashboard />}
         {tab === "settings" && <Settings />}
         <TabBar active={tab} onChange={setTab} />
       </div>
