@@ -181,6 +181,13 @@ export async function addMonthLine(monthKey: string, line: Omit<MonthLine, "id">
 export async function deleteMonthLine(monthKey: string, id: string): Promise<void> {
   await deleteDoc(doc(db, monthLines(monthKey), id));
 }
+/** Inline-edit a month line (name/amount/channel) for this month only; marks it
+ *  overridden so a later template sync won't clobber the change. */
+export async function updateMonthLine(
+  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel">>,
+): Promise<void> {
+  await updateDoc(doc(db, monthLines(monthKey), id), { ...patch, overridden: true });
+}
 /** Add a one-off income to a month's incomes subcollection. */
 export async function addMonthIncome(monthKey: string, income: Omit<Income, "id">): Promise<void> {
   await setDoc(doc(collection(db, monthIncomes(monthKey))), income);

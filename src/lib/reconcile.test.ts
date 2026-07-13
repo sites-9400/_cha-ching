@@ -29,4 +29,16 @@ describe("reconcileLines", () => {
     expect(upserts).toEqual([]);
     expect(deletes).toEqual([]);
   });
+  it("leaves an inline-overridden line completely untouched (no upsert, no delete)", () => {
+    const template = [T({ id: "tithes", name: "Tithes", amount: 5000 })];
+    const month = [M({ id: "tithes", name: "Tithes (church B)", amount: 3000, status: "PAID", overridden: true })];
+    const { upserts, deletes } = reconcileLines(template, month);
+    expect(deletes).toEqual([]);
+    expect(upserts.find((u) => u.id === "tithes")).toBeUndefined();
+  });
+  it("keeps an overridden line even if its template was deleted", () => {
+    const month = [M({ id: "tithes", overridden: true })];
+    const { deletes } = reconcileLines([], month);
+    expect(deletes).toEqual([]);
+  });
 });

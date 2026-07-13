@@ -1,22 +1,43 @@
+import { useRef } from "react";
 import { peso } from "../lib/format";
 import { setLineStatus } from "../lib/repo";
 import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
 export default function LineRow(
-  { monthKey, line, readOnly = false, onDelete }:
-  { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void },
+  { monthKey, line, readOnly = false, onDelete, onEdit }:
+  { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void; onEdit?: () => void },
 ) {
   const { chip } = useAccounts();
   const ticked = line.status !== "";
   const nextStatus = ticked ? "" : "PAID";
 
+  // Long-press (~450ms) opens the editor; a normal tap toggles PAID.
+  const timer = useRef<number | null>(null);
+  const longPressed = useRef(false);
+  const startPress = () => {
+    if (!onEdit) return;
+    longPressed.current = false;
+    timer.current = window.setTimeout(() => { longPressed.current = true; onEdit(); }, 450);
+  };
+  const clearPress = () => { if (timer.current) { clearTimeout(timer.current); timer.current = null; } };
+  const handleClick = () => {
+    clearPress();
+    if (longPressed.current) { longPressed.current = false; return; } // swallow the click after a long-press
+    if (!readOnly) void setLineStatus(monthKey, line.id, nextStatus);
+  };
+
   return (
     <li className="py-2 flex items-center justify-between gap-2">
       <button
-        onClick={readOnly ? undefined : () => void setLineStatus(monthKey, line.id, nextStatus)}
-        disabled={readOnly}
-        className={`flex-1 flex items-center gap-2 text-left min-w-0 ${ticked ? "opacity-50" : ""}`}
+        onClick={handleClick}
+        onPointerDown={startPress}
+        onPointerUp={clearPress}
+        onPointerLeave={clearPress}
+        onPointerCancel={clearPress}
+        disabled={readOnly && !onEdit}
+        style={{ WebkitTouchCallout: "none" }}
+        className={`flex-1 flex items-center gap-2 text-left min-w-0 select-none ${ticked ? "opacity-50" : ""}`}
         aria-pressed={ticked}
       >
         <span

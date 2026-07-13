@@ -8,11 +8,12 @@ import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../lib/paths";
 import { deleteMonthIncome, deleteMonthLine, setIncomeReceived, syncMonthFromTemplate } from "../lib/repo";
-import type { Debt, EventItem, TemplateLine } from "../lib/types";
+import type { Debt, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import LineRow from "./LineRow";
 import DebtPlan, { type PaymentRec } from "./DebtPlan";
 import AddOneOff from "./AddOneOff";
+import EditLineDialog from "./EditLineDialog";
 
 export default function ThisMonth() {
   const { viewedKey, currentKey, mode, editable, lines, incomes, ready, goPrev, goNext, start } = useMonth();
@@ -25,6 +26,7 @@ export default function ThisMonth() {
   const template = useCollection<TemplateLine>(templateLines());
   const events = useCollection<EventItem>(eventsCol());
   const [adding, setAdding] = useState(false);
+  const [editingLine, setEditingLine] = useState<MonthLine | null>(null);
 
   const projected = mode === "projected";
 
@@ -67,11 +69,14 @@ export default function ThisMonth() {
       )}
 
       {editable && (
-        <div className="flex gap-3 mb-3 text-sm">
-          <button onClick={() => setAdding(true)} className="font-semibold text-emerald-700">+ Add one-off</button>
-          {mode === "current" && (
-            <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-semibold text-stone-500">Sync from template</button>
-          )}
+        <div className="mb-3">
+          <div className="flex gap-3 text-sm">
+            <button onClick={() => setAdding(true)} className="font-semibold text-emerald-700">+ Add one-off</button>
+            {mode === "current" && (
+              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-semibold text-stone-500">Sync from template</button>
+            )}
+          </div>
+          <p className="text-[11px] text-stone-400 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
         </div>
       )}
 
@@ -123,6 +128,7 @@ export default function ThisMonth() {
                   line={l}
                   readOnly={!editable}
                   onDelete={editable && l.oneOff ? () => void deleteMonthLine(viewedKey, l.id) : undefined}
+                  onEdit={editable ? () => setEditingLine(l) : undefined}
                 />
               ))}
             </ul>
@@ -154,6 +160,7 @@ export default function ThisMonth() {
       })}
 
       {adding && <AddOneOff monthKey={viewedKey} onClose={() => setAdding(false)} />}
+      {editingLine && <EditLineDialog monthKey={viewedKey} line={editingLine} onClose={() => setEditingLine(null)} />}
     </main>
   );
 }

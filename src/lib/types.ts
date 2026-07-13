@@ -32,6 +32,7 @@ export interface MonthLine extends TemplateLine {
   status: LineStatus;
   paidDate?: string; // ISO date
   oneOff: boolean;
+  overridden?: boolean; // inline-edited for this month; template sync must not clobber it
 }
 
 export interface Income {

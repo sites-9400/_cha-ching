@@ -12,18 +12,20 @@ export function reconcileLines(
   const byId = new Map(monthLines.map((l) => [l.id, l]));
   const templateIds = new Set(template.map((t) => t.id));
 
-  const upserts: MonthLine[] = template.map((t) => {
-    const existing = byId.get(t.id);
-    return {
-      id: t.id, name: t.name, amount: t.amount, channel: t.channel, cutoff: t.cutoff,
-      order: t.order, oneOff: false,
-      status: existing?.status ?? "",
-      ...(existing?.paidDate ? { paidDate: existing.paidDate } : {}),
-    };
-  });
+  const upserts: MonthLine[] = template
+    .filter((t) => !byId.get(t.id)?.overridden) // leave inline-edited lines untouched
+    .map((t) => {
+      const existing = byId.get(t.id);
+      return {
+        id: t.id, name: t.name, amount: t.amount, channel: t.channel, cutoff: t.cutoff,
+        order: t.order, oneOff: false,
+        status: existing?.status ?? "",
+        ...(existing?.paidDate ? { paidDate: existing.paidDate } : {}),
+      };
+    });
 
   const deletes = monthLines
-    .filter((l) => !l.oneOff && !templateIds.has(l.id))
+    .filter((l) => !l.oneOff && !l.overridden && !templateIds.has(l.id))
     .map((l) => l.id);
 
   return { upserts, deletes };
