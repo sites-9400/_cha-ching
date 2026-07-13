@@ -12,6 +12,7 @@ import type { Debt, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import LineRow from "./LineRow";
 import DebtPlan, { type PaymentRec } from "./DebtPlan";
+import SendPlan from "./SendPlan";
 import AddOneOff from "./AddOneOff";
 import EditLineDialog from "./EditLineDialog";
 
@@ -134,7 +135,10 @@ export default function ThisMonth() {
             </ul>
 
             {mode !== "past" && !projected && (
-              <DebtPlan freeCash={freeCash} debts={debts} payments={payments} monthKey={viewedKey} cutoff={cutoff} unplanned={unplanned} />
+              <>
+                <DebtPlan freeCash={freeCash} debts={debts} payments={payments} monthKey={viewedKey} cutoff={cutoff} unplanned={unplanned} />
+                <SendPlan freeCash={freeCash} debts={debts} payments={payments} lines={cutLines} monthKey={viewedKey} cutoff={cutoff} />
+              </>
             )}
             {projected && projAlloc && (
               <div className="mt-3 border-t border-stone-100 pt-3">

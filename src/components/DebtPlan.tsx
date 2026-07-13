@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAccounts } from "./AccountsProvider";
 import { peso } from "../lib/format";
 import { logDebtPayment } from "../lib/repo";
-import { allocateCutoff } from "../lib/allocate";
+import { cutoffAllocation, paidByDebt } from "../lib/funding";
 import type { Debt } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
 
@@ -21,24 +21,14 @@ export default function DebtPlan({
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const { chip } = useAccounts();
 
-  // Debt payments already made in THIS month + cutoff, per debt.
-  const paidByDebt = new Map<string, number>();
-  for (const p of payments) {
-    if (p.monthKey === monthKey && p.cutoff === cutoff) {
-      paidByDebt.set(p.debtId, (paidByDebt.get(p.debtId) ?? 0) + p.amount);
-    }
-  }
-  // Allocate on start-of-cutoff balances (restore what this cutoff's payments already
-  // cleared) so a completed payment ticks off instead of spilling its money onto the
-  // next debt. Live balances remain the source of truth for the actual debt.
-  const planDebts = debts.map((d) =>
-    paidByDebt.has(d.id) ? { ...d, currentBalance: d.currentBalance + (paidByDebt.get(d.id) ?? 0) } : d,
-  );
-  const alloc = allocateCutoff(freeCash, planDebts, cutoff);
-  const paidTotal = [...paidByDebt.values()].reduce((s, n) => s + n, 0);
+  // Allocate on start-of-cutoff balances so a completed payment ticks off instead of
+  // spilling its money onto the next debt (shared with the send calculator).
+  const paid = paidByDebt(payments, monthKey, cutoff);
+  const alloc = cutoffAllocation(freeCash, debts, paid, cutoff);
+  const paidTotal = [...paid.values()].reduce((s, n) => s + n, 0);
   const remaining = Math.max(0, freeCash - paidTotal);
 
-  const isPaid = (debtId: string) => (paidByDebt.get(debtId) ?? 0) > 0;
+  const isPaid = (debtId: string) => (paid.get(debtId) ?? 0) > 0;
 
   if (alloc.lines.length === 0 && alloc.shortfall === 0) return null;
 
