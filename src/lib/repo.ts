@@ -3,9 +3,10 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
-  debtPayments, debtsCol, expensesCol, monthDoc, monthLines, templateIncomes, templateLines,
+  categoriesCol, debtPayments, debtsCol, expensesCol, monthDoc, monthLines,
+  templateIncomes, templateLines,
 } from "./paths";
-import type { Debt, Income, LineStatus, MonthLine, TemplateLine } from "./types";
+import type { Category, Debt, Income, LineStatus, MonthLine, TemplateLine } from "./types";
 
 /** Toggle/set one month line's status. */
 export async function setLineStatus(
@@ -106,4 +107,14 @@ export async function updateTemplateIncome(id: string, patch: Partial<Income>): 
 }
 export async function deleteTemplateIncome(id: string): Promise<void> {
   await deleteDoc(doc(db, templateIncomes(), id));
+}
+
+export async function addCategory(c: Omit<Category, "id">): Promise<void> {
+  await setDoc(doc(collection(db, categoriesCol())), c);
+}
+export async function updateCategory(id: string, patch: Partial<Category>): Promise<void> {
+  await updateDoc(doc(db, categoriesCol(), id), patch);
+}
+export async function deleteCategory(id: string): Promise<void> {
+  await deleteDoc(doc(db, categoriesCol(), id));
 }
