@@ -2,7 +2,10 @@
 
 **Date:** 2026-07-13
 **Owner:** Eve (gamaliel)
-**Status:** Approved pending user review
+**Status:** Approved 2026-07-13 (reviewed against M2 code). Two review decisions
+folded in: (1) payment **undo** is in M3a scope (not pre-existing); (2) the Debts
+tab's "Log payment" is unified through `ConfirmPayDialog`, so every debt payment —
+plan or Debts tab — records a `cutoff` and shares the overpay/zero guards.
 **Parent spec:** docs/superpowers/specs/2026-07-13-cha-ching-design.md
 **Milestone:** M3a (first M3 sub-milestone)
 
@@ -53,8 +56,8 @@ excluded from the avalanche entirely.
 3. **Merge.** Combine both passes into **exactly one `AllocLine` per debt per
    cutoff** — `amount` = its minimum-pass + waterfall-pass total, `kind` =
    `"target"` if it's the payoff-order target, `"spill"` if it received waterfall
-   money without being the target, else `"minimum"`. When a line's total exceeds
-   its own minimum, it carries a `min` note (e.g. "incl. ₱1,090 min"). One debt →
+   money without being the target, else `"minimum"`. When a line folds in a reserved
+   minimum, it sets `minIncluded` (rendered as "incl. ₱1,090 min"). One debt →
    one payable line → one payment action, so paid-state never double-counts.
 
 **Due-day → cutoff assignment** (minimums shown in the cutoff before the due date,
@@ -115,22 +118,33 @@ debts/{id}  { ...existing, minimum?: number }
   chip, kind label), a "✓ paid" state per line, and the shortfall flag. A line is
   **paid** when a debt payment for that debt has been logged this month+cutoff
   (see sync).
-- **`ConfirmPayDialog`** — small modal opened by tapping a plan line: shows debt
-  name + editable amount (pre-filled from the alloc line) + Confirm/Cancel. On
-  confirm calls `logDebtPayment(debtId, amount, monthKey)` and records the cutoff
-  (see sync), then closes.
+- **`ConfirmPayDialog`** — small modal opened by tapping a plan line **or** the
+  Debts tab's "Log payment" button (one shared component; the Debts tab no longer
+  uses its inline number input). Shows debt name + editable amount (pre-filled from
+  the alloc line, or the debt's `currentBalance` when opened from the Debts tab) +
+  Confirm/Cancel. On confirm calls `logDebtPayment(debtId, amount, monthKey, cutoff)`
+  then closes. When opened from the Debts tab (no plan line), `cutoff` defaults to
+  the debt's `cutoffForDueDay(dueDay)` (cutoff 2 if no `dueDay`), so the payment
+  still lands in a cutoff and both views stay in sync.
 - **Inline minimum editor** on the Debts tab — each debt card gains a
   "Min ₱X · edit" / "Set minimum" control; saving calls a new repo helper
   `setDebtMinimum(debtId, amount)`.
+- **Undo control** on the Debts tab — each debt card lists its payments this month
+  (from the `payments` subcollection) with an undo action per payment; undo calls a
+  new repo helper `undoDebtPayment(debtId, paymentId, amount)` that deletes the
+  payment doc and restores `currentBalance` atomically (`increment(+amount)`). The
+  plan re-derives, so the corresponding plan line reverts to unpaid automatically.
 
 ## Sync / paid-state (no double-count)
 
 Debt payments already store `{ amount, date, monthKey }`. Add `cutoff: 1 | 2` to
-the payment doc written by the plan/confirm flow. A `DebtPlan` line for
+**every** payment doc — `logDebtPayment` gains a required `cutoff` parameter, and
+both entry points (plan line and Debts-tab button) go through `ConfirmPayDialog`,
+so no payment is ever written without a cutoff. A `DebtPlan` line for
 `(debt, cutoff)` renders as **✓ paid** when a payment doc exists for that debt
 with the current `monthKey` and `cutoff`. Because the plan re-derives from live
-`currentBalance`, paying (from the plan OR directly on the Debts tab) updates both
-views identically — the plan reads reality, it doesn't store its own copy of it.
+`currentBalance`, paying (from the plan OR the Debts tab) updates both views
+identically — the plan reads reality, it doesn't store its own copy of it.
 
 ## Error handling
 
@@ -139,13 +153,15 @@ views identically — the plan reads reality, it doesn't store its own copy of i
   clear it?"). Confirming an overpay is allowed (user may know something the app
   doesn't) but never silently.
 - **Zero/invalid amount:** Confirm is disabled unless amount > 0 (no silent
-  close — fixes the M2 Debts minor).
+  close). Because the Debts tab now shares `ConfirmPayDialog`, this fixes the M2
+  Debts silent-close minor everywhere, not just on the plan.
 - **Minimum not set:** plan reserves nothing for that debt and the Debts tab shows
   a "min not set" tag; not an error, just surfaced.
 - **Shortfall:** plan renders the red "Short ₱X for minimums" flag; allocation
   never returns negative amounts.
-- **Reversibility:** a logged payment can be undone on the Debts tab (existing
-  behavior) — un-logging restores the balance and the plan line reverts to unpaid.
+- **Reversibility:** M3a **adds** payment undo on the Debts tab (see the Undo
+  control above) — undoing a payment restores the balance and the plan line reverts
+  to unpaid automatically, since the plan derives from live balance + payment docs.
 
 ## Testing & verification
 
@@ -159,14 +175,20 @@ views identically — the plan reads reality, it doesn't store its own copy of i
   - `cutoffForDueDay`: 16→1, 28→2, 4→2, 10→2, boundary 24→1 / 25→2 / 12→2 / 13→1.
 - **Manual/browser** (controller-driven on live site): set a minimum on a debt →
   plan updates; tap a plan line → confirm → balance drops, line shows ✓, surplus
-  goes to ₱0; reload persists.
+  goes to ₱0; reload persists; undo the payment on the Debts tab → balance restored
+  and plan line reverts to unpaid; log a payment from the Debts tab → it lands in a
+  cutoff and its plan line (if any) shows ✓.
 
 ## Build order (for the implementation plan)
 
 1. `Debt.minimum` field + `setDebtMinimum` repo helper + inline minimum editor on
    Debts tab.
 2. `cutoffForDueDay` + `allocateCutoff` pure functions with full unit tests.
-3. Payment doc `cutoff` field + paid-state derivation.
-4. `DebtPlan` block on This Month (render allocation + shortfall + paid state).
-5. `ConfirmPayDialog` + tap-to-pay wiring (overpay/zero guards).
-6. Live verification + deploy.
+3. `logDebtPayment` gains `cutoff` param; add `undoDebtPayment` helper; paid-state
+   derivation from `(debt, monthKey, cutoff)` payment docs.
+4. `ConfirmPayDialog` (shared) + rewire the Debts tab "Log payment" to use it
+   (retires the inline input, applies overpay/zero guards there too).
+5. `DebtPlan` block on This Month (render allocation + shortfall + paid state +
+   tap-to-pay through `ConfirmPayDialog`).
+6. Undo control on Debts tab (per-payment list + undo → `undoDebtPayment`).
+7. Live verification + deploy.
