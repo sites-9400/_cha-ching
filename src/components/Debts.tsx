@@ -6,14 +6,15 @@ import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
 import { logDebtPayment, setDebtMinimum } from "../lib/repo";
 import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
+import { cutoffForDueDay } from "../lib/allocate";
 import type { Debt } from "../lib/types";
+import ConfirmPayDialog from "./ConfirmPayDialog";
 
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; projection basis until history exists
 
 export default function Debts() {
   const debts = useCollection<Debt>(debtsCol());
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [amount, setAmount] = useState("");
+  const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const [minEditId, setMinEditId] = useState<string | null>(null);
   const [minValue, setMinValue] = useState("");
 
@@ -27,13 +28,6 @@ export default function Debts() {
   const active = [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const totals = debtTotals(debts);
   const freeMonth = projectDebtFreeMonth(debts, MONTHLY_PAYDOWN, currentMonthKey());
-
-  async function pay(id: string) {
-    const v = Number(amount);
-    if (v > 0) await logDebtPayment(id, v, currentMonthKey(), 2);
-    setPayingId(null);
-    setAmount("");
-  }
 
   return (
     <main className="p-4">
@@ -87,26 +81,26 @@ export default function Debts() {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${channelChipSafe(d.channel)}`}>
                   {d.channel}
                 </span>
-                {payingId === d.id ? (
-                  <span className="flex items-center gap-1">
-                    <input
-                      type="number" inputMode="decimal" placeholder="Amount" autoFocus
-                      value={amount} onChange={(e) => setAmount(e.target.value)}
-                      className="w-24 text-sm border-b border-stone-300 outline-none tabular-nums"
-                    />
-                    <button onClick={() => void pay(d.id)} className="text-xs font-semibold text-emerald-700 px-2">Log</button>
-                    <button onClick={() => { setPayingId(null); setAmount(""); }} className="text-xs text-stone-400">✕</button>
-                  </span>
-                ) : (
-                  <button onClick={() => setPayingId(d.id)} className="text-xs font-semibold text-emerald-700">
-                    Log payment
-                  </button>
-                )}
+                <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-emerald-700">
+                  Log payment
+                </button>
               </div>
             </li>
           );
         })}
       </ul>
+      {payDebt && (
+        <ConfirmPayDialog
+          debtName={payDebt.name}
+          currentBalance={payDebt.currentBalance}
+          defaultAmount={payDebt.currentBalance}
+          onConfirm={async (amt) => {
+            await logDebtPayment(payDebt.id, amt, currentMonthKey(), cutoffForDueDay(payDebt.dueDay));
+            setPayDebt(null);
+          }}
+          onCancel={() => setPayDebt(null)}
+        />
+      )}
     </main>
   );
 }
