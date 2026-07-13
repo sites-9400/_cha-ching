@@ -1,4 +1,5 @@
 import { addMonths } from "./format";
+import { cutoffForDueDay } from "./allocate";
 import type { Debt, EventItem, Income, MonthLine, SinkingFund, TemplateLine } from "./types";
 
 export interface CutoffSummary {
@@ -19,6 +20,21 @@ export function cutoffSummary(
   const planned = cutLines.reduce((s, l) => s + l.amount, 0);
   const ticked = cutLines.filter((l) => l.status !== "").reduce((s, l) => s + l.amount, 0);
   return { income, planned, ticked, surplus: income - planned };
+}
+
+/**
+ * Sum of a month's unplanned (Quick Add) expenses attributed to `cutoff` by the
+ * expense date's day (same due-day → cutoff rule the allocation uses). Reduces the
+ * debt plan's free cash so it never allocates cash that was already spent.
+ */
+export function unplannedForCutoff(
+  expenses: readonly { amount: number; date: string }[],
+  monthKey: string,
+  cutoff: 1 | 2,
+): number {
+  return expenses
+    .filter((e) => e.date.slice(0, 7) === monthKey && cutoffForDueDay(Number(e.date.slice(8, 10))) === cutoff)
+    .reduce((s, e) => s + e.amount, 0);
 }
 
 export interface DebtTotals {

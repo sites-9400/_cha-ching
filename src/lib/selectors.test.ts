@@ -6,6 +6,7 @@ import {
   fundStateFor,
   generateMonthLines,
   projectDebtFreeMonth,
+  unplannedForCutoff,
 } from "./selectors";
 import type { Debt, EventItem, Income, MonthLine, SinkingFund, TemplateLine } from "./types";
 
@@ -123,5 +124,23 @@ describe("fundStateFor", () => {
 describe("addMonths", () => {
   it("crosses year boundaries", () => {
     expect(addMonths("2026-11", 3)).toBe("2027-02");
+  });
+});
+
+describe("unplannedForCutoff", () => {
+  const exps = [
+    { amount: 500, date: "2026-07-16T10:00:00.000Z" }, // day 16 → cutoff 1
+    { amount: 300, date: "2026-07-04T10:00:00.000Z" }, // day 4  → cutoff 2
+    { amount: 200, date: "2026-07-28T10:00:00.000Z" }, // day 28 → cutoff 2
+    { amount: 999, date: "2026-06-16T10:00:00.000Z" }, // other month, excluded
+  ];
+  it("sums this month's expenses attributed to cutoff 1 by date", () => {
+    expect(unplannedForCutoff(exps, "2026-07", 1)).toBe(500);
+  });
+  it("sums cutoff 2 (days 25–31 or 1–12)", () => {
+    expect(unplannedForCutoff(exps, "2026-07", 2)).toBe(500); // 300 + 200
+  });
+  it("ignores other months", () => {
+    expect(unplannedForCutoff(exps, "2026-08", 1)).toBe(0);
   });
 });

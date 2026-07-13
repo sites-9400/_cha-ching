@@ -13,9 +13,10 @@ export interface PaymentRec {
 const KIND_LABEL: Record<string, string> = { target: "target", spill: "spill", minimum: "min" };
 
 export default function DebtPlan({
-  freeCash, debts, payments, monthKey, cutoff,
+  freeCash, debts, payments, monthKey, cutoff, unplanned = 0,
 }: {
   freeCash: number; debts: Debt[]; payments: PaymentRec[]; monthKey: string; cutoff: 1 | 2;
+  unplanned?: number;
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const alloc = allocateCutoff(freeCash, debts, cutoff);
@@ -27,7 +28,10 @@ export default function DebtPlan({
 
   return (
     <div className="mt-3 border-t border-stone-100 pt-3">
-      <p className="text-xs font-semibold text-stone-500 mb-2">DEBT PLAN · free cash {peso(freeCash)}</p>
+      <p className="text-xs font-semibold text-stone-500 mb-2">
+        DEBT PLAN · free cash {peso(freeCash)}
+        {unplanned > 0 && <span className="font-normal text-stone-400"> (after {peso(unplanned)} unplanned)</span>}
+      </p>
       <ul className="flex flex-col gap-1.5">
         {alloc.lines.map((l) => {
           const paid = isPaid(l.debtId);
