@@ -13,10 +13,10 @@ export interface PaymentRec {
 const KIND_LABEL: Record<string, string> = { target: "target", spill: "spill", minimum: "min" };
 
 export default function DebtPlan({
-  freeCash, debts, payments, monthKey, cutoff, unplanned = 0,
+  freeCash, debts, payments, monthKey, cutoff, unplanned = 0, readOnly = false,
 }: {
   freeCash: number; debts: Debt[]; payments: PaymentRec[]; monthKey: string; cutoff: 1 | 2;
-  unplanned?: number;
+  unplanned?: number; readOnly?: boolean;
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const alloc = allocateCutoff(freeCash, debts, cutoff);
@@ -38,8 +38,8 @@ export default function DebtPlan({
           return (
             <li key={l.debtId} className="flex items-center justify-between gap-2 text-sm">
               <button
-                disabled={paid}
-                onClick={() => setPayDebt(debts.find((d) => d.id === l.debtId) ?? null)}
+                disabled={paid || readOnly}
+                onClick={readOnly ? undefined : () => setPayDebt(debts.find((d) => d.id === l.debtId) ?? null)}
                 className="flex items-center gap-2 min-w-0"
               >
                 <span className={paid ? "text-emerald-600" : "text-stone-300"}>✓</span>

@@ -3,14 +3,15 @@ import { peso } from "../lib/format";
 import { setLineStatus } from "../lib/repo";
 import type { MonthLine } from "../lib/types";
 
-export default function LineRow({ monthKey, line }: { monthKey: string; line: MonthLine }) {
+export default function LineRow({ monthKey, line, readOnly = false }: { monthKey: string; line: MonthLine; readOnly?: boolean }) {
   const ticked = line.status !== "";
   const nextStatus = ticked ? "" : "PAID";
 
   return (
     <li className="py-2 flex items-center justify-between gap-2">
       <button
-        onClick={() => void setLineStatus(monthKey, line.id, nextStatus)}
+        onClick={readOnly ? undefined : () => void setLineStatus(monthKey, line.id, nextStatus)}
+        disabled={readOnly}
         className={`flex-1 flex items-center gap-2 text-left ${ticked ? "opacity-50" : ""}`}
         aria-pressed={ticked}
       >
