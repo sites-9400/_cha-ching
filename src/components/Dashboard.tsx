@@ -5,11 +5,13 @@ import { currentMonthKey, monthIndex } from "../lib/clock";
 import { debtsCol, expensesCol, fundsCol, metaDoc } from "../lib/paths";
 import { updateMeta } from "../lib/repo";
 import { debtTotals } from "../lib/selectors";
+import { debtCurve } from "../lib/stats";
 import type { Debt, Meta, SinkingFund } from "../lib/types";
 import type { PaymentRec } from "./DebtPlan";
 import SavingsMeter from "./dashboard/SavingsMeter";
 import FundTiles from "./dashboard/FundTiles";
 import CategoryBars, { type DashExpense } from "./dashboard/CategoryBars";
+import DebtCurveChart from "./dashboard/DebtCurveChart";
 
 export default function Dashboard() {
   const debts = useCollection<Debt>(debtsCol());
@@ -20,7 +22,10 @@ export default function Dashboard() {
 
   const monthKey = currentMonthKey();
   const { blitz } = debtTotals(debts);
-  void payments; // consumed by the debt-curve chart (added next build step)
+
+  // Debt curve: payments against tracked (non-BNPL) debts only.
+  const trackedIds = new Set(debts.filter((d) => !d.isBNPL).map((d) => d.id));
+  const curve = debtCurve(blitz, payments.filter((p) => trackedIds.has(p.debtId)));
 
   return (
     <main className="p-4 flex flex-col gap-4">
@@ -32,11 +37,7 @@ export default function Dashboard() {
         onSave={(v) => updateMeta({ savingsBalance: v })}
       />
 
-      <section className="bg-white rounded-xl shadow p-4">
-        <h2 className="font-semibold text-sm mb-1">Debt remaining</h2>
-        <p className="text-2xl font-bold tabular-nums">{blitz.toLocaleString("en-PH", { style: "currency", currency: "PHP" })}</p>
-        <p className="text-xs text-stone-400">interest-bearing (curve coming next)</p>
-      </section>
+      <DebtCurveChart points={curve} />
 
       <CategoryBars expenses={expenses} monthKey={monthKey} />
 
