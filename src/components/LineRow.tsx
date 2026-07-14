@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { peso } from "../lib/format";
-import { setLineStatus } from "../lib/repo";
+import { toggleLinePaid } from "../lib/repo";
 import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
@@ -10,7 +10,6 @@ export default function LineRow(
 ) {
   const { chip, label } = useAccounts();
   const ticked = line.status !== "";
-  const nextStatus = ticked ? "" : "PAID";
 
   // Long-press (~450ms) opens the editor; a normal tap toggles PAID.
   const timer = useRef<number | null>(null);
@@ -24,7 +23,7 @@ export default function LineRow(
   const handleClick = () => {
     clearPress();
     if (longPressed.current) { longPressed.current = false; return; } // swallow the click after a long-press
-    if (!readOnly) void setLineStatus(monthKey, line.id, nextStatus);
+    if (!readOnly) void toggleLinePaid(monthKey, line);
   };
 
   return (

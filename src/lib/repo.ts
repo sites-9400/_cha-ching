@@ -20,6 +20,42 @@ export async function setLineStatus(
   await updateDoc(ref, { status, paidDate: status === "" ? "" : new Date().toISOString() });
 }
 
+/**
+ * Toggle a line's PAID status. If the line is linked to a debt (`debtId`), also log
+ * a debt payment for its amount when marking PAID, and reverse that payment when
+ * unticking — so ticking a BNPL/loan line actually pays the debt down. The payment
+ * carries `lineId` so untick finds and reverses exactly it.
+ */
+export async function toggleLinePaid(monthKey: string, line: MonthLine): Promise<void> {
+  const goingPaid = line.status === "";
+  if (!line.debtId) {
+    await setLineStatus(monthKey, line.id, goingPaid ? "PAID" : "");
+    return;
+  }
+  const lineRef = doc(db, monthLines(monthKey), line.id);
+  const debtRef = doc(db, debtsCol(), line.debtId);
+  const batch = writeBatch(db);
+
+  if (goingPaid) {
+    batch.set(doc(collection(db, debtPayments(line.debtId))), {
+      amount: line.amount, date: new Date().toISOString(),
+      monthKey, cutoff: line.cutoff, lineId: line.id,
+    });
+    batch.update(debtRef, { currentBalance: increment(-line.amount) });
+    batch.update(lineRef, { status: "PAID", paidDate: new Date().toISOString() });
+  } else {
+    const snap = await getDocs(collection(db, debtPayments(line.debtId)));
+    for (const d of snap.docs) {
+      if (d.data().lineId === line.id) {
+        batch.delete(d.ref);
+        batch.update(debtRef, { currentBalance: increment(d.data().amount as number) });
+      }
+    }
+    batch.update(lineRef, { status: "", paidDate: "" });
+  }
+  await batch.commit();
+}
+
 /** Tick/untick an income line as RECEIVED for a month (stored on the month meta doc). */
 export async function setIncomeReceived(
   monthKey: string, incomeId: string, received: boolean,
@@ -184,7 +220,7 @@ export async function deleteMonthLine(monthKey: string, id: string): Promise<voi
 /** Inline-edit a month line (name/amount/channel) for this month only; marks it
  *  overridden so a later template sync won't clobber the change. */
 export async function updateMonthLine(
-  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel">>,
+  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "debtId">>,
 ): Promise<void> {
   await updateDoc(doc(db, monthLines(monthKey), id), { ...patch, overridden: true });
 }

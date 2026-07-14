@@ -3,9 +3,9 @@ import { useCollection } from "../../hooks/useCollection";
 import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey } from "../../lib/clock";
 import { peso } from "../../lib/format";
-import { monthLines, templateLines } from "../../lib/paths";
+import { debtsCol, monthLines, templateLines } from "../../lib/paths";
 import { addTemplateLine, updateTemplateLine, deleteTemplateLine, syncMonthFromTemplate } from "../../lib/repo";
-import type { Channel, MonthLine, TemplateLine } from "../../lib/types";
+import type { Channel, Debt, MonthLine, TemplateLine } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
 
 const BLANK: Omit<TemplateLine, "id"> = { name: "", amount: 0, channel: "CIMB", cutoff: 1, order: 99 };
@@ -109,6 +109,7 @@ export default function TemplateEditor() {
 
 function Form({ line, onDone, onCancel }: { line: TemplateLine | Omit<TemplateLine, "id">; onDone: () => void | Promise<void>; onCancel: () => void }) {
   const { names: CHANNELS } = useAccounts();
+  const debts = useCollection<Debt>(debtsCol());
   const [f, setF] = useState(line);
   const id = "id" in line ? line.id : null;
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });
@@ -139,6 +140,16 @@ function Form({ line, onDone, onCancel }: { line: TemplateLine | Omit<TemplateLi
       <label className="flex items-center justify-between text-sm">Order
         <input type="number" value={f.order} onChange={(e) => set("order", Number(e.target.value))} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
       </label>
+      <label className="flex items-center justify-between text-sm gap-2">
+        <span className="shrink-0">Pays debt</span>
+        <select value={f.debtId ?? ""} onChange={(e) => set("debtId", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
+          <option value="">— none —</option>
+          {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      </label>
+      <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
       <div className="flex gap-2 mt-2">
         <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
