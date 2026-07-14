@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDoc } from "../hooks/useDoc";
 import { metaDoc } from "../lib/paths";
 import { peso } from "../lib/format";
+import { allocateCutoff } from "../lib/allocate";
 import { cutoffAllocation, fundingByChannel, paidByDebt } from "../lib/funding";
 import type { Debt, Meta, MonthLine } from "../lib/types";
 import type { PaymentRec } from "./DebtPlan";
@@ -20,9 +21,13 @@ export default function SendPlan({
   const [mode, setMode] = useState<"remaining" | "full">("remaining");
 
   const paid = paidByDebt(payments, monthKey, cutoff);
-  const alloc = cutoffAllocation(freeCash, debts, paid, cutoff);
-  const paidDebts = new Set([...paid.keys()]);
-  const sends = fundingByChannel(lines, alloc.lines, paidDebts, mode, incomeChannel);
+  const paidTotal = [...paid.values()].reduce((s, n) => s + n, 0);
+  // "remaining": the leftover free cash allocated on live balances (matches the debt
+  // plan). "full": the whole cutoff's allocation on start-of-cutoff balances.
+  const alloc = mode === "remaining"
+    ? allocateCutoff(Math.max(0, freeCash - paidTotal), debts, cutoff)
+    : cutoffAllocation(freeCash, debts, paid, cutoff);
+  const sends = fundingByChannel(lines, alloc.lines, mode, incomeChannel);
   const grandTotal = sends.reduce((s, x) => s + x.total, 0);
 
   if (sends.length === 0) return null;

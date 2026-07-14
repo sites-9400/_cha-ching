@@ -36,16 +36,15 @@ export function cutoffAllocation(
 export interface ChannelSend { channel: string; total: number }
 
 /**
- * How much to send to each channel for a cutoff = its expense lines + the debt
- * allocations routed through that channel. "remaining" skips ticked lines and
- * debts already paid this cutoff; "full" counts everything. The `incomeChannel`
- * (where salary lands) is excluded — that money is already there. Sorted desc,
- * zeros omitted. Pure.
+ * How much to send to each channel for a cutoff = its expense lines + the given debt
+ * allocation routed through that channel. "remaining" skips ticked expense lines
+ * ("full" counts them all); the caller passes the mode-appropriate `alloc` (remaining
+ * cash on live balances vs the full allocation). The `incomeChannel` (where salary
+ * lands) is excluded — that money is already there. Sorted desc, zeros omitted. Pure.
  */
 export function fundingByChannel(
   lines: readonly { channel: string; amount: number; status: string }[],
-  alloc: readonly { channel: string; amount: number; debtId: string }[],
-  paidDebts: Set<string>,
+  alloc: readonly { channel: string; amount: number }[],
   mode: "remaining" | "full",
   incomeChannel?: string,
 ): ChannelSend[] {
@@ -59,10 +58,7 @@ export function fundingByChannel(
     if (mode === "remaining" && l.status !== "") continue;
     add(String(l.channel), l.amount);
   }
-  for (const a of alloc) {
-    if (mode === "remaining" && paidDebts.has(a.debtId)) continue;
-    add(String(a.channel), a.amount);
-  }
+  for (const a of alloc) add(String(a.channel), a.amount);
 
   return [...byChannel.entries()]
     .map(([channel, total]) => ({ channel, total }))

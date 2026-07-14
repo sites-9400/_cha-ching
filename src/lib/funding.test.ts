@@ -35,27 +35,26 @@ describe("fundingByChannel", () => {
     { channel: "CIMB", amount: 2000, status: "PAID" },
     { channel: "GCASH", amount: 1500, status: "" },
   ];
-  const alloc = [{ channel: "CIMB", amount: 13000, debtId: "revi" }];
+  const alloc = [{ channel: "CIMB", amount: 13000 }];
 
   it("full mode sums bills + debt allocations per channel, sorted desc", () => {
-    const out = fundingByChannel(lines, alloc, new Set(), "full");
+    const out = fundingByChannel(lines, alloc, "full");
     expect(out).toEqual([
       { channel: "CIMB", total: 20000 }, // 5000 + 2000 + 13000
       { channel: "GCASH", total: 1500 },
     ]);
   });
 
-  it("remaining mode skips ticked lines and paid debts", () => {
-    const out = fundingByChannel(lines, alloc, new Set(["revi"]), "remaining");
-    // CIMB: only the unticked 5000 (2000 paid skipped; revi debt paid skipped)
+  it("remaining mode skips ticked expense lines (caller supplies the remaining alloc)", () => {
+    const out = fundingByChannel(lines, [], "remaining"); // no remaining debt alloc
     expect(out).toEqual([
-      { channel: "CIMB", total: 5000 },
+      { channel: "CIMB", total: 5000 }, // the 2000 PAID line skipped
       { channel: "GCASH", total: 1500 },
     ]);
   });
 
   it("omits channels that net to zero", () => {
-    const out = fundingByChannel([{ channel: "MAYA", amount: 100, status: "PAID" }], [], new Set(), "remaining");
+    const out = fundingByChannel([{ channel: "MAYA", amount: 100, status: "PAID" }], [], "remaining");
     expect(out).toEqual([]);
   });
 
@@ -64,7 +63,7 @@ describe("fundingByChannel", () => {
       { channel: "WISE", amount: 8000, status: "" }, // income account — skip
       { channel: "CIMB", amount: 3000, status: "" },
     ];
-    const out = fundingByChannel(l, [], new Set(), "full", "WISE");
+    const out = fundingByChannel(l, [], "full", "WISE");
     expect(out).toEqual([{ channel: "CIMB", total: 3000 }]);
   });
 });
