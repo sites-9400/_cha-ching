@@ -57,6 +57,12 @@ export default function Debts() {
               <div className="h-2 rounded-full bg-stone-100 my-2 overflow-hidden">
                 <div className={`h-full ${d.isBNPL ? "bg-emerald-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
               </div>
+              {d.creditLimit != null && d.creditLimit > 0 && (
+                <p className="text-[11px] text-stone-500 mb-1">
+                  <span className="font-semibold text-emerald-700 tabular-nums">{peso(Math.max(0, d.creditLimit - d.currentBalance))}</span>
+                  {" "}available of {peso(d.creditLimit)} limit
+                </p>
+              )}
               <div className="mb-2">
                 {minEditId === d.id ? (
                   <div className="flex items-center gap-1.5">

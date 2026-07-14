@@ -50,6 +50,7 @@ export interface Debt {
   currentBalance: number;
   dueDay?: number;
   minimum?: number;
+  creditLimit?: number; // for credit cards — remaining credit = creditLimit − currentBalance
   payoffOrder: number;
   channel: Channel;
   isBNPL: boolean;

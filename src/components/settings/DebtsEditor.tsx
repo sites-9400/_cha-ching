@@ -74,7 +74,7 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
 
   // Plain helper that RETURNS JSX (not a nested component) — a nested component
   // would get a new identity each render and remount the input, losing focus.
-  const numberField = (label: string, k: "startingBalance" | "currentBalance" | "payoffOrder" | "dueDay" | "minimum") => (
+  const numberField = (label: string, k: "startingBalance" | "currentBalance" | "payoffOrder" | "dueDay" | "minimum" | "creditLimit") => (
     <label className="flex items-center justify-between text-sm">
       {label}
       <input
@@ -96,6 +96,7 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
       {numberField("Payoff order", "payoffOrder")}
       {numberField("Due day (1–31)", "dueDay")}
       {numberField("Minimum", "minimum")}
+      {numberField("Credit limit", "creditLimit")}
       <label className="flex items-center justify-between text-sm">
         Channel
         <select value={f.channel} onChange={(e) => set("channel", e.target.value as Channel)} className="text-sm border-b border-stone-300 outline-none">
