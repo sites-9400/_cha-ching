@@ -10,11 +10,27 @@ import ConfirmDialog from "../ConfirmDialog";
 
 const BLANK: Omit<TemplateLine, "id"> = { name: "", amount: 0, channel: "CIMB", cutoff: 1, order: 99 };
 
+type SortKey = "cutoff" | "amount" | "channel" | "name";
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: "cutoff", label: "Cutoff" },
+  { key: "amount", label: "Amount" },
+  { key: "channel", label: "Channel" },
+  { key: "name", label: "Name" },
+];
+const compareBy: Record<SortKey, (a: TemplateLine, b: TemplateLine) => number> = {
+  cutoff: (a, b) => (a.cutoff - b.cutoff) || (a.order - b.order),
+  amount: (a, b) => b.amount - a.amount, // biggest first
+  channel: (a, b) => String(a.channel).localeCompare(String(b.channel)) || (a.order - b.order),
+  name: (a, b) => a.name.localeCompare(b.name),
+};
+
 export default function TemplateEditor() {
   const monthKey = currentMonthKey();
   const lines = useCollection<TemplateLine>(templateLines());
   const monthLineList = useCollection<MonthLine>(monthLines(monthKey));
-  const sorted = [...lines].sort((a, b) => (a.cutoff - b.cutoff) || (a.order - b.order));
+  const { chip, label } = useAccounts();
+  const [sort, setSort] = useState<SortKey>("cutoff");
+  const sorted = [...lines].sort(compareBy[sort]);
   const [editing, setEditing] = useState<TemplateLine | Omit<TemplateLine, "id"> | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -35,12 +51,26 @@ export default function TemplateEditor() {
     <div>
       <h2 className="font-bold text-lg mb-1">Template lines</h2>
       <p className="text-xs text-stone-400 mb-3">Edits sync into the current month, keeping your ticks.</p>
+      <div className="flex items-center gap-1.5 mb-3">
+        <span className="text-[11px] text-stone-400">Sort</span>
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+          {SORTS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setSort(s.key)}
+              className={`px-2.5 py-0.5 rounded-full ${sort === s.key ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
+            >{s.label}</button>
+          ))}
+        </div>
+      </div>
       <ul className="flex flex-col gap-2">
         {sorted.map((l) => (
           <li key={l.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-            <button onClick={() => setEditing(l)} className="flex-1 flex items-center justify-between min-w-0">
-              <span className="truncate text-sm">C{l.cutoff} · {l.name}</span>
-              <span className="text-sm tabular-nums">{peso(l.amount)}</span>
+            <button onClick={() => setEditing(l)} className="flex-1 flex items-center gap-2 min-w-0">
+              <span className="text-[10px] text-stone-400 shrink-0">C{l.cutoff}</span>
+              <span className="truncate text-sm flex-1 text-left">{l.name}</span>
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${chip(l.channel)}`}>{label(l.channel)}</span>
+              <span className="text-sm tabular-nums shrink-0">{peso(l.amount)}</span>
             </button>
             <button onClick={() => setConfirmId(l.id)} className="text-red-500 text-xs px-1">✕</button>
           </li>
