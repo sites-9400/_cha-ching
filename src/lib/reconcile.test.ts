@@ -45,4 +45,21 @@ describe("reconcileLines", () => {
     const { deletes } = reconcileLines([], month);
     expect(deletes).toEqual([]);
   });
+  it("migrates a tick to the template's id when ids diverged (name+cutoff fallback)", () => {
+    // template line was re-created with a new id; the month line still has the old id + PAID tick.
+    const template = [T({ id: "new-id", name: "Tithes", amount: 5000, cutoff: 2 })];
+    const month = [M({ id: "old-id", name: "Tithes", cutoff: 2, status: "PAID", paidDate: "2026-07-05" })];
+    const { upserts, deletes } = reconcileLines(template, month);
+    // status migrated onto the template's id, old-id doc removed — tick NOT lost
+    expect(upserts).toEqual([
+      expect.objectContaining({ id: "new-id", name: "Tithes", status: "PAID", paidDate: "2026-07-05" }),
+    ]);
+    expect(deletes).toEqual(["old-id"]);
+  });
+  it("does not fallback-match across a different cutoff", () => {
+    const template = [T({ id: "new-id", name: "Tithes", cutoff: 1 })];
+    const month = [M({ id: "old-id", name: "Tithes", cutoff: 2, status: "PAID" })];
+    const { upserts } = reconcileLines(template, month);
+    expect(upserts[0].status).toBe(""); // different cutoff → treated as a new blank line
+  });
 });
