@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useCollection } from "../../hooks/useCollection";
 import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey } from "../../lib/clock";
@@ -64,17 +64,27 @@ export default function TemplateEditor() {
         </div>
       </div>
       <ul className="flex flex-col gap-2">
-        {sorted.map((l) => (
-          <li key={l.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-            <button onClick={() => setEditing(l)} className="flex-1 flex items-center gap-2 min-w-0">
-              <span className="text-[10px] text-stone-400 shrink-0">C{l.cutoff}</span>
-              <span className="truncate text-sm flex-1 text-left">{l.name}</span>
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${chip(l.channel)}`}>{label(l.channel)}</span>
-              <span className="text-sm tabular-nums shrink-0">{peso(l.amount)}</span>
-            </button>
-            <button onClick={() => setConfirmId(l.id)} className="text-red-500 text-xs px-1">✕</button>
-          </li>
-        ))}
+        {sorted.map((l, i) => {
+          const groupHeader = sort === "channel" && (i === 0 || sorted[i - 1].channel !== l.channel);
+          return (
+            <Fragment key={l.id}>
+              {groupHeader && (
+                <li className="pt-2 first:pt-0 text-[10px] font-bold uppercase tracking-wide text-stone-400">
+                  {label(l.channel)}
+                </li>
+              )}
+              <li className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
+                <button onClick={() => setEditing(l)} className="flex-1 flex items-center gap-2 min-w-0">
+                  <span className="text-[10px] text-stone-400 shrink-0">C{l.cutoff}</span>
+                  <span className="truncate text-sm flex-1 text-left">{l.name}</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${chip(l.channel)}`}>{label(l.channel)}</span>
+                  <span className="text-sm tabular-nums shrink-0">{peso(l.amount)}</span>
+                </button>
+                <button onClick={() => setConfirmId(l.id)} className="text-red-500 text-xs px-1">✕</button>
+              </li>
+            </Fragment>
+          );
+        })}
       </ul>
       <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add line</button>
       {confirmId && (
