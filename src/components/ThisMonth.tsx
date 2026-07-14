@@ -3,6 +3,7 @@ import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { cutoffSummary, unplannedForCutoff } from "../lib/selectors";
 import { projectMonthPlan } from "../lib/project";
+import { lineComparators, LINE_SORTS, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
@@ -28,6 +29,7 @@ export default function ThisMonth() {
   const events = useCollection<EventItem>(eventsCol());
   const [adding, setAdding] = useState(false);
   const [editingLine, setEditingLine] = useState<MonthLine | null>(null);
+  const [lineSort, setLineSort] = useState<LineSortKey>("order");
 
   const projected = mode === "projected";
 
@@ -81,12 +83,25 @@ export default function ThisMonth() {
         </div>
       )}
 
+      <div className="flex items-center gap-1.5 mb-3">
+        <span className="text-[11px] text-stone-400">Sort</span>
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+          {LINE_SORTS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setLineSort(s.key)}
+              className={`px-2.5 py-0.5 rounded-full ${lineSort === s.key ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
+            >{s.label}</button>
+          ))}
+        </div>
+      </div>
+
       {([1, 2] as const).map((cutoff) => {
         const s = cutoffSummary(lines, incomes, cutoff);
         const unplanned = editable ? unplannedForCutoff(expenses, viewedKey, cutoff) : 0;
         const freeCash = Math.max(0, s.surplus - unplanned);
         const pct = s.planned > 0 ? Math.round((s.ticked / s.planned) * 100) : 0;
-        const cutLines = lines.filter((l) => l.cutoff === cutoff).sort((a, b) => a.order - b.order);
+        const cutLines = lines.filter((l) => l.cutoff === cutoff).sort(lineComparators[lineSort]);
         const cutIncomes = incomes.filter((i) => i.cutoff === cutoff).sort((a, b) => a.day - b.day);
         const proj = projected ? projectMonthPlan(viewedKey, currentKey, debts, template, events, incomes) : null;
         const projAlloc = proj ? (cutoff === 1 ? proj.alloc.c1 : proj.alloc.c2) : null;
