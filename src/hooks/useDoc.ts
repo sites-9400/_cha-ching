@@ -6,6 +6,9 @@ import { db } from "../lib/firebase";
 export function useDoc<T>(path: string): T | null | undefined {
   const [value, setValue] = useState<T | null | undefined>(undefined);
   useEffect(() => {
+    // Path changed: back to loading. Never leak the previous doc's value (a stale
+    // `null` here once let the month auto-generator overwrite an existing month).
+    setValue(undefined);
     const un = onSnapshot(doc(db, path), (snap) =>
       setValue(snap.exists() ? ({ id: snap.id, ...snap.data() } as T) : null),
     );

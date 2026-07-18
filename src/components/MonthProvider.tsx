@@ -4,7 +4,7 @@ import { addMonths } from "../lib/format";
 import {
   eventsCol, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "../lib/paths";
-import { startMonth, writeMonth } from "../lib/repo";
+import { startMonth } from "../lib/repo";
 import { generateMonthLines } from "../lib/selectors";
 import type { EventItem, Income, MonthLine, TemplateLine } from "../lib/types";
 import { useCollection } from "../hooks/useCollection";
@@ -60,15 +60,16 @@ export default function MonthProvider({ children }: { children: React.ReactNode 
   const startedRef = useRef(false);
   useEffect(() => { startedRef.current = false; }, [viewedKey]);
 
-  // Auto-generate ONLY the current month when missing.
+  // Auto-generate ONLY the current month when missing. startMonth (not raw
+  // writeMonth) — it re-checks the meta doc's existence at write time, so a
+  // stale/transient `null` snapshot can never overwrite an existing month.
   useEffect(() => {
     if (
       viewedKey === currentKey && monthMeta === null && !startedRef.current &&
       template.length > 0 && templateIncomeList.length > 0
     ) {
       startedRef.current = true;
-      const generated = generateMonthLines(template, events, currentKey);
-      void writeMonth(currentKey, generated, templateIncomeList).catch(() => { startedRef.current = false; });
+      void startMonth(currentKey).catch(() => { startedRef.current = false; });
     }
   }, [viewedKey, currentKey, monthMeta, template, events, templateIncomeList]);
 
