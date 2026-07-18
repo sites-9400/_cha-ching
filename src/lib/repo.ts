@@ -5,8 +5,9 @@ import {
 import { db } from "./firebase";
 import {
   accountsCol, categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
-  metaDoc, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
+  metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "./paths";
+import { BACKUP_KEEP, backupsToPrune, type MonthBackup } from "./backups";
 import { reconcileLines } from "./reconcile";
 import { generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
@@ -68,6 +69,7 @@ export async function setIncomeReceived(
 export async function writeMonth(
   monthKey: string, lines: MonthLine[], incomes: Income[],
 ): Promise<void> {
+  await backupMonth(monthKey, "month generate"); // no-op unless lines already exist
   const batch = writeBatch(db);
   const monthMetaRef = doc(db, monthDoc(monthKey));
   batch.set(monthMetaRef, {
@@ -254,8 +256,66 @@ export async function deleteMonthIncome(monthKey: string, id: string): Promise<v
   await deleteDoc(doc(db, monthIncomes(monthKey), id));
 }
 
+// ── Month backups (safety snapshots) ─────────────────────────────────────────
+
+/**
+ * Snapshot a month's restorable state (lines + one-off incomes + received
+ * flags) into months/{key}/backups/{ISO timestamp}, then prune to the newest
+ * BACKUP_KEEP. No-op for a month with no lines. Called before any batch that
+ * rewrites month lines, so a buggy write is always one Restore away from undone.
+ */
+export async function backupMonth(monthKey: string, reason: string): Promise<void> {
+  const [lSnap, iSnap, metaSnap, bSnap] = await Promise.all([
+    getDocs(collection(db, monthLines(monthKey))),
+    getDocs(collection(db, monthIncomes(monthKey))),
+    getDoc(doc(db, monthDoc(monthKey))),
+    getDocs(collection(db, monthBackups(monthKey))),
+  ]);
+  if (lSnap.empty) return;
+  const backup: Omit<MonthBackup, "id"> = {
+    reason,
+    lines: lSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as MonthBackup["lines"],
+    incomes: iSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as MonthBackup["incomes"],
+    receivedIncomes: (metaSnap.data()?.receivedIncomes as Record<string, boolean> | undefined) ?? {},
+  };
+  const id = new Date().toISOString();
+  const batch = writeBatch(db);
+  batch.set(doc(db, monthBackups(monthKey), id), backup);
+  for (const old of backupsToPrune([...bSnap.docs.map((d) => d.id), id], BACKUP_KEEP)) {
+    batch.delete(doc(db, monthBackups(monthKey), old));
+  }
+  await batch.commit();
+}
+
+/** Restore a month from a backup: current state is snapshotted first, then
+ *  lines/incomes/received flags are replaced wholesale with the backup's. */
+export async function restoreMonthBackup(monthKey: string, backupId: string): Promise<void> {
+  const backupSnap = await getDoc(doc(db, monthBackups(monthKey), backupId));
+  if (!backupSnap.exists()) return;
+  const backup = backupSnap.data() as Omit<MonthBackup, "id">;
+  await backupMonth(monthKey, "restore");
+  const [lSnap, iSnap] = await Promise.all([
+    getDocs(collection(db, monthLines(monthKey))),
+    getDocs(collection(db, monthIncomes(monthKey))),
+  ]);
+  const batch = writeBatch(db);
+  for (const d of lSnap.docs) batch.delete(d.ref);
+  for (const d of iSnap.docs) batch.delete(d.ref);
+  for (const l of backup.lines) {
+    const { id, ...rest } = l;
+    batch.set(doc(db, monthLines(monthKey), id), rest);
+  }
+  for (const i of backup.incomes) {
+    const { id, ...rest } = i;
+    batch.set(doc(db, monthIncomes(monthKey), id), rest);
+  }
+  batch.set(doc(db, monthDoc(monthKey)), { receivedIncomes: backup.receivedIncomes }, { merge: true });
+  await batch.commit();
+}
+
 /** Reconcile a month's template-derived lines to the current template (keeps ticks + one-offs). */
 export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
+  await backupMonth(monthKey, "template sync");
   const [tSnap, mSnap] = await Promise.all([
     getDocs(collection(db, templateLines())),
     getDocs(collection(db, monthLines(monthKey))),

@@ -9,9 +9,10 @@ import EventsEditor from "./settings/EventsEditor";
 import AccountsEditor from "./settings/AccountsEditor";
 import ChangePin from "./settings/ChangePin";
 import ExportData from "./settings/ExportData";
+import BackupsEditor from "./settings/BackupsEditor";
 
 type Section =
-  | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "accounts" | "pin" | "export";
+  | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "accounts" | "pin" | "export" | "backups";
 
 const ROWS: { id: Section; label: string }[] = [
   { id: "debts", label: "Debts" },
@@ -21,6 +22,7 @@ const ROWS: { id: Section; label: string }[] = [
   { id: "categories", label: "Categories" },
   { id: "funds", label: "Sinking funds" },
   { id: "events", label: "Events" },
+  { id: "backups", label: "Backups" },
   { id: "pin", label: "Change PIN" },
   { id: "export", label: "Export CSV" },
 ];
@@ -70,5 +72,6 @@ function Editor({ section }: { section: Section }) {
   if (section === "accounts") return <AccountsEditor />;
   if (section === "pin") return <ChangePin />;
   if (section === "export") return <ExportData />;
+  if (section === "backups") return <BackupsEditor />;
   return <div className="text-stone-500 text-sm">{section} editor — coming in a later step.</div>;
 }
