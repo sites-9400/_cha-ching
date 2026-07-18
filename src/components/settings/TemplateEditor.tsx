@@ -136,8 +136,11 @@ function Form({ line, onDone, onCancel }: {
 
   async function save() {
     if (!f.name.trim()) return;
+    // A budget group implies the line is a budget line — no separate toggle needed.
+    const group = f.budgetGroup?.trim() ?? "";
+    const withGroup = { ...f, budgetGroup: group, ...(group ? { isEnvelope: true } : {}) };
     // Firestore rejects undefined values (cleared "Pays debt" leaves debtId: undefined) — strip them.
-    const clean = Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined)) as typeof f;
+    const clean = Object.fromEntries(Object.entries(withGroup).filter(([, v]) => v !== undefined)) as typeof f;
     if (id) await updateTemplateLine(id, clean); else await addTemplateLine(clean);
     await onDone(clean);
   }
@@ -176,19 +179,15 @@ function Form({ line, onDone, onCancel }: {
         <input type="checkbox" checked={!!f.isEnvelope} onChange={(e) => set("isEnvelope", e.target.checked)} />
       </label>
       <p className="text-[11px] text-stone-400 -mt-1">Quick Add can draw spending from this budget line instead of free cash.</p>
-      {f.isEnvelope && (
-        <>
-          <label className="flex items-center justify-between text-sm gap-2">Budget group
-            <input
-              placeholder="e.g. Allowance"
-              value={f.budgetGroup ?? ""}
-              onChange={(e) => set("budgetGroup", e.target.value)}
-              className="w-32 text-right border-b border-stone-300 outline-none"
-            />
-          </label>
-          <p className="text-[11px] text-stone-400 -mt-1">Lines with the same group name share ONE combined pool.</p>
-        </>
-      )}
+      <label className="flex items-center justify-between text-sm gap-2">Budget group
+        <input
+          placeholder="e.g. Allowance"
+          value={f.budgetGroup ?? ""}
+          onChange={(e) => set("budgetGroup", e.target.value)}
+          className="w-32 text-right border-b border-stone-300 outline-none"
+        />
+      </label>
+      <p className="text-[11px] text-stone-400 -mt-1">Lines with the same group name share ONE combined pool. Setting a group makes this a budget line automatically.</p>
       <div className="flex gap-2 mt-2">
         <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>

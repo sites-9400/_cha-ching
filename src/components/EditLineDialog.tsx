@@ -18,9 +18,11 @@ export default function EditLineDialog(
 
   async function save() {
     if (!valid) return;
+    // A budget group implies the line is a budget line — no separate toggle needed.
+    const group = budgetGroup.trim();
     await updateMonthLine(monthKey, line.id, {
-      name: name.trim(), amount: amt, channel, isEnvelope,
-      budgetGroup: isEnvelope ? budgetGroup.trim() : "",
+      name: name.trim(), amount: amt, channel,
+      isEnvelope: isEnvelope || group !== "", budgetGroup: group,
     });
     onClose();
   }
@@ -43,15 +45,13 @@ export default function EditLineDialog(
         <label className="flex items-center justify-between text-sm">Budget
           <input type="checkbox" checked={isEnvelope} onChange={(e) => setIsEnvelope(e.target.checked)} />
         </label>
-        {isEnvelope && (
-          <label className="flex items-center justify-between text-sm gap-2">Budget group
-            <input
-              placeholder="e.g. Allowance" value={budgetGroup}
-              onChange={(e) => setBudgetGroup(e.target.value)}
-              className="w-32 text-right border-b border-stone-300 outline-none"
-            />
-          </label>
-        )}
+        <label className="flex items-center justify-between text-sm gap-2">Budget group
+          <input
+            placeholder="e.g. Allowance" value={budgetGroup}
+            onChange={(e) => setBudgetGroup(e.target.value)}
+            className="w-32 text-right border-b border-stone-300 outline-none"
+          />
+        </label>
         <p className="text-[11px] text-stone-400">Changes apply to {monthKey} only — the template stays as-is.</p>
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
