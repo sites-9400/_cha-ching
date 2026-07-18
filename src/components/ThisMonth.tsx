@@ -21,7 +21,7 @@ export default function ThisMonth() {
   const { viewedKey, currentKey, mode, editable, lines, incomes, ready, goPrev, goNext, start } = useMonth();
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
-  const expenses = useCollection<{ id: string; amount: number; date: string }>(expensesCol());
+  const expenses = useCollection<{ id: string; amount: number; date: string; envelopeLineId?: string }>(expensesCol());
   const meta = useDoc<{ receivedIncomes?: Record<string, boolean> }>(monthDoc(viewedKey));
   const received = meta?.receivedIncomes ?? {};
   // For projected months the plan is forward-simulated from these globals:
@@ -98,7 +98,7 @@ export default function ThisMonth() {
 
       {([1, 2] as const).map((cutoff) => {
         const s = cutoffSummary(lines, incomes, cutoff);
-        const unplanned = editable ? unplannedForCutoff(expenses, viewedKey, cutoff) : 0;
+        const unplanned = editable ? unplannedForCutoff(expenses, viewedKey, cutoff, lines) : 0;
         const freeCash = Math.max(0, s.surplus - unplanned);
         const pct = s.planned > 0 ? Math.round((s.ticked / s.planned) * 100) : 0;
         const cutLines = lines.filter((l) => l.cutoff === cutoff).sort(lineComparators[lineSort]);

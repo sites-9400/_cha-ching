@@ -28,19 +28,54 @@ export function isCutoffClosed(lines: readonly MonthLine[], cutoff: 1 | 2): bool
   return cut.length > 0 && cut.every((l) => l.status !== "");
 }
 
-/**
- * Sum of a month's unplanned (Quick Add) expenses attributed to `cutoff` by the
- * expense date's day (same due-day → cutoff rule the allocation uses). Reduces the
- * debt plan's free cash so it never allocates cash that was already spent.
- */
-export function unplannedForCutoff(
-  expenses: readonly { amount: number; date: string }[],
+/** Sum of this month's Quick Add expenses drawn from envelope line `lineId`. */
+export function envelopeSpent(
+  expenses: readonly { amount: number; date: string; envelopeLineId?: string }[],
   monthKey: string,
-  cutoff: 1 | 2,
+  lineId: string,
 ): number {
   return expenses
-    .filter((e) => e.date.slice(0, 7) === monthKey && cutoffForDueDay(Number(e.date.slice(8, 10))) === cutoff)
+    .filter((e) => e.envelopeLineId === lineId && e.date.slice(0, 7) === monthKey)
     .reduce((s, e) => s + e.amount, 0);
+}
+
+/**
+ * Unplanned spending charged to `cutoff`:
+ *  - envelope-less expenses, attributed by the date's day (13–24 → 1, else 2),
+ *    rolled to the other cutoff when the attributed one is closed, and to
+ *    nowhere (tracking-only) when both are closed;
+ *  - each envelope line's overspend excess (spent − amount, min 0) in its own
+ *    cutoff. Expenses whose envelopeLineId no longer matches an envelope line
+ *    count as envelope-less. Reduces the debt plan's free cash so it never
+ *    allocates cash that was already spent.
+ */
+export function unplannedForCutoff(
+  expenses: readonly { amount: number; date: string; envelopeLineId?: string }[],
+  monthKey: string,
+  cutoff: 1 | 2,
+  lines: readonly MonthLine[],
+): number {
+  const closed = { 1: isCutoffClosed(lines, 1), 2: isCutoffClosed(lines, 2) };
+  const lineById = new Map(lines.map((l) => [l.id, l]));
+  const attribute = (day: number): 1 | 2 | null => {
+    const first = cutoffForDueDay(day);
+    if (!closed[first]) return first;
+    const other = first === 1 ? 2 : 1;
+    return closed[other] ? null : other;
+  };
+
+  let total = 0;
+  for (const e of expenses) {
+    if (e.date.slice(0, 7) !== monthKey) continue;
+    const envLine = e.envelopeLineId ? lineById.get(e.envelopeLineId) : undefined;
+    if (envLine?.isEnvelope) continue; // drawn from the envelope, counted below as excess only
+    if (attribute(Number(e.date.slice(8, 10))) === cutoff) total += e.amount;
+  }
+  for (const l of lines) {
+    if (!l.isEnvelope || l.cutoff !== cutoff) continue;
+    total += Math.max(0, envelopeSpent(expenses, monthKey, l.id) - l.amount);
+  }
+  return total;
 }
 
 export interface DebtTotals {

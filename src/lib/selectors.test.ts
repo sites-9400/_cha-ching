@@ -3,6 +3,7 @@ import { addMonths } from "./format";
 import {
   cutoffSummary,
   debtTotals,
+  envelopeSpent,
   fundStateFor,
   generateMonthLines,
   isCutoffClosed,
@@ -156,20 +157,72 @@ describe("isCutoffClosed", () => {
   });
 });
 
+const env = (id: string, cutoff: 1 | 2, amount: number, status: MonthLine["status"] = ""): MonthLine =>
+  ({ ...mk(id, amount, cutoff, status), isEnvelope: true });
+const exp = (amount: number, date: string, envelopeLineId?: string) =>
+  ({ amount, date, ...(envelopeLineId ? { envelopeLineId } : {}) });
+
+describe("envelopeSpent", () => {
+  it("sums only this month's expenses linked to the line", () => {
+    const expenses = [
+      exp(100, "2026-07-05T10:00:00.000Z", "allow"),
+      exp(50, "2026-07-20T10:00:00.000Z", "allow"),
+      exp(999, "2026-06-30T10:00:00.000Z", "allow"), // other month
+      exp(70, "2026-07-06T10:00:00.000Z", "other"),  // other envelope
+      exp(40, "2026-07-07T10:00:00.000Z"),           // unplanned
+    ];
+    expect(envelopeSpent(expenses, "2026-07", "allow")).toBe(150);
+  });
+});
+
 describe("unplannedForCutoff", () => {
-  const exps = [
-    { amount: 500, date: "2026-07-16T10:00:00.000Z" }, // day 16 → cutoff 1
-    { amount: 300, date: "2026-07-04T10:00:00.000Z" }, // day 4  → cutoff 2
-    { amount: 200, date: "2026-07-28T10:00:00.000Z" }, // day 28 → cutoff 2
-    { amount: 999, date: "2026-06-16T10:00:00.000Z" }, // other month, excluded
-  ];
-  it("sums this month's expenses attributed to cutoff 1 by date", () => {
-    expect(unplannedForCutoff(exps, "2026-07", 1)).toBe(500);
+  const openLines = [env("allow", 1, 1000), mk("rent", 100, 2)];
+
+  it("attributes envelope-less expenses by day rule when cutoffs are open", () => {
+    const expenses = [
+      exp(100, "2026-07-15T10:00:00.000Z"), // day 15 → cutoff 1
+      exp(200, "2026-07-28T10:00:00.000Z"), // day 28 → cutoff 2
+      exp(300, "2026-07-05T10:00:00.000Z"), // day 5  → cutoff 2
+    ];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(100);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(500);
   });
-  it("sums cutoff 2 (days 25–31 or 1–12)", () => {
-    expect(unplannedForCutoff(exps, "2026-07", 2)).toBe(500); // 300 + 200
+
+  it("excludes envelope-linked expenses from unplanned", () => {
+    const expenses = [exp(100, "2026-07-15T10:00:00.000Z", "allow")];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(0);
   });
+
+  it("counts only the envelope's overspend excess, in the envelope's cutoff", () => {
+    const expenses = [
+      exp(900, "2026-07-15T10:00:00.000Z", "allow"),
+      exp(400, "2026-07-16T10:00:00.000Z", "allow"),
+    ];
+    // spent 1300 of 1000 → 300 excess charged to cutoff 1
+    expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(300);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(0);
+  });
+
+  it("treats an orphaned envelopeLineId as unplanned", () => {
+    const expenses = [exp(100, "2026-07-15T10:00:00.000Z", "deleted-line")];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(100);
+  });
+
+  it("rolls date-attributed expenses off a closed cutoff onto the open one", () => {
+    const lines = [mk("a", 100, 1, "PAID"), mk("b", 100, 2)];
+    const expenses = [exp(100, "2026-07-15T10:00:00.000Z")]; // day 15 → cutoff 1, but 1 is closed
+    expect(unplannedForCutoff(expenses, "2026-07", 1, lines)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, lines)).toBe(100);
+  });
+
+  it("reduces nothing when both cutoffs are closed (tracking-only)", () => {
+    const lines = [mk("a", 100, 1, "PAID"), mk("b", 100, 2, "SENT")];
+    const expenses = [exp(100, "2026-07-15T10:00:00.000Z")];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, lines)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, lines)).toBe(0);
+  });
+
   it("ignores other months", () => {
-    expect(unplannedForCutoff(exps, "2026-08", 1)).toBe(0);
+    expect(unplannedForCutoff([exp(100, "2026-06-15T10:00:00.000Z")], "2026-07", 1, openLines)).toBe(0);
   });
 });

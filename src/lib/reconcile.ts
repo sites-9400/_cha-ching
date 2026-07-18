@@ -46,6 +46,7 @@ export function reconcileLines(
       order: t.order, oneOff: false,
       status: existing?.status ?? "",
       ...(t.debtId ? { debtId: t.debtId } : {}),
+      ...(t.isEnvelope ? { isEnvelope: true } : {}),
       ...(existing?.paidDate ? { paidDate: existing.paidDate } : {}),
     });
   }

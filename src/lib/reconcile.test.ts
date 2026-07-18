@@ -23,6 +23,10 @@ describe("reconcileLines", () => {
     const { upserts } = reconcileLines([T({ id: "rent", name: "Rent", debtId: "d9" })], []);
     expect(upserts[0].debtId).toBe("d9");
   });
+  it("carries isEnvelope onto the month line", () => {
+    const { upserts } = reconcileLines([T({ id: "allow", isEnvelope: true })], []);
+    expect(upserts[0].isEnvelope).toBe(true);
+  });
   it("deletes a template-derived line whose template is gone", () => {
     const { deletes } = reconcileLines([], [M({ id: "gone" })]);
     expect(deletes).toEqual(["gone"]);

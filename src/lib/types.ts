@@ -26,6 +26,7 @@ export interface TemplateLine {
   cutoff: 1 | 2;
   order: number;
   debtId?: string;
+  isEnvelope?: boolean; // Quick Add spending can draw from this line instead of free cash
 }
 
 export interface MonthLine extends TemplateLine {
