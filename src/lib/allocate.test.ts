@@ -77,3 +77,23 @@ describe("allocateCutoff", () => {
     expect(a.lines.some((l) => l.debtId === "laptop")).toBe(false);
   });
 });
+
+describe("allocateCutoff with cycle minimums", () => {
+  const target = D({ id: "t", name: "t", payoffOrder: 1, currentBalance: 10000, dueDay: 16 });
+  const other = D({ id: "o", name: "o", payoffOrder: 2, currentBalance: 10000, dueDay: 16, minimum: 500 });
+
+  it("reserves the cycle minimum instead of the static minimum", () => {
+    const alloc = allocateCutoff(1000, [target, other], 1, new Map([["o", 800]]));
+    expect(alloc.lines.find((l) => l.debtId === "o")?.amount).toBe(800);
+    expect(alloc.lines.find((l) => l.debtId === "t")?.amount).toBe(200);
+  });
+  it("reserves nothing when the cycle minimum is already covered (0), despite a static minimum", () => {
+    const alloc = allocateCutoff(1000, [target, other], 1, new Map([["o", 0]]));
+    expect(alloc.lines.find((l) => l.debtId === "o")).toBeUndefined();
+    expect(alloc.lines.find((l) => l.debtId === "t")?.amount).toBe(1000);
+  });
+  it("falls back to the static minimum when the debt has no map entry", () => {
+    const alloc = allocateCutoff(1000, [target, other], 1, new Map());
+    expect(alloc.lines.find((l) => l.debtId === "o")?.amount).toBe(500);
+  });
+});

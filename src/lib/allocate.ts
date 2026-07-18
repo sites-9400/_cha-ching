@@ -27,7 +27,10 @@ export function cutoffForDueDay(dueDay: number | undefined): 1 | 2 {
  * reserve non-target minimums assigned to this cutoff, then waterfall the rest
  * down the payoff order. Exactly one merged line per debt. Pure — no Firestore.
  */
-export function allocateCutoff(freeCash: number, debts: Debt[], cutoff: 1 | 2): Allocation {
+export function allocateCutoff(
+  freeCash: number, debts: Debt[], cutoff: 1 | 2,
+  cycleMins?: ReadonlyMap<string, number>,
+): Allocation {
   const cands = debts
     .filter((d) => d.active && !d.isBNPL && d.currentBalance > 0)
     .sort((a, b) => a.payoffOrder - b.payoffOrder);
@@ -47,7 +50,8 @@ export function allocateCutoff(freeCash: number, debts: Debt[], cutoff: 1 | 2): 
   for (const d of cands) {
     if (target && d.id === target.id) continue;
     if (cutoffForDueDay(d.dueDay) !== cutoff) continue;
-    const min = d.minimum ?? 0;
+    // Entered statement cycle → its (net) minimum wins; otherwise the static minimum.
+    const min = cycleMins?.get(d.id) ?? d.minimum ?? 0;
     if (min <= 0) continue;
     requiredMin += Math.min(min, d.currentBalance);
     const reserve = Math.min(min, d.currentBalance, Math.max(0, remaining));

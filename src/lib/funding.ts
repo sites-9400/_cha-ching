@@ -26,11 +26,12 @@ export function cutoffAllocation(
   debts: Debt[],
   paid: Map<string, number>,
   cutoff: 1 | 2,
+  cycleMins?: ReadonlyMap<string, number>,
 ): Allocation {
   const planDebts = debts.map((d) =>
     paid.has(d.id) ? { ...d, currentBalance: d.currentBalance + (paid.get(d.id) ?? 0) } : d,
   );
-  return allocateCutoff(freeCash, planDebts, cutoff);
+  return allocateCutoff(freeCash, planDebts, cutoff, cycleMins);
 }
 
 export interface ChannelSend { channel: string; total: number }
