@@ -5,14 +5,20 @@ import {
 import { db } from "./firebase";
 import {
   accountsCol, categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
-  metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
+  metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, subscriptionsCol, templateIncomes, templateLines,
 } from "./paths";
 import { BACKUP_KEEP, backupsToPrune, type MonthBackup } from "./backups";
 import { reconcileLines } from "./reconcile";
 import { generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
-  Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, TemplateLine,
+  Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, Subscription,
+  TemplateLine,
 } from "./types";
+
+/** Strip undefined-valued keys — Firestore rejects literal `undefined`. */
+function stripUndefined<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined)) as Partial<T>;
+}
 
 /** Toggle/set one month line's status. */
 export async function setLineStatus(
@@ -186,6 +192,10 @@ export async function addCategory(c: Omit<Category, "id">): Promise<void> {
 export async function updateCategory(id: string, patch: Partial<Category>): Promise<void> {
   await updateDoc(doc(db, categoriesCol(), id), patch);
 }
+/** Set or clear (null) a category's monthly budget — clearing deletes the field. */
+export async function setCategoryBudget(id: string, budget: number | null): Promise<void> {
+  await updateDoc(doc(db, categoriesCol(), id), { budget: budget === null ? deleteField() : budget });
+}
 export async function deleteCategory(id: string): Promise<void> {
   await deleteDoc(doc(db, categoriesCol(), id));
 }
@@ -208,6 +218,16 @@ export async function updateEvent(id: string, patch: Partial<EventItem>): Promis
 }
 export async function deleteEvent(id: string): Promise<void> {
   await deleteDoc(doc(db, eventsCol(), id));
+}
+
+export async function addSubscription(s: Omit<Subscription, "id">): Promise<void> {
+  await setDoc(doc(collection(db, subscriptionsCol())), stripUndefined(s));
+}
+export async function updateSubscription(id: string, patch: Partial<Subscription>): Promise<void> {
+  await updateDoc(doc(db, subscriptionsCol(), id), stripUndefined(patch));
+}
+export async function deleteSubscription(id: string): Promise<void> {
+  await deleteDoc(doc(db, subscriptionsCol(), id));
 }
 
 /** Patch the household meta (savingsBalance, floor, currency) on the root doc. */

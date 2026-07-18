@@ -59,7 +59,7 @@ export default function QuickAdd() {
 
   return (
     <main className="p-4">
-      <h1 className="text-xl font-bold mb-4">Quick Add</h1>
+      <h1 className="text-xl font-bold mb-4">Expenses</h1>
       <div className="bg-white rounded-2xl shadow p-5 flex flex-col gap-5">
         <div>
           <Label>Amount</Label>

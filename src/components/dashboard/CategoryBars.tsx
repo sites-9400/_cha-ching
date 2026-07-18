@@ -1,16 +1,22 @@
 import { useState } from "react";
 import { peso } from "../../lib/format";
 import { categoryTotals } from "../../lib/stats";
+import type { Category, Channel } from "../../lib/types";
 
 export interface DashExpense {
   id: string; amount: number; category: string; date: string; note?: string;
+  envelopeLineId?: string; channel: Channel;
 }
 
-/** This month's unplanned spending by category (single-hue bars); tap to see notes. */
-export default function CategoryBars({ expenses, monthKey }: { expenses: DashExpense[]; monthKey: string }) {
+/** This month's unplanned spending by category (single-hue bars); tap to see notes.
+ *  Categories with a monthly budget scale their bar to spent/budget and turn red past 100%. */
+export default function CategoryBars(
+  { expenses, monthKey, categories }: { expenses: DashExpense[]; monthKey: string; categories: Category[] },
+) {
   const totals = categoryTotals(expenses, monthKey);
   const [open, setOpen] = useState<string | null>(null);
   const max = totals.reduce((m, t) => Math.max(m, t.total), 0) || 1;
+  const budgetOf = new Map(categories.map((c) => [c.name, c.budget]));
 
   return (
     <section className="bg-white rounded-xl shadow p-4">
@@ -24,15 +30,20 @@ export default function CategoryBars({ expenses, monthKey }: { expenses: DashExp
               .filter((e) => e.category === t.category && e.date.slice(0, 7) === monthKey)
               .sort((a, b) => b.date.localeCompare(a.date));
             const isOpen = open === t.category;
+            const budget = budgetOf.get(t.category);
+            const hasBudget = !!budget && budget > 0;
+            const pct = hasBudget ? Math.min(100, (t.total / budget) * 100) : (t.total / max) * 100;
+            const barColor = hasBudget && t.total > budget ? "bg-red-500" : "bg-emerald-500";
+            const rightLabel = hasBudget ? `${peso(t.total)} of ${peso(budget)}` : peso(t.total);
             return (
               <li key={t.category}>
                 <button onClick={() => setOpen(isOpen ? null : t.category)} className="w-full text-left">
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="font-medium">{t.category}</span>
-                    <span className="tabular-nums">{peso(t.total)}</span>
+                    <span className="tabular-nums">{rightLabel}</span>
                   </div>
                   <div className="h-2.5 rounded-full bg-stone-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(t.total / max) * 100}%` }} />
+                    <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                   </div>
                 </button>
                 {isOpen && (

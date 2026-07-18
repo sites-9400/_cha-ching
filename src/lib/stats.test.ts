@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryTotals, debtCurve, nextRelease } from "./stats";
+import { categoryTotals, dailyTotals, debtCurve, nextRelease } from "./stats";
 
 describe("debtCurve", () => {
   it("reconstructs end-of-month balance from live total + later payments", () => {
@@ -38,6 +38,28 @@ describe("categoryTotals", () => {
   });
   it("is empty for a month with no expenses", () => {
     expect(categoryTotals(exps, "2026-09")).toEqual([]);
+  });
+});
+
+describe("dailyTotals", () => {
+  const exps = [
+    { amount: 500, date: "2026-07-16T10:00:00.000Z" },
+    { amount: 200, date: "2026-07-16T18:00:00.000Z" },
+    { amount: 300, date: "2026-07-04T10:00:00.000Z" },
+    { amount: 999, date: "2026-06-01T10:00:00.000Z" }, // other month
+  ];
+  it("sums same-day expenses within the month", () => {
+    expect(dailyTotals(exps, "2026-07")).toEqual(new Map([
+      [16, 700],
+      [4, 300],
+    ]));
+  });
+  it("filters out expenses from other months", () => {
+    const totals = dailyTotals(exps, "2026-07");
+    expect(totals.has(1)).toBe(false);
+  });
+  it("returns an empty map for empty input", () => {
+    expect(dailyTotals([], "2026-07")).toEqual(new Map());
   });
 });
 

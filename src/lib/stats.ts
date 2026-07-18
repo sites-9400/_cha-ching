@@ -41,6 +41,20 @@ export function categoryTotals(
     .sort((a, b) => b.total - a.total);
 }
 
+/** This month's expenses summed per day-of-month. Pure. */
+export function dailyTotals(
+  expenses: readonly { amount: number; date: string }[],
+  monthKey: string,
+): Map<number, number> {
+  const byDay = new Map<number, number>();
+  for (const e of expenses) {
+    if (e.date.slice(0, 7) !== monthKey) continue;
+    const day = Number(e.date.slice(8, 10));
+    byDay.set(day, (byDay.get(day) ?? 0) + e.amount);
+  }
+  return byDay;
+}
+
 /**
  * The next release month (1–12) on or after `fromMonthIndex`, wrapping to the
  * earliest if none remain; null if the fund never releases. Pure.

@@ -6,22 +6,25 @@ import IncomesEditor from "./settings/IncomesEditor";
 import CategoriesEditor from "./settings/CategoriesEditor";
 import FundsEditor from "./settings/FundsEditor";
 import EventsEditor from "./settings/EventsEditor";
+import SubscriptionsEditor from "./settings/SubscriptionsEditor";
 import AccountsEditor from "./settings/AccountsEditor";
 import ChangePin from "./settings/ChangePin";
 import ExportData from "./settings/ExportData";
 import BackupsEditor from "./settings/BackupsEditor";
 
 type Section =
-  | "debts" | "template" | "incomes" | "categories" | "funds" | "events" | "accounts" | "pin" | "export" | "backups";
+  | "debts" | "template" | "incomes" | "categories" | "funds" | "subscriptions" | "events"
+  | "accounts" | "pin" | "export" | "backups";
 
 const ROWS: { id: Section; label: string }[] = [
   { id: "debts", label: "Debts" },
   { id: "accounts", label: "Accounts" },
-  { id: "template", label: "Template lines" },
+  { id: "template", label: "Recurring" },
   { id: "incomes", label: "Income sources" },
   { id: "categories", label: "Categories" },
   { id: "funds", label: "Sinking funds" },
-  { id: "events", label: "Events" },
+  { id: "subscriptions", label: "Subscriptions" },
+  { id: "events", label: "Planned one-offs" },
   { id: "backups", label: "Backups" },
   { id: "pin", label: "Change PIN" },
   { id: "export", label: "Export CSV" },
@@ -68,6 +71,7 @@ function Editor({ section }: { section: Section }) {
   if (section === "incomes") return <IncomesEditor />;
   if (section === "categories") return <CategoriesEditor />;
   if (section === "funds") return <FundsEditor />;
+  if (section === "subscriptions") return <SubscriptionsEditor />;
   if (section === "events") return <EventsEditor />;
   if (section === "accounts") return <AccountsEditor />;
   if (section === "pin") return <ChangePin />;

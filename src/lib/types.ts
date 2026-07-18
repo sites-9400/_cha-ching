@@ -88,7 +88,17 @@ export interface SinkingFund {
   balance: number;
 }
 
-export interface Category { id: string; name: string; order: number }
+export interface Category { id: string; name: string; order: number; budget?: number }
+
+/** An individually-tracked recurring service (Netflix, iCloud, …). Informational
+ *  registry only — does not create month lines or affect money math. */
+export interface Subscription {
+  id: string;
+  name: string;
+  amount: number;
+  channel?: Channel;
+  note?: string;
+}
 
 export interface Meta {
   savingsBalance: number;

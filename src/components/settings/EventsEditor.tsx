@@ -19,7 +19,7 @@ export default function EventsEditor() {
 
   return (
     <div>
-      <h2 className="font-bold text-lg mb-1">Events</h2>
+      <h2 className="font-bold text-lg mb-1">Planned one-offs</h2>
       <p className="text-xs text-stone-400 mb-3">Suggested one-off lines when a month is generated.</p>
       <ul className="flex flex-col gap-2">
         {sorted.map((e) => (

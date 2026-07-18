@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
-  metaDoc, monthBackups, monthDoc, monthLines, templateIncomes, templateLines,
+  metaDoc, monthBackups, monthDoc, monthLines, subscriptionsCol, templateIncomes, templateLines,
 } from "./paths";
 
 describe("paths", () => {
@@ -13,6 +13,7 @@ describe("paths", () => {
     expect(fundsCol()).toBe("households/main/sinkingFunds");
     expect(categoriesCol()).toBe("households/main/categories");
     expect(expensesCol()).toBe("households/main/expenses");
+    expect(subscriptionsCol()).toBe("households/main/subscriptions");
   });
   it("builds month + nested paths", () => {
     expect(monthDoc("2026-07")).toBe("households/main/months/2026-07");

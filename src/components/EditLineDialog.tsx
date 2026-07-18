@@ -36,7 +36,7 @@ export default function EditLineDialog(
             {names.map((c) => <option key={String(c)} value={String(c)}>{c}</option>)}
           </select>
         </label>
-        <label className="flex items-center justify-between text-sm">Envelope
+        <label className="flex items-center justify-between text-sm">Budget
           <input type="checkbox" checked={isEnvelope} onChange={(e) => setIsEnvelope(e.target.checked)} />
         </label>
         <p className="text-[11px] text-stone-400">Changes apply to {monthKey} only — the template stays as-is.</p>
