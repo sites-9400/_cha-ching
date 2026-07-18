@@ -71,9 +71,22 @@ describe("cycleMinimums", () => {
     const m = cycleMinimums(debts, cycles, [pay("d1", "2026-07-16T00:00:00.000Z", 9999)], today);
     expect(m.get("d1")).toBe(0);
   });
-  it("has no entry without a statementDay or without a cycle doc", () => {
+  it("has no entry without a statementDay, or without both a cycle doc and a static minimum", () => {
     const m = cycleMinimums(debts, [cycles[0]], [], today);
-    expect(m.has("d2")).toBe(false); // no cycle doc entered yet → static fallback applies downstream
-    expect(m.has("d3")).toBe(false); // no statementDay
+    expect(m.has("d2")).toBe(false); // no cycle doc AND no static minimum → nothing to net
+    expect(m.has("d3")).toBe(false); // no statementDay → no billing window to net within
+  });
+
+  it("nets the static minimum by billing window when no cycle doc is entered", () => {
+    // Landers case: statement day known, no statement entered, ₱2,900 static min,
+    // paid 2,900 after the billing date → nothing left to reserve.
+    const landers = [{ id: "landers", statementDay: 15, minimum: 2900 }];
+    const paidFull = cycleMinimums(landers, [], [pay("landers", "2026-07-16T00:00:00.000Z", 2900)], today);
+    expect(paidFull.get("landers")).toBe(0);
+    const paidPart = cycleMinimums(landers, [], [pay("landers", "2026-07-16T00:00:00.000Z", 1000)], today);
+    expect(paidPart.get("landers")).toBe(1900);
+    // Payment BEFORE the billing date belongs to the previous cycle — not netted.
+    const paidBefore = cycleMinimums(landers, [], [pay("landers", "2026-07-14T00:00:00.000Z", 2900)], today);
+    expect(paidBefore.get("landers")).toBe(2900);
   });
 });

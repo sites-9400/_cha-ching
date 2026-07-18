@@ -52,13 +52,15 @@ export function daysUntil(dateIso: string, today: Date): number {
 
 /**
  * Per-debt reserve for the allocation's minimums pass: the current cycle's
- * minimum net of payments already inside the cycle window. Debts without a
- * statementDay or without an entered cycle doc get no entry — callers fall
- * back to the static `minimum`. Pass `payments: []` for the gross (un-netted)
- * variant used by full-cutoff views.
+ * minimum (entered statement doc, else the static `minimum`) net of payments
+ * already inside the billing window — so paying a card after its statement
+ * date ticks its minimum down even before a statement is entered. Debts
+ * without a statementDay have no billing window and get no entry — callers
+ * fall back to the un-netted static `minimum`. Pass `payments: []` for the
+ * gross variant used by full-cutoff views.
  */
 export function cycleMinimums(
-  debts: readonly { id: string; statementDay?: number }[],
+  debts: readonly { id: string; statementDay?: number; minimum?: number }[],
   cycles: readonly { id: string; debtId?: string; minimumDue: number }[],
   payments: readonly { debtId: string; date: string; amount: number }[],
   today: Date,
@@ -68,8 +70,9 @@ export function cycleMinimums(
     if (!d.statementDay) continue;
     const key = currentCycleKey(d.statementDay, today);
     const cyc = cycles.find((c) => c.debtId === d.id && c.id === key);
-    if (!cyc) continue;
-    m.set(d.id, Math.max(0, cyc.minimumDue - paidInCycle(payments, d.id, d.statementDay, key)));
+    const minDue = cyc?.minimumDue ?? d.minimum;
+    if (minDue == null) continue;
+    m.set(d.id, Math.max(0, minDue - paidInCycle(payments, d.id, d.statementDay, key)));
   }
   return m;
 }
