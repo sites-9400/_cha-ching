@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { lock } from "../lib/pinAuth";
+import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
 import DebtsEditor from "./settings/DebtsEditor";
 import TemplateEditor from "./settings/TemplateEditor";
 import IncomesEditor from "./settings/IncomesEditor";
@@ -30,8 +31,20 @@ const ROWS: { id: Section; label: string }[] = [
   { id: "export", label: "Export CSV" },
 ];
 
+const THEMES: { id: ThemePref; label: string }[] = [
+  { id: "system", label: "System" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+];
+
 export default function Settings() {
   const [section, setSection] = useState<Section | null>(null);
+  const [theme, setTheme] = useState<ThemePref>(getThemePref);
+
+  const pickTheme = (t: ThemePref) => {
+    setTheme(t);
+    setThemePref(t);
+  };
 
   if (section) {
     return (
@@ -45,6 +58,18 @@ export default function Settings() {
   return (
     <main className="p-4">
       <h1 className="text-xl font-bold mb-4">Settings</h1>
+      <div className="bg-white rounded-xl shadow px-4 py-3 mb-4 flex items-center justify-between">
+        <span className="text-sm">Appearance</span>
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => pickTheme(t.id)}
+              className={`px-2.5 py-1 rounded-full ${theme === t.id ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
+            >{t.label}</button>
+          ))}
+        </div>
+      </div>
       <ul className="bg-white rounded-xl shadow divide-y divide-stone-100 mb-6">
         {ROWS.map((r) => (
           <li key={r.id}>

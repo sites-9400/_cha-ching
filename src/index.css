@@ -1,5 +1,53 @@
 @import "tailwindcss";
 
+/* ── Dark mode: theme override layer ─────────────────────────────────────────
+   The app's light palette is applied via a consistent set of utilities, so
+   dark mode remaps those utilities under html.dark instead of adding dark:
+   variants to every component (see 2026-07-18-dark-mode-design.md). Account
+   chips and solid emerald/red action colors are intentionally left as-is. */
+.dark { color-scheme: dark; }
+
+/* Surfaces */
+.dark .bg-white { background-color: #1c1917; }        /* cards, dialogs → stone-900 */
+.dark .bg-stone-50 { background-color: #292524; }
+.dark .bg-stone-100 { background-color: #0f0d0c; }    /* page bg, tracks, pills */
+.dark .bg-stone-700 { background-color: #57534e; }    /* selected "Unplanned" chip */
+
+/* Text */
+.dark .text-stone-900 { color: #f5f5f4; }
+.dark .text-stone-700 { color: #e7e5e4; }
+.dark .text-stone-600 { color: #d6d3d1; }
+.dark .text-stone-500 { color: #a8a29e; }
+.dark .text-stone-400 { color: #857f7a; }
+.dark .text-stone-300 { color: #57534e; }
+.dark .text-stone-200 { color: #44403c; }
+
+/* Borders / dividers */
+.dark .border-stone-100 { border-color: #292524; }
+.dark .border-stone-200 { border-color: #3a3532; }
+.dark .border-stone-300 { border-color: #4a4440; }
+.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]) { border-color: #292524; }
+
+/* Tinted banners / badges (keep hue, invert lightness) */
+.dark .bg-emerald-100 { background-color: #064e3b; }
+.dark .bg-emerald-50 { background-color: #052e2b; }
+.dark .text-emerald-800 { color: #6ee7b7; }
+.dark .text-emerald-700 { color: #34d399; }
+.dark .text-emerald-600 { color: #34d399; }
+.dark .bg-amber-50 { background-color: #451a03; }
+.dark .border-amber-200 { border-color: #78350f; }
+.dark .text-amber-800 { color: #fcd34d; }
+.dark .text-amber-700 { color: #fbbf24; }
+.dark .text-amber-600 { color: #fbbf24; }
+.dark .bg-red-50 { background-color: #450a0a; }
+.dark .border-red-200 { border-color: #7f1d1d; }
+.dark .text-red-800 { color: #fca5a5; }
+.dark .text-red-700 { color: #f87171; }
+.dark .text-red-600 { color: #f87171; }
+
+/* Shadows read as glow on dark — flatten them */
+.dark .shadow, .dark .shadow-xl { box-shadow: 0 0 0 1px #292524; }
+
 /* iOS Safari zooms the page when a focused input's font-size is < 16px.
    Force 16px on form controls only on iOS (the -webkit-touch-callout query
    targets iOS Safari), so the layout keeps its Tailwind sizes elsewhere. */
