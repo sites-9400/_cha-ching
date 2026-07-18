@@ -105,4 +105,39 @@ describe("reconcileLines with closed cutoffs", () => {
     const { upserts } = reconcileLines([T({ id: "new", cutoff: 1 })], [M({ id: "a", cutoff: 1, status: "PAID" })]);
     expect(upserts.map((u) => u.id)).toContain("new");
   });
+
+  it("budget metadata still flows into a closed cutoff as a patch (no upsert)", () => {
+    const { upserts, deletes, patches } = reconcileLines(
+      [T({ id: "allow", cutoff: 1, isEnvelope: true, budgetGroup: "Allowance" })],
+      [M({ id: "allow", cutoff: 1, status: "PAID" })],
+      new Set([1]),
+    );
+    expect(upserts).toEqual([]);
+    expect(deletes).toEqual([]);
+    expect(patches).toEqual([{ id: "allow", isEnvelope: true, budgetGroup: "Allowance" }]);
+  });
+  it("emits no patch when the closed line's metadata already matches", () => {
+    const { patches } = reconcileLines(
+      [T({ id: "allow", cutoff: 1, isEnvelope: true, budgetGroup: "Allowance" })],
+      [M({ id: "allow", cutoff: 1, status: "PAID", isEnvelope: true, budgetGroup: "Allowance" })],
+      new Set([1]),
+    );
+    expect(patches).toEqual([]);
+  });
+  it("does not patch overridden lines (dialog edits win)", () => {
+    const { patches } = reconcileLines(
+      [T({ id: "allow", cutoff: 1, budgetGroup: "Allowance" })],
+      [M({ id: "allow", cutoff: 1, status: "PAID", overridden: true })],
+      new Set([1]),
+    );
+    expect(patches).toEqual([]);
+  });
+  it("open cutoffs get metadata via the normal upsert, not a patch", () => {
+    const { upserts, patches } = reconcileLines(
+      [T({ id: "allow", cutoff: 1, isEnvelope: true, budgetGroup: "Allowance" })],
+      [M({ id: "allow", cutoff: 1 })],
+    );
+    expect(upserts[0]).toMatchObject({ id: "allow", isEnvelope: true, budgetGroup: "Allowance" });
+    expect(patches).toEqual([]);
+  });
 });

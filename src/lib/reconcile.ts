@@ -9,23 +9,35 @@ import type { MonthLine, TemplateLine } from "./types";
  * a new id), it falls back to matching an untracked non-oneOff month line by
  * (name, cutoff) so the tick MIGRATES to the new id instead of being wiped — the
  * old-id doc is then deleted. Cutoffs in `closedCutoffs` are frozen — no
- * upserts into them, no moves out of them, no deletes within them. Pure.
+ * upserts into them, no moves out of them, no deletes within them; only budget
+ * metadata (isEnvelope/budgetGroup) still flows onto existing lines there via
+ * `patches`, since it changes no amounts or ticks. Pure.
  */
+export interface LinePatch { id: string; isEnvelope: boolean; budgetGroup: string }
+
 export function reconcileLines(
   template: TemplateLine[],
   monthLines: MonthLine[],
   closedCutoffs: ReadonlySet<number> = new Set(),
-): { upserts: MonthLine[]; deletes: string[] } {
+): { upserts: MonthLine[]; deletes: string[]; patches: LinePatch[] } {
   const byId = new Map(monthLines.map((l) => [l.id, l]));
   const templateIds = new Set(template.map((t) => t.id));
   const consumed = new Set<string>(); // month-line ids matched by a template line
 
   const upserts: MonthLine[] = [];
+  const patches: LinePatch[] = [];
   for (const t of template) {
     const direct = byId.get(t.id);
     // Closed cutoffs are frozen: never insert into one, never move a line out of one.
+    // Budget metadata alone still syncs onto an existing, non-overridden line.
     if (closedCutoffs.has(t.cutoff) || (direct && closedCutoffs.has(direct.cutoff))) {
-      if (direct) consumed.add(direct.id);
+      if (direct) {
+        consumed.add(direct.id);
+        const wantEnv = !!t.isEnvelope, wantGroup = t.budgetGroup ?? "";
+        if (!direct.overridden && (!!direct.isEnvelope !== wantEnv || (direct.budgetGroup ?? "") !== wantGroup)) {
+          patches.push({ id: direct.id, isEnvelope: wantEnv, budgetGroup: wantGroup });
+        }
+      }
       continue;
     }
     if (direct?.overridden) { consumed.add(direct.id); continue; } // leave inline-edits untouched
@@ -58,5 +70,5 @@ export function reconcileLines(
     .filter((l) => !l.oneOff && !l.overridden && !templateIds.has(l.id) && !closedCutoffs.has(l.cutoff))
     .map((l) => l.id);
 
-  return { upserts, deletes };
+  return { upserts, deletes, patches };
 }

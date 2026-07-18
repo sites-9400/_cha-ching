@@ -377,13 +377,17 @@ export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
   const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
   const lines = mSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as MonthLine[];
   const closed = new Set(([1, 2] as const).filter((c) => isCutoffClosed(lines, c)));
-  const { upserts, deletes } = reconcileLines(template, lines, closed);
+  const { upserts, deletes, patches } = reconcileLines(template, lines, closed);
   const batch = writeBatch(db);
   for (const l of upserts) {
     const { id, ...rest } = l;
     batch.set(doc(db, monthLines(monthKey), id), rest);
   }
   for (const id of deletes) batch.delete(doc(db, monthLines(monthKey), id));
+  // Budget metadata flowing into closed (frozen) cutoffs — update, never replace.
+  for (const p of patches) {
+    batch.update(doc(db, monthLines(monthKey), p.id), { isEnvelope: p.isEnvelope, budgetGroup: p.budgetGroup });
+  }
   await batch.commit();
 }
 
