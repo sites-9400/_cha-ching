@@ -10,10 +10,11 @@ import { useAccounts } from "./AccountsProvider";
 
 /** "Send to accounts" — how much to fund each channel this cutoff (bills + debt payments). */
 export default function SendPlan({
-  freeCash, debts, payments, lines, monthKey, cutoff,
+  freeCash, debts, payments, lines, monthKey, cutoff, cycleMins, cycleMinsGross,
 }: {
   freeCash: number; debts: Debt[]; payments: PaymentRec[]; lines: MonthLine[];
   monthKey: string; cutoff: 1 | 2;
+  cycleMins?: ReadonlyMap<string, number>; cycleMinsGross?: ReadonlyMap<string, number>;
 }) {
   const { chip, label } = useAccounts();
   const meta = useDoc<Meta>(metaDoc());
@@ -25,8 +26,8 @@ export default function SendPlan({
   // "remaining": the leftover free cash allocated on live balances (matches the debt
   // plan). "full": the whole cutoff's allocation on start-of-cutoff balances.
   const alloc = mode === "remaining"
-    ? allocateCutoff(Math.max(0, freeCash - paidTotal), debts, cutoff)
-    : cutoffAllocation(freeCash, debts, paid, cutoff);
+    ? allocateCutoff(Math.max(0, freeCash - paidTotal), debts, cutoff, cycleMins)
+    : cutoffAllocation(freeCash, debts, paid, cutoff, cycleMinsGross);
   const sends = fundingByChannel(lines, alloc.lines, mode, incomeChannel);
   const grandTotal = sends.reduce((s, x) => s + x.total, 0);
 

@@ -14,10 +14,10 @@ export interface PaymentRec {
 const KIND_LABEL: Record<string, string> = { target: "target", spill: "spill", minimum: "min" };
 
 export default function DebtPlan({
-  freeCash, debts, payments, monthKey, cutoff, unplanned = 0, readOnly = false,
+  freeCash, debts, payments, monthKey, cutoff, unplanned = 0, readOnly = false, cycleMins,
 }: {
   freeCash: number; debts: Debt[]; payments: PaymentRec[]; monthKey: string; cutoff: 1 | 2;
-  unplanned?: number; readOnly?: boolean;
+  unplanned?: number; readOnly?: boolean; cycleMins?: ReadonlyMap<string, number>;
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const { chip, label } = useAccounts();
@@ -27,7 +27,7 @@ export default function DebtPlan({
   const paid = paidByDebt(payments, monthKey, cutoff);
   const paidTotal = [...paid.values()].reduce((s, n) => s + n, 0);
   const remaining = Math.max(0, freeCash - paidTotal);
-  const alloc = allocateCutoff(remaining, debts, cutoff);
+  const alloc = allocateCutoff(remaining, debts, cutoff, cycleMins);
 
   const paidLines = [...paid.entries()]
     .map(([debtId, amount]) => ({ debt: debts.find((d) => d.id === debtId), amount }))

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { cutoffSummary, envelopeSpent, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
+import { cycleMinimums } from "../lib/cycles";
 import { projectMonthPlan } from "../lib/project";
 import { lineComparators, LINE_SORTS, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
@@ -9,7 +10,7 @@ import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../lib/paths";
 import { deleteMonthIncome, deleteMonthLine, setIncomeReceived, syncMonthFromTemplate } from "../lib/repo";
-import type { Debt, EventItem, MonthLine, TemplateLine } from "../lib/types";
+import type { Debt, DebtCycle, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import LineRow from "./LineRow";
 import DebtPlan, { type PaymentRec } from "./DebtPlan";
@@ -22,6 +23,11 @@ export default function ThisMonth() {
   const { viewedKey, currentKey, mode, editable, lines, incomes, ready, goPrev, goNext, start } = useMonth();
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
+  const cycles = useCollectionGroup<DebtCycle>("cycles");
+  // Net = what's still owed on each entered statement minimum; gross = the full
+  // minimum (start-of-cutoff view for SendPlan's "full" mode).
+  const cycleMins = cycleMinimums(debts, cycles, payments, new Date());
+  const cycleMinsGross = cycleMinimums(debts, cycles, [], new Date());
   const expenses = useCollection<{ id: string; amount: number; date: string; envelopeLineId?: string }>(expensesCol());
   const meta = useDoc<{ receivedIncomes?: Record<string, boolean> }>(monthDoc(viewedKey));
   const received = meta?.receivedIncomes ?? {};
@@ -161,8 +167,8 @@ export default function ThisMonth() {
 
             {mode !== "past" && !projected && (
               <>
-                <DebtPlan freeCash={freeCash} debts={debts} payments={payments} monthKey={viewedKey} cutoff={cutoff} unplanned={unplanned} />
-                <SendPlan freeCash={freeCash} debts={debts} payments={payments} lines={cutLines} monthKey={viewedKey} cutoff={cutoff} />
+                <DebtPlan freeCash={freeCash} debts={debts} payments={payments} monthKey={viewedKey} cutoff={cutoff} unplanned={unplanned} cycleMins={cycleMins} />
+                <SendPlan freeCash={freeCash} debts={debts} payments={payments} lines={cutLines} monthKey={viewedKey} cutoff={cutoff} cycleMins={cycleMins} cycleMinsGross={cycleMinsGross} />
               </>
             )}
             {projected && projAlloc && (
