@@ -52,18 +52,24 @@ export default function LineRow(
           {line.name}
           {line.oneOff && <span className="ml-1 text-[10px] text-amber-600">•one-off</span>}
           {line.isEnvelope && spent != null && (
-            <>
-              <span className="block text-[10px] text-stone-400 tabular-nums">
-                {peso(Math.max(0, poolTotal - spent))} left of {peso(poolTotal)}
-                {line.budgetGroup ? ` (${line.budgetGroup})` : ""}
+            poolTotal === 0 ? (
+              <span className="block text-[10px] text-stone-400">
+                budget not on hand yet — tick to fund{line.budgetGroup ? ` (${line.budgetGroup})` : ""}
               </span>
-              <span className="mt-0.5 block h-1 w-24 rounded-full bg-stone-100 overflow-hidden">
-                <span
-                  className={`block h-full ${spent > poolTotal ? "bg-red-500" : "bg-emerald-500"}`}
-                  style={{ width: `${poolTotal > 0 ? Math.min(100, Math.round((spent / poolTotal) * 100)) : 100}%` }}
-                />
-              </span>
-            </>
+            ) : (
+              <>
+                <span className="block text-[10px] text-stone-400 tabular-nums">
+                  {peso(Math.max(0, poolTotal - spent))} left of {peso(poolTotal)}
+                  {line.budgetGroup ? ` (${line.budgetGroup})` : ""}
+                </span>
+                <span className="mt-0.5 block h-1 w-24 rounded-full bg-stone-100 overflow-hidden">
+                  <span
+                    className={`block h-full ${spent > poolTotal ? "bg-red-500" : "bg-emerald-500"}`}
+                    style={{ width: `${Math.min(100, Math.round((spent / poolTotal) * 100))}%` }}
+                  />
+                </span>
+              </>
+            )
           )}
         </span>
       </button>

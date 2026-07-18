@@ -174,9 +174,12 @@ export default function ThisMonth() {
                       ? groupSpent(expenses, viewedKey, l.budgetGroup, lines)
                       : envelopeSpent(expenses, viewedKey, l.id)
                     : undefined}
-                  budgetTotal={l.isEnvelope && l.budgetGroup
-                    ? lines.filter((x) => x.isEnvelope && x.budgetGroup === l.budgetGroup)
-                        .reduce((s, x) => s + x.amount, 0)
+                  budgetTotal={l.isEnvelope
+                    ? l.budgetGroup
+                      // Only ticked (on-hand) lines fund the pool — matches unplannedForCutoff.
+                      ? lines.filter((x) => x.isEnvelope && x.budgetGroup === l.budgetGroup && x.status !== "")
+                          .reduce((s, x) => s + x.amount, 0)
+                      : (l.status !== "" ? l.amount : 0)
                     : undefined}
                   onDelete={editable && l.oneOff ? () => void deleteMonthLine(viewedKey, l.id) : undefined}
                   onEdit={editable ? () => setEditingLine(l) : undefined}

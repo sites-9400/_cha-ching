@@ -177,7 +177,8 @@ describe("envelopeSpent", () => {
 });
 
 describe("unplannedForCutoff", () => {
-  const openLines = [env("allow", 1, 1000), mk("rent", 100, 2)];
+  // "allow" is TICKED (money on hand → its 1,000 budget is live); filler lines keep both cutoffs open.
+  const openLines = [env("allow", 1, 1000, "PAID"), mk("misc", 50, 1), mk("rent", 100, 2)];
 
   it("attributes envelope-less expenses by day rule when cutoffs are open", () => {
     const expenses = [
@@ -232,13 +233,22 @@ describe("unplannedForCutoff", () => {
     expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(0);
     expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(0);
   });
+
+  it("an UNTICKED envelope line offers no budget yet — its spending is all excess", () => {
+    const lines = [env("allow", 1, 1000), mk("misc", 50, 1), mk("rent", 100, 2)]; // allow not ticked
+    const expenses = [exp(300, "2026-07-15T10:00:00.000Z", "allow")];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, lines)).toBe(300);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, lines)).toBe(0);
+  });
 });
 
 describe("budget groups", () => {
-  // Allowance pool: 10,000 (cutoff 1) + 5,750 + 5,750 (cutoff 2) = 21,500 combined.
-  const grouped = (id: string, cutoff: 1 | 2, amount: number): MonthLine =>
-    ({ ...mk(id, amount, cutoff), isEnvelope: true, budgetGroup: "Allowance" });
-  const pool = [grouped("allow", 1, 10000), grouped("allow-1", 2, 5750), grouped("allow-2", 2, 5750)];
+  // Allowance pool: 10,000 (cutoff 1) + 5,750 + 5,750 (cutoff 2) = 21,500 when fully ticked.
+  const grouped = (id: string, cutoff: 1 | 2, amount: number, status: MonthLine["status"] = "PAID"): MonthLine =>
+    ({ ...mk(id, amount, cutoff, status), isEnvelope: true, budgetGroup: "Allowance" });
+  // Unticked fillers keep both cutoffs open.
+  const fillers = [mk("misc1", 50, 1), mk("misc2", 50, 2)];
+  const pool = [grouped("allow", 1, 10000), grouped("allow-1", 2, 5750), grouped("allow-2", 2, 5750), ...fillers];
   const gexp = (amount: number, date: string) => ({ amount, date, budgetGroup: "Allowance" });
 
   it("groupSpent sums group-tagged AND member-line-tagged expenses this month", () => {
@@ -273,5 +283,21 @@ describe("budget groups", () => {
     const expenses = [exp(12000, "2026-07-15T10:00:00.000Z", "allow")];
     expect(unplannedForCutoff(expenses, "2026-07", 1, pool)).toBe(0);
     expect(unplannedForCutoff(expenses, "2026-07", 2, pool)).toBe(0);
+  });
+
+  it("only TICKED member lines fund the pool — unticked ones don't count yet", () => {
+    // Only the 10,000 cutoff-1 line is ticked; the two 5,750s aren't on hand yet.
+    const partial = [
+      grouped("allow", 1, 10000, "PAID"),
+      grouped("allow-1", 2, 5750, ""),
+      grouped("allow-2", 2, 5750, ""),
+      ...fillers,
+    ];
+    const within = [gexp(9000, "2026-07-15T10:00:00.000Z")];
+    expect(unplannedForCutoff(within, "2026-07", 1, partial)).toBe(0);
+    expect(unplannedForCutoff(within, "2026-07", 2, partial)).toBe(0);
+    const over = [gexp(12000, "2026-07-15T10:00:00.000Z")]; // 2,000 past the funded 10,000
+    expect(unplannedForCutoff(over, "2026-07", 1, partial)).toBe(0);
+    expect(unplannedForCutoff(over, "2026-07", 2, partial)).toBe(2000);
   });
 });

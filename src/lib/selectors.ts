@@ -108,15 +108,18 @@ export function unplannedForCutoff(
     if (envLine?.isEnvelope) continue; // drawn from the envelope, counted below as excess only
     if (attribute(Number(e.date.slice(8, 10))) === cutoff) total += e.amount;
   }
+  // A budget only exists once its line is ticked (the money is on hand):
+  // unticked lines contribute nothing to the available pool yet.
   for (const l of lines) {
     if (!l.isEnvelope || l.budgetGroup || l.cutoff !== cutoff) continue;
-    total += Math.max(0, envelopeSpent(expenses, monthKey, l.id) - l.amount);
+    const funded = l.status !== "" ? l.amount : 0;
+    total += Math.max(0, envelopeSpent(expenses, monthKey, l.id) - funded);
   }
   for (const [name, members] of groups) {
     const latest = Math.max(...members.map((l) => l.cutoff)) as 1 | 2;
     if (latest !== cutoff) continue;
-    const poolTotal = members.reduce((s, l) => s + l.amount, 0);
-    total += Math.max(0, groupSpent(expenses, monthKey, name, lines) - poolTotal);
+    const funded = members.filter((l) => l.status !== "").reduce((s, l) => s + l.amount, 0);
+    total += Math.max(0, groupSpent(expenses, monthKey, name, lines) - funded);
   }
   return total;
 }
