@@ -79,6 +79,7 @@ export async function writeMonth(
 
 export interface ExpenseInput {
   amount: number; category: string; channel: string; note: string; date: string;
+  envelopeLineId?: string; // month line the spending draws from; absent = unplanned
 }
 
 export async function addExpense(e: ExpenseInput): Promise<void> {

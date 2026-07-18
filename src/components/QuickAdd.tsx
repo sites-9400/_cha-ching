@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
+import { currentMonthKey } from "../lib/clock";
 import { peso } from "../lib/format";
-import { categoriesCol, expensesCol } from "../lib/paths";
+import { categoriesCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
-import type { Category, Channel } from "../lib/types";
+import type { Category, Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
 interface Expense extends ExpenseInput { id: string }
@@ -12,11 +13,23 @@ export default function QuickAdd() {
   const { names: CHANNELS, chip, label } = useAccounts();
   const categories = useCollection<Category>(categoriesCol());
   const expenses = useCollection<Expense>(expensesCol());
+  const lines = useCollection<MonthLine>(monthLines(currentMonthKey()));
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [channel, setChannel] = useState<Channel>("CASH");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [envelope, setEnvelope] = useState<string>(() => localStorage.getItem("quickadd-envelope") ?? "");
+
+  const envelopes = lines
+    .filter((l) => l.isEnvelope)
+    .sort((a, b) => a.cutoff - b.cutoff || a.order - b.order);
+  // A remembered envelope that no longer exists (new month, deleted line) falls back to Unplanned.
+  const activeEnvelope = envelopes.some((l) => l.id === envelope) ? envelope : "";
+  const pickEnvelope = (id: string) => {
+    setEnvelope(id);
+    localStorage.setItem("quickadd-envelope", id);
+  };
 
   const cats = [...categories].sort((a, b) => a.order - b.order);
   const recent = [...expenses].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
@@ -27,7 +40,10 @@ export default function QuickAdd() {
     if (!canSave) return;
     setBusy(true);
     try {
-      await addExpense({ amount: value, category, channel, note, date: new Date().toISOString() });
+      await addExpense({
+        amount: value, category, channel, note, date: new Date().toISOString(),
+        ...(activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
+      });
       setAmount("");
       setNote("");
     } finally {
@@ -84,6 +100,26 @@ export default function QuickAdd() {
         </div>
 
         <div>
+          <Label>Paid from</Label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => pickEnvelope("")}
+              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                activeEnvelope === "" ? "bg-stone-700 text-white" : "bg-stone-100 text-stone-600"
+              }`}
+            >Unplanned</button>
+            {envelopes.map((l) => (
+              <button
+                key={l.id} onClick={() => pickEnvelope(l.id)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  activeEnvelope === l.id ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                }`}
+              >{l.name}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
           <Label>Note</Label>
           <input
             placeholder="optional" value={note} onChange={(e) => setNote(e.target.value)}
@@ -103,7 +139,13 @@ export default function QuickAdd() {
           <li key={e.id} className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 min-w-0">
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{label(e.channel)}</span>
-              <span className="text-sm truncate">{e.category}{e.note ? ` · ${e.note}` : ""}</span>
+              <span className="text-sm truncate">
+                {e.category}
+                {e.envelopeLineId && (
+                  <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
+                )}
+                {e.note ? ` · ${e.note}` : ""}
+              </span>
             </span>
             <span className="flex items-center gap-2 shrink-0">
               <span className="text-sm font-semibold tabular-nums">{peso(e.amount)}</span>
