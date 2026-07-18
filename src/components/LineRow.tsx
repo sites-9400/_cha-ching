@@ -5,8 +5,8 @@ import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
 export default function LineRow(
-  { monthKey, line, readOnly = false, onDelete, onEdit }:
-  { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void; onEdit?: () => void },
+  { monthKey, line, readOnly = false, onDelete, onEdit, spent }:
+  { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void; onEdit?: () => void; spent?: number },
 ) {
   const { chip, label } = useAccounts();
   const ticked = line.status !== "";
@@ -46,9 +46,22 @@ export default function LineRow(
         >
           {ticked ? "✓" : ""}
         </span>
-        <span className="text-sm">
+        <span className="text-sm min-w-0">
           {line.name}
           {line.oneOff && <span className="ml-1 text-[10px] text-amber-600">•one-off</span>}
+          {line.isEnvelope && spent != null && (
+            <>
+              <span className="block text-[10px] text-stone-400 tabular-nums">
+                {peso(Math.max(0, line.amount - spent))} left of {peso(line.amount)}
+              </span>
+              <span className="mt-0.5 block h-1 w-24 rounded-full bg-stone-100 overflow-hidden">
+                <span
+                  className={`block h-full ${spent > line.amount ? "bg-red-500" : "bg-emerald-500"}`}
+                  style={{ width: `${line.amount > 0 ? Math.min(100, Math.round((spent / line.amount) * 100)) : 100}%` }}
+                />
+              </span>
+            </>
+          )}
         </span>
       </button>
       <span className="flex items-center gap-2 shrink-0">

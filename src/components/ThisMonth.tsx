@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
-import { cutoffSummary, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
+import { cutoffSummary, envelopeSpent, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
 import { projectMonthPlan } from "../lib/project";
 import { lineComparators, LINE_SORTS, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
@@ -149,6 +149,7 @@ export default function ThisMonth() {
                   monthKey={viewedKey}
                   line={l}
                   readOnly={!editable}
+                  spent={l.isEnvelope ? envelopeSpent(expenses, viewedKey, l.id) : undefined}
                   onDelete={editable && l.oneOff ? () => void deleteMonthLine(viewedKey, l.id) : undefined}
                   onEdit={editable ? () => setEditingLine(l) : undefined}
                 />
