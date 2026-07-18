@@ -8,6 +8,7 @@ export const templateLines = (): string => col("template-lines");
 export const templateIncomes = (): string => col("template-incomes");
 export const debtsCol = (): string => col("debts");
 export const debtPayments = (debtId: string): string => `${debtsCol()}/${debtId}/payments`;
+export const debtCycles = (debtId: string): string => `${debtsCol()}/${debtId}/cycles`;
 export const eventsCol = (): string => col("events");
 export const fundsCol = (): string => col("sinkingFunds");
 export const categoriesCol = (): string => col("categories");

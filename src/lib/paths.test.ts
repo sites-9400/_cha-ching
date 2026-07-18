@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
+  categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
   metaDoc, monthDoc, monthLines, templateIncomes, templateLines,
 } from "./paths";
 
@@ -18,6 +18,7 @@ describe("paths", () => {
     expect(monthDoc("2026-07")).toBe("households/main/months/2026-07");
     expect(monthLines("2026-07")).toBe("households/main/months/2026-07/lines");
     expect(debtPayments("revi")).toBe("households/main/debts/revi/payments");
+    expect(debtCycles("revi")).toBe("households/main/debts/revi/cycles");
   });
   it("builds the meta doc path", () => {
     expect(metaDoc()).toBe("households/main");

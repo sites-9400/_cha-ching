@@ -3,7 +3,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
-  accountsCol, categoriesCol, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
+  accountsCol, categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
   metaDoc, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "./paths";
 import { reconcileLines } from "./reconcile";
@@ -88,6 +88,14 @@ export async function addExpense(e: ExpenseInput): Promise<void> {
 
 export async function deleteExpense(id: string): Promise<void> {
   await deleteDoc(doc(db, expensesCol(), id));
+}
+
+/** Upsert a card's statement cycle (doc id = statement-month "YYYY-MM"). Idempotent. */
+export async function setDebtCycle(
+  debtId: string, cycleKey: string,
+  cycle: { statementDate: string; dueDate: string; statementBalance: number; minimumDue: number },
+): Promise<void> {
+  await setDoc(doc(db, debtCycles(debtId), cycleKey), cycle);
 }
 
 /** Set a debt's monthly minimum payment. */

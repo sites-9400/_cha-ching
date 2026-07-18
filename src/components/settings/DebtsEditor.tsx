@@ -67,14 +67,16 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
 
   async function save() {
     if (!f.name.trim()) return;
-    if (id) await updateDebt(id, f);
-    else await addDebt(f);
+    // Cleared number fields hold `undefined`, which Firestore rejects — drop them.
+    const clean = Object.fromEntries(Object.entries(f).filter(([, v]) => v !== undefined)) as typeof f;
+    if (id) await updateDebt(id, clean);
+    else await addDebt(clean);
     onDone();
   }
 
   // Plain helper that RETURNS JSX (not a nested component) — a nested component
   // would get a new identity each render and remount the input, losing focus.
-  const numberField = (label: string, k: "startingBalance" | "currentBalance" | "payoffOrder" | "dueDay" | "minimum" | "creditLimit") => (
+  const numberField = (label: string, k: "startingBalance" | "currentBalance" | "payoffOrder" | "dueDay" | "statementDay" | "minimum" | "creditLimit") => (
     <label className="flex items-center justify-between text-sm">
       {label}
       <input
@@ -95,6 +97,7 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
       {numberField("Current balance", "currentBalance")}
       {numberField("Payoff order", "payoffOrder")}
       {numberField("Due day (1–31)", "dueDay")}
+      {numberField("Statement day (1–31)", "statementDay")}
       {numberField("Minimum", "minimum")}
       {numberField("Credit limit", "creditLimit")}
       <label className="flex items-center justify-between text-sm">
