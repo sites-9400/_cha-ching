@@ -8,11 +8,13 @@ import type { MonthLine, TemplateLine } from "./types";
  * If a template line's id has no month-line match (e.g. the line was re-created with
  * a new id), it falls back to matching an untracked non-oneOff month line by
  * (name, cutoff) so the tick MIGRATES to the new id instead of being wiped — the
- * old-id doc is then deleted. Pure.
+ * old-id doc is then deleted. Cutoffs in `closedCutoffs` are frozen — no
+ * upserts into them, no moves out of them, no deletes within them. Pure.
  */
 export function reconcileLines(
   template: TemplateLine[],
   monthLines: MonthLine[],
+  closedCutoffs: ReadonlySet<number> = new Set(),
 ): { upserts: MonthLine[]; deletes: string[] } {
   const byId = new Map(monthLines.map((l) => [l.id, l]));
   const templateIds = new Set(template.map((t) => t.id));
@@ -21,6 +23,11 @@ export function reconcileLines(
   const upserts: MonthLine[] = [];
   for (const t of template) {
     const direct = byId.get(t.id);
+    // Closed cutoffs are frozen: never insert into one, never move a line out of one.
+    if (closedCutoffs.has(t.cutoff) || (direct && closedCutoffs.has(direct.cutoff))) {
+      if (direct) consumed.add(direct.id);
+      continue;
+    }
     if (direct?.overridden) { consumed.add(direct.id); continue; } // leave inline-edits untouched
 
     let existing = direct;
@@ -46,7 +53,7 @@ export function reconcileLines(
   // Delete any non-oneOff, non-overridden month line whose id isn't a current template
   // id: either a removed template, or a fallback-migrated old-id doc.
   const deletes = monthLines
-    .filter((l) => !l.oneOff && !l.overridden && !templateIds.has(l.id))
+    .filter((l) => !l.oneOff && !l.overridden && !templateIds.has(l.id) && !closedCutoffs.has(l.cutoff))
     .map((l) => l.id);
 
   return { upserts, deletes };

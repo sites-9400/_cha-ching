@@ -7,7 +7,7 @@ import {
   metaDoc, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "./paths";
 import { reconcileLines } from "./reconcile";
-import { generateMonthLines } from "./selectors";
+import { generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
   Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, TemplateLine,
 } from "./types";
@@ -240,7 +240,8 @@ export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
   ]);
   const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
   const lines = mSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as MonthLine[];
-  const { upserts, deletes } = reconcileLines(template, lines);
+  const closed = new Set(([1, 2] as const).filter((c) => isCutoffClosed(lines, c)));
+  const { upserts, deletes } = reconcileLines(template, lines, closed);
   const batch = writeBatch(db);
   for (const l of upserts) {
     const { id, ...rest } = l;

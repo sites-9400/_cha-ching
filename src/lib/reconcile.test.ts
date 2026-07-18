@@ -63,3 +63,42 @@ describe("reconcileLines", () => {
     expect(upserts[0].status).toBe(""); // different cutoff → treated as a new blank line
   });
 });
+
+describe("reconcileLines with closed cutoffs", () => {
+  it("does not upsert a new template line into a closed cutoff", () => {
+    const { upserts } = reconcileLines(
+      [T({ id: "new", cutoff: 1 })],
+      [M({ id: "a", cutoff: 1, status: "PAID" })],
+      new Set([1]),
+    );
+    expect(upserts.find((u) => u.id === "new")).toBeUndefined();
+  });
+  it("does not delete lines that live in a closed cutoff", () => {
+    // "orphan" has no template counterpart — normally it would be deleted.
+    const { deletes } = reconcileLines([], [M({ id: "orphan", cutoff: 1, status: "PAID" })], new Set([1]));
+    expect(deletes).toEqual([]);
+  });
+  it("does not move an existing line out of a closed cutoff", () => {
+    // Template moved the line to cutoff 2, but its month doc sits in closed cutoff 1.
+    const { upserts, deletes } = reconcileLines(
+      [T({ id: "a", cutoff: 2 })],
+      [M({ id: "a", cutoff: 1, status: "PAID" })],
+      new Set([1]),
+    );
+    expect(upserts.find((u) => u.id === "a")).toBeUndefined();
+    expect(deletes).toEqual([]);
+  });
+  it("still reconciles open cutoffs normally", () => {
+    const { upserts, deletes } = reconcileLines(
+      [T({ id: "new2", cutoff: 2 })],
+      [M({ id: "a", cutoff: 1, status: "PAID" }), M({ id: "gone", name: "gone", cutoff: 2 })],
+      new Set([1]),
+    );
+    expect(upserts.map((u) => u.id)).toContain("new2");
+    expect(deletes).toContain("gone");
+  });
+  it("defaults to no closed cutoffs (back-compat)", () => {
+    const { upserts } = reconcileLines([T({ id: "new", cutoff: 1 })], [M({ id: "a", cutoff: 1, status: "PAID" })]);
+    expect(upserts.map((u) => u.id)).toContain("new");
+  });
+});
