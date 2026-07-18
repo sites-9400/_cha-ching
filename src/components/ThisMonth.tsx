@@ -13,6 +13,7 @@ import type { Debt, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import LineRow from "./LineRow";
 import DebtPlan, { type PaymentRec } from "./DebtPlan";
+import DueSoonStrip from "./DueSoonStrip";
 import SendPlan from "./SendPlan";
 import AddOneOff from "./AddOneOff";
 import EditLineDialog from "./EditLineDialog";
@@ -63,6 +64,8 @@ export default function ThisMonth() {
   return (
     <main className="p-4">
       {header}
+
+      {mode === "current" && <DueSoonStrip />}
 
       {projected && (
         <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">

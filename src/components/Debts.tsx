@@ -10,6 +10,7 @@ import { cutoffForDueDay } from "../lib/allocate";
 import { currentCycleKey, cycleDates, daysUntil, paidInCycle } from "../lib/cycles";
 import type { Debt, DebtCycle } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
+import DueSoonStrip from "./DueSoonStrip";
 import StatementDialog from "./StatementDialog";
 import type { PaymentRec } from "./DebtPlan";
 import { useAccounts } from "./AccountsProvider";
@@ -46,6 +47,7 @@ export default function Debts() {
         {peso(totals.total)} left · interest-bearing clear by{" "}
         <span className="font-semibold text-stone-700">{monthLabel(freeMonth)}</span>
       </p>
+      <DueSoonStrip />
       <ul className="flex flex-col gap-3">
         {active.map((d) => {
           const paid = d.startingBalance - d.currentBalance;
