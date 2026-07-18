@@ -27,6 +27,7 @@ export interface TemplateLine {
   order: number;
   debtId?: string;
   isEnvelope?: boolean; // Quick Add spending can draw from this line instead of free cash
+  budgetGroup?: string; // envelope lines sharing a group name form ONE combined budget ("" ≡ none)
 }
 
 export interface MonthLine extends TemplateLine {

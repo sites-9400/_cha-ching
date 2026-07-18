@@ -9,6 +9,7 @@ import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
 import { cutoffForDueDay } from "../lib/allocate";
 import { currentCycleKey, cycleDates, daysUntil, paidInCycle } from "../lib/cycles";
 import type { Debt, DebtCycle } from "../lib/types";
+import ChannelIcon from "./ChannelIcon";
 import ConfirmPayDialog from "./ConfirmPayDialog";
 import DueSoonStrip from "./DueSoonStrip";
 import StatementDialog from "./StatementDialog";
@@ -63,9 +64,7 @@ export default function Debts() {
             <li key={d.id} className="bg-white rounded-2xl shadow p-4">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-semibold text-sm flex items-center gap-2.5 min-w-0">
-                  <span className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${chip(d.channel)}`}>
-                    {d.name.charAt(0).toUpperCase()}
-                  </span>
+                  <ChannelIcon channel={String(d.channel)} initial={d.name.charAt(0).toUpperCase()} chipClass={chip(d.channel)} />
                   <span className="truncate flex items-center gap-2">
                     {d.name}
                     {d.isBNPL && <span className="text-[10px] text-emerald-600">0% BNPL</span>}

@@ -55,6 +55,25 @@ export const DEFAULT_ACCOUNT_NUMBERS: Record<string, string> = {
   MARIBANK: "12018019577",
 };
 
+/** Bundled brand logos (public/logos, sourced from Wikimedia Commons).
+ *  Channels without a clean official asset (MARIBANK, CASH) fall back to
+ *  the initial-letter circle. */
+const LOGOS: Record<string, string> = {
+  CIMB: "/logos/cimb.svg",
+  GCASH: "/logos/gcash.svg",
+  MAYA: "/logos/maya.svg",
+  RCBC: "/logos/rcbc.svg",
+  "RCBC CREDIT": "/logos/rcbc.svg",
+  "RCBC SAVINGS": "/logos/rcbc.svg",
+  WISE: "/logos/wise.svg",
+  "WISE/KLOOK": "/logos/wise.svg",
+  LANDBANK: "/logos/landbank.svg",
+  UNIONBANK: "/logos/unionbank.svg",
+};
+
+/** Logo path for a channel, or undefined when it should use the initial circle. */
+export const channelLogo = (c: string): string | undefined => LOGOS[c];
+
 export const isBuiltinChannel = (name: string): boolean => name in CHIP;
 
 export const channelChip = (c: Channel): string => CHIP[c] ?? "bg-gray-200 text-gray-800";

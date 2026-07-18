@@ -12,12 +12,16 @@ export default function EditLineDialog(
   const [amount, setAmount] = useState(String(line.amount));
   const [channel, setChannel] = useState<Channel>(line.channel);
   const [isEnvelope, setIsEnvelope] = useState(!!line.isEnvelope);
+  const [budgetGroup, setBudgetGroup] = useState(line.budgetGroup ?? "");
   const amt = Number(amount);
   const valid = name.trim() !== "" && amt >= 0;
 
   async function save() {
     if (!valid) return;
-    await updateMonthLine(monthKey, line.id, { name: name.trim(), amount: amt, channel, isEnvelope });
+    await updateMonthLine(monthKey, line.id, {
+      name: name.trim(), amount: amt, channel, isEnvelope,
+      budgetGroup: isEnvelope ? budgetGroup.trim() : "",
+    });
     onClose();
   }
 
@@ -39,6 +43,15 @@ export default function EditLineDialog(
         <label className="flex items-center justify-between text-sm">Budget
           <input type="checkbox" checked={isEnvelope} onChange={(e) => setIsEnvelope(e.target.checked)} />
         </label>
+        {isEnvelope && (
+          <label className="flex items-center justify-between text-sm gap-2">Budget group
+            <input
+              placeholder="e.g. Allowance" value={budgetGroup}
+              onChange={(e) => setBudgetGroup(e.target.value)}
+              className="w-32 text-right border-b border-stone-300 outline-none"
+            />
+          </label>
+        )}
         <p className="text-[11px] text-stone-400">Changes apply to {monthKey} only — the template stays as-is.</p>
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>

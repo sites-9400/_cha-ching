@@ -6,6 +6,7 @@ import { categoriesCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
 import type { Category, Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
+import ChannelIcon from "./ChannelIcon";
 import HeaderBand from "./HeaderBand";
 import EditExpenseDialog from "./EditExpenseDialog";
 
@@ -25,12 +26,16 @@ export default function QuickAdd() {
   const [editing, setEditing] = useState<Expense | null>(null);
 
   const envelopes = lines
-    .filter((l) => l.isEnvelope)
+    .filter((l) => l.isEnvelope && !l.budgetGroup)
     .sort((a, b) => a.cutoff - b.cutoff || a.order - b.order);
-  // "@savings" is the Savings source; a remembered envelope that no longer
-  // exists (new month, deleted line) falls back to Unplanned.
+  const groups = [...new Set(lines.filter((l) => l.isEnvelope && l.budgetGroup).map((l) => l.budgetGroup!))].sort();
+  // "@savings" = Savings; "@group:X" = budget group X. A remembered source that
+  // no longer exists (new month, deleted line) falls back to Unplanned.
   const activeEnvelope =
-    envelope === "@savings" || envelopes.some((l) => l.id === envelope) ? envelope : "";
+    envelope === "@savings"
+    || (envelope.startsWith("@group:") && groups.includes(envelope.slice(7)))
+    || envelopes.some((l) => l.id === envelope)
+      ? envelope : "";
   const pickEnvelope = (id: string) => {
     setEnvelope(id);
     localStorage.setItem("quickadd-envelope", id);
@@ -53,7 +58,9 @@ export default function QuickAdd() {
         amount: value, category, channel, note, date: new Date().toISOString(),
         ...(activeEnvelope === "@savings"
           ? { fundedBySavings: true }
-          : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
+          : activeEnvelope.startsWith("@group:")
+            ? { budgetGroup: activeEnvelope.slice(7) }
+            : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
       });
       setAmount("");
       setNote("");
@@ -120,6 +127,14 @@ export default function QuickAdd() {
                 activeEnvelope === "" ? "bg-stone-700 text-white" : "bg-stone-100 text-stone-600"
               }`}
             >Unplanned</button>
+            {groups.map((g) => (
+              <button
+                key={g} onClick={() => pickEnvelope(`@group:${g}`)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  activeEnvelope === `@group:${g}` ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                }`}
+              >{g}</button>
+            ))}
             {envelopes.map((l) => (
               <button
                 key={l.id} onClick={() => pickEnvelope(l.id)}
@@ -157,9 +172,7 @@ export default function QuickAdd() {
           <li key={e.id} className="bg-white rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
             <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
               <span className="flex items-center gap-2.5 min-w-0">
-                <span className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${chip(e.channel)}`}>
-                  {e.category.charAt(0).toUpperCase()}
-                </span>
+                <ChannelIcon channel={String(e.channel)} initial={e.category.charAt(0).toUpperCase()} chipClass={chip(e.channel)} />
                 <span className="text-sm truncate min-w-0">
                   <span className="block truncate">
                     {e.category}
@@ -167,6 +180,7 @@ export default function QuickAdd() {
                       <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
                     )}
                     {e.fundedBySavings && <span className="text-cyan-700"> · Savings</span>}
+                    {e.budgetGroup && <span className="text-emerald-700"> · {e.budgetGroup}</span>}
                     {e.note ? ` · ${e.note}` : ""}
                   </span>
                   <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>

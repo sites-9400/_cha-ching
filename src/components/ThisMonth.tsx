@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
-import { cutoffSummary, envelopeSpent, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
+import { cutoffSummary, envelopeSpent, groupSpent, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
 import { cycleMinimums } from "../lib/cycles";
 import { projectMonthPlan } from "../lib/project";
 import { lineComparators, LINE_SORTS, type LineSortKey } from "../lib/lineSort";
@@ -29,7 +29,7 @@ export default function ThisMonth() {
   // minimum (start-of-cutoff view for SendPlan's "full" mode).
   const cycleMins = cycleMinimums(debts, cycles, payments, new Date());
   const cycleMinsGross = cycleMinimums(debts, cycles, [], new Date());
-  const expenses = useCollection<{ id: string; amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean }>(expensesCol());
+  const expenses = useCollection<{ id: string; amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean; budgetGroup?: string }>(expensesCol());
   const meta = useDoc<{ receivedIncomes?: Record<string, boolean> }>(monthDoc(viewedKey));
   const received = meta?.receivedIncomes ?? {};
   // For projected months the plan is forward-simulated from these globals:
@@ -169,7 +169,15 @@ export default function ThisMonth() {
                   monthKey={viewedKey}
                   line={l}
                   readOnly={!editable}
-                  spent={l.isEnvelope ? envelopeSpent(expenses, viewedKey, l.id) : undefined}
+                  spent={l.isEnvelope
+                    ? l.budgetGroup
+                      ? groupSpent(expenses, viewedKey, l.budgetGroup, lines)
+                      : envelopeSpent(expenses, viewedKey, l.id)
+                    : undefined}
+                  budgetTotal={l.isEnvelope && l.budgetGroup
+                    ? lines.filter((x) => x.isEnvelope && x.budgetGroup === l.budgetGroup)
+                        .reduce((s, x) => s + x.amount, 0)
+                    : undefined}
                   onDelete={editable && l.oneOff ? () => void deleteMonthLine(viewedKey, l.id) : undefined}
                   onEdit={editable ? () => setEditingLine(l) : undefined}
                 />

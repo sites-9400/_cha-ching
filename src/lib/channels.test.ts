@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHANNELS, channelChip, channelChipSafe } from "./channels";
+import { CHANNELS, channelChip, channelChipSafe, channelLogo } from "./channels";
 
 describe("channels", () => {
   it("lists the built-in channels incl. LANDBANK and UNIONBANK", () => {
@@ -16,5 +16,11 @@ describe("channels", () => {
   it("safe variant falls back to neutral for unknown strings", () => {
     expect(channelChipSafe("CIMB")).toBe("bg-red-900 text-red-50");
     expect(channelChipSafe("NONSENSE")).toBe("bg-gray-200 text-gray-800");
+  });
+  it("maps channels to bundled logos, undefined where none exists", () => {
+    expect(channelLogo("GCASH")).toBe("/logos/gcash.svg");
+    expect(channelLogo("RCBC CREDIT")).toBe("/logos/rcbc.svg");
+    expect(channelLogo("MARIBANK")).toBeUndefined();
+    expect(channelLogo("CASH")).toBeUndefined();
   });
 });

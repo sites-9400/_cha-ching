@@ -15,34 +15,40 @@ export default function EditExpenseDialog(
   const [amount, setAmount] = useState(String(expense.amount));
   const [category, setCategory] = useState(expense.category);
   const [channel, setChannel] = useState<Channel>(expense.channel);
-  // "@savings" sentinel = paid from savings (fundedBySavings on the doc).
+  // "@savings" = paid from savings; "@group:X" = budget group X.
   const [envelope, setEnvelope] = useState(
-    expense.fundedBySavings ? "@savings" : (expense.envelopeLineId ?? ""),
+    expense.fundedBySavings ? "@savings"
+    : expense.budgetGroup ? `@group:${expense.budgetGroup}`
+    : (expense.envelopeLineId ?? ""),
   );
   const [note, setNote] = useState(expense.note);
   const [date, setDate] = useState(expense.date.slice(0, 10));
 
   const cats = [...categories].sort((a, b) => a.order - b.order);
   const envelopes = lines
-    .filter((l) => l.isEnvelope)
+    .filter((l) => l.isEnvelope && !l.budgetGroup)
     .sort((a, b) => a.cutoff - b.cutoff || a.order - b.order);
+  const groups = [...new Set(lines.filter((l) => l.isEnvelope && l.budgetGroup).map((l) => l.budgetGroup!))].sort();
 
   const amt = Number(amount);
   const valid = amt > 0 && date !== "";
 
   async function save() {
     if (!valid) return;
-    const patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings">>
-      & { envelopeLineId?: string | null; fundedBySavings?: boolean | null } = {};
+    const patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup">>
+      & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null } = {};
     if (amt !== expense.amount) patch.amount = amt;
     if (category !== expense.category) patch.category = category;
     if (channel !== expense.channel) patch.channel = channel;
     if (note !== expense.note) patch.note = note;
     if (date !== expense.date.slice(0, 10)) patch.date = `${date}${expense.date.slice(10)}`;
-    const was = expense.fundedBySavings ? "@savings" : (expense.envelopeLineId ?? "");
+    const was = expense.fundedBySavings ? "@savings"
+      : expense.budgetGroup ? `@group:${expense.budgetGroup}`
+      : (expense.envelopeLineId ?? "");
     if (envelope !== was) {
       patch.fundedBySavings = envelope === "@savings" ? true : null;
-      patch.envelopeLineId = envelope && envelope !== "@savings" ? envelope : null;
+      patch.budgetGroup = envelope.startsWith("@group:") ? envelope.slice(7) : null;
+      patch.envelopeLineId = envelope && !envelope.startsWith("@") ? envelope : null;
     }
     await updateExpense(expense.id, patch);
     onClose();
@@ -95,6 +101,14 @@ export default function EditExpenseDialog(
                 envelope === "" ? "bg-stone-700 text-white" : "bg-stone-100 text-stone-600"
               }`}
             >Unplanned</button>
+            {groups.map((g) => (
+              <button
+                key={g} onClick={() => setEnvelope(`@group:${g}`)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  envelope === `@group:${g}` ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                }`}
+              >{g}</button>
+            ))}
             {envelopes.map((l) => (
               <button
                 key={l.id} onClick={() => setEnvelope(l.id)}

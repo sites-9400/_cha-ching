@@ -4,6 +4,7 @@ import {
   cutoffSummary,
   debtTotals,
   envelopeSpent,
+  groupSpent,
   fundStateFor,
   generateMonthLines,
   isCutoffClosed,
@@ -230,5 +231,47 @@ describe("unplannedForCutoff", () => {
     const expenses = [{ amount: 5000, date: "2026-07-15T10:00:00.000Z", fundedBySavings: true }];
     expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(0);
     expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(0);
+  });
+});
+
+describe("budget groups", () => {
+  // Allowance pool: 10,000 (cutoff 1) + 5,750 + 5,750 (cutoff 2) = 21,500 combined.
+  const grouped = (id: string, cutoff: 1 | 2, amount: number): MonthLine =>
+    ({ ...mk(id, amount, cutoff), isEnvelope: true, budgetGroup: "Allowance" });
+  const pool = [grouped("allow", 1, 10000), grouped("allow-1", 2, 5750), grouped("allow-2", 2, 5750)];
+  const gexp = (amount: number, date: string) => ({ amount, date, budgetGroup: "Allowance" });
+
+  it("groupSpent sums group-tagged AND member-line-tagged expenses this month", () => {
+    const expenses = [
+      gexp(1000, "2026-07-05T10:00:00.000Z"),
+      exp(500, "2026-07-06T10:00:00.000Z", "allow-1"), // legacy per-line tag counts too
+      gexp(999, "2026-06-05T10:00:00.000Z"),           // other month
+      exp(70, "2026-07-07T10:00:00.000Z", "other"),
+    ];
+    expect(groupSpent(expenses, "2026-07", "Allowance", pool)).toBe(1500);
+  });
+
+  it("group-funded expenses never hit free cash while within the pool", () => {
+    const expenses = [gexp(20000, "2026-07-15T10:00:00.000Z")];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, pool)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, pool)).toBe(0);
+  });
+
+  it("group overspend excess charges once, to the group's latest cutoff", () => {
+    const expenses = [gexp(23000, "2026-07-15T10:00:00.000Z")]; // 1,500 over the 21,500 pool
+    expect(unplannedForCutoff(expenses, "2026-07", 1, pool)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, pool)).toBe(1500);
+  });
+
+  it("expenses tagged to a nonexistent group count as unplanned", () => {
+    const expenses = [{ amount: 100, date: "2026-07-15T10:00:00.000Z", budgetGroup: "Ghost" }];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, pool)).toBe(100);
+  });
+
+  it("grouped lines are excluded from per-line excess (no double count)", () => {
+    // 12,000 tagged to the single grouped line "allow" (10,000): within the 21,500 pool → no excess anywhere.
+    const expenses = [exp(12000, "2026-07-15T10:00:00.000Z", "allow")];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, pool)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, pool)).toBe(0);
   });
 });

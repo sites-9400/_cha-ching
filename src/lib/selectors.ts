@@ -39,24 +39,59 @@ export function envelopeSpent(
     .reduce((s, e) => s + e.amount, 0);
 }
 
+type ExpenseLike = {
+  amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean; budgetGroup?: string;
+};
+
+/** Envelope lines per budget group ("" ≡ ungrouped, excluded). Pure. */
+function envelopeGroups(lines: readonly MonthLine[]): Map<string, MonthLine[]> {
+  const m = new Map<string, MonthLine[]>();
+  for (const l of lines) {
+    if (!l.isEnvelope || !l.budgetGroup) continue;
+    const g = m.get(l.budgetGroup);
+    if (g) g.push(l); else m.set(l.budgetGroup, [l]);
+  }
+  return m;
+}
+
+/** This month's spending against a budget group: expenses tagged to the group
+ *  PLUS expenses tagged to any of its member lines (legacy per-line tags). Pure. */
+export function groupSpent(
+  expenses: readonly ExpenseLike[],
+  monthKey: string,
+  group: string,
+  lines: readonly MonthLine[],
+): number {
+  const memberIds = new Set(
+    lines.filter((l) => l.isEnvelope && l.budgetGroup === group).map((l) => l.id),
+  );
+  return expenses
+    .filter((e) => e.date.slice(0, 7) === monthKey
+      && (e.budgetGroup === group || (!!e.envelopeLineId && memberIds.has(e.envelopeLineId))))
+    .reduce((s, e) => s + e.amount, 0);
+}
+
 /**
  * Unplanned spending charged to `cutoff`:
  *  - envelope-less expenses, attributed by the date's day (13–24 → 1, else 2),
  *    rolled to the other cutoff when the attributed one is closed, and to
  *    nowhere (tracking-only) when both are closed;
- *  - each envelope line's overspend excess (spent − amount, min 0) in its own
- *    cutoff. Expenses whose envelopeLineId no longer matches an envelope line
- *    count as envelope-less. Reduces the debt plan's free cash so it never
- *    allocates cash that was already spent.
+ *  - each ungrouped envelope line's overspend excess (spent − amount, min 0)
+ *    in its own cutoff;
+ *  - each budget group's overspend excess (spent − combined amount, min 0),
+ *    charged once to the group's latest cutoff.
+ * Expenses whose envelopeLineId/budgetGroup no longer matches anything count
+ * as envelope-less. Savings-funded expenses never touch cutoff cash.
  */
 export function unplannedForCutoff(
-  expenses: readonly { amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean }[],
+  expenses: readonly ExpenseLike[],
   monthKey: string,
   cutoff: 1 | 2,
   lines: readonly MonthLine[],
 ): number {
   const closed = { 1: isCutoffClosed(lines, 1), 2: isCutoffClosed(lines, 2) };
   const lineById = new Map(lines.map((l) => [l.id, l]));
+  const groups = envelopeGroups(lines);
   const attribute = (day: number): 1 | 2 | null => {
     const first = cutoffForDueDay(day);
     if (!closed[first]) return first;
@@ -68,13 +103,20 @@ export function unplannedForCutoff(
   for (const e of expenses) {
     if (e.date.slice(0, 7) !== monthKey) continue;
     if (e.fundedBySavings) continue; // paid from savings — never touches cutoff cash
+    if (e.budgetGroup && groups.has(e.budgetGroup)) continue; // drawn from a group pool
     const envLine = e.envelopeLineId ? lineById.get(e.envelopeLineId) : undefined;
     if (envLine?.isEnvelope) continue; // drawn from the envelope, counted below as excess only
     if (attribute(Number(e.date.slice(8, 10))) === cutoff) total += e.amount;
   }
   for (const l of lines) {
-    if (!l.isEnvelope || l.cutoff !== cutoff) continue;
+    if (!l.isEnvelope || l.budgetGroup || l.cutoff !== cutoff) continue;
     total += Math.max(0, envelopeSpent(expenses, monthKey, l.id) - l.amount);
+  }
+  for (const [name, members] of groups) {
+    const latest = Math.max(...members.map((l) => l.cutoff)) as 1 | 2;
+    if (latest !== cutoff) continue;
+    const poolTotal = members.reduce((s, l) => s + l.amount, 0);
+    total += Math.max(0, groupSpent(expenses, monthKey, name, lines) - poolTotal);
   }
   return total;
 }

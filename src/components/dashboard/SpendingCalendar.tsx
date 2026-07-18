@@ -6,6 +6,7 @@ import { addMonths, peso } from "../../lib/format";
 import { categoriesCol, monthLines } from "../../lib/paths";
 import { dailyTotals } from "../../lib/stats";
 import type { Category, MonthLine } from "../../lib/types";
+import ChannelIcon from "../ChannelIcon";
 import EditExpenseDialog from "../EditExpenseDialog";
 import type { DashExpense } from "./CategoryBars";
 
@@ -82,9 +83,7 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
             <li key={e.id} className="bg-stone-50 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
               <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
                 <span className="flex items-center gap-2.5 min-w-0">
-                  <span className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${chip(e.channel)}`}>
-                    {e.category.charAt(0).toUpperCase()}
-                  </span>
+                  <ChannelIcon channel={String(e.channel)} initial={e.category.charAt(0).toUpperCase()} chipClass={chip(e.channel)} />
                   <span className="text-sm truncate min-w-0">
                     <span className="block truncate">{e.category}{e.note ? ` · ${e.note}` : ""}</span>
                     <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>

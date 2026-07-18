@@ -90,6 +90,7 @@ export interface ExpenseInput {
   amount: number; category: string; channel: string; note: string; date: string;
   envelopeLineId?: string; // month line the spending draws from; absent = unplanned
   fundedBySavings?: boolean; // paid from savings — skips cutoff math, deducts savingsBalance
+  budgetGroup?: string; // budget-group pool the spending draws from (e.g. "Allowance")
 }
 
 export async function addExpense(e: ExpenseInput): Promise<void> {
@@ -115,19 +116,21 @@ export async function deleteExpense(id: string): Promise<void> {
  *  changes (amount edits, toggling the source) adjust savingsBalance by the delta. */
 export async function updateExpense(
   id: string,
-  patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings">>
-    & { envelopeLineId?: string | null; fundedBySavings?: boolean | null },
+  patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup">>
+    & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null },
 ): Promise<void> {
   const ref = doc(db, expensesCol(), id);
   const snap = await getDoc(ref);
   const old = (snap.data() ?? {}) as ExpenseInput;
 
-  const { envelopeLineId, fundedBySavings, ...rest } = patch;
+  const { envelopeLineId, fundedBySavings, budgetGroup, ...rest } = patch;
   const data: UpdateData<ExpenseInput> = { ...rest };
   if (envelopeLineId === null) data.envelopeLineId = deleteField();
   else if (envelopeLineId !== undefined) data.envelopeLineId = envelopeLineId;
   if (fundedBySavings === null || fundedBySavings === false) data.fundedBySavings = deleteField();
   else if (fundedBySavings === true) data.fundedBySavings = true;
+  if (budgetGroup === null) data.budgetGroup = deleteField();
+  else if (budgetGroup !== undefined) data.budgetGroup = budgetGroup;
 
   // Savings delta: what the old doc deducted vs what the new state should deduct.
   const wasFunded = !!old.fundedBySavings;
@@ -295,7 +298,7 @@ export async function deleteMonthLine(monthKey: string, id: string): Promise<voi
 /** Inline-edit a month line (name/amount/channel) for this month only; marks it
  *  overridden so a later template sync won't clobber the change. */
 export async function updateMonthLine(
-  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "debtId" | "isEnvelope">>,
+  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "debtId" | "isEnvelope" | "budgetGroup">>,
 ): Promise<void> {
   await updateDoc(doc(db, monthLines(monthKey), id), { ...patch, overridden: true });
 }

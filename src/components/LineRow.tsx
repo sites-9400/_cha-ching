@@ -5,9 +5,11 @@ import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
 export default function LineRow(
-  { monthKey, line, readOnly = false, onDelete, onEdit, spent }:
-  { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void; onEdit?: () => void; spent?: number },
+  { monthKey, line, readOnly = false, onDelete, onEdit, spent, budgetTotal }:
+  { monthKey: string; line: MonthLine; readOnly?: boolean; onDelete?: () => void; onEdit?: () => void;
+    spent?: number; budgetTotal?: number }, // budgetTotal: combined pool for grouped budget lines
 ) {
+  const poolTotal = budgetTotal ?? line.amount;
   const { chip, label } = useAccounts();
   const ticked = line.status !== "";
 
@@ -52,12 +54,13 @@ export default function LineRow(
           {line.isEnvelope && spent != null && (
             <>
               <span className="block text-[10px] text-stone-400 tabular-nums">
-                {peso(Math.max(0, line.amount - spent))} left of {peso(line.amount)}
+                {peso(Math.max(0, poolTotal - spent))} left of {peso(poolTotal)}
+                {line.budgetGroup ? ` (${line.budgetGroup})` : ""}
               </span>
               <span className="mt-0.5 block h-1 w-24 rounded-full bg-stone-100 overflow-hidden">
                 <span
-                  className={`block h-full ${spent > line.amount ? "bg-red-500" : "bg-emerald-500"}`}
-                  style={{ width: `${line.amount > 0 ? Math.min(100, Math.round((spent / line.amount) * 100)) : 100}%` }}
+                  className={`block h-full ${spent > poolTotal ? "bg-red-500" : "bg-emerald-500"}`}
+                  style={{ width: `${poolTotal > 0 ? Math.min(100, Math.round((spent / poolTotal) * 100)) : 100}%` }}
                 />
               </span>
             </>
