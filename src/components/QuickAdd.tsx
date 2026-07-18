@@ -6,6 +6,7 @@ import { categoriesCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
 import type { Category, Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
+import HeaderBand from "./HeaderBand";
 import EditExpenseDialog from "./EditExpenseDialog";
 
 interface Expense extends ExpenseInput { id: string }
@@ -37,6 +38,10 @@ export default function QuickAdd() {
 
   const cats = [...categories].sort((a, b) => a.order - b.order);
   const recent = [...expenses].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  const monthKey = currentMonthKey();
+  const spentThisMonth = expenses
+    .filter((e) => e.date.slice(0, 7) === monthKey)
+    .reduce((s, e) => s + e.amount, 0);
   const value = Number(amount);
   const canSave = value > 0 && !busy;
 
@@ -62,8 +67,9 @@ export default function QuickAdd() {
   );
 
   return (
-    <main className="p-4">
-      <h1 className="text-xl font-bold mb-4">Expenses</h1>
+    <>
+      <HeaderBand title="SPENT THIS MONTH" value={peso(spentThisMonth)} />
+      <main className="p-4">
       <div className="bg-white rounded-2xl shadow p-5 flex flex-col gap-5">
         <div>
           <Label>Amount</Label>
@@ -148,17 +154,22 @@ export default function QuickAdd() {
       <h2 className="font-semibold mt-6 mb-2 text-sm text-stone-600">Recent</h2>
       <ul className="flex flex-col gap-1.5">
         {recent.map((e) => (
-          <li key={e.id} className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
-            <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2 min-w-0 flex-1 text-left">
-              <span className="flex items-center gap-2 min-w-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{label(e.channel)}</span>
-                <span className="text-sm truncate">
-                  {e.category}
-                  {e.envelopeLineId && (
-                    <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
-                  )}
-                  {e.fundedBySavings && <span className="text-cyan-700"> · Savings</span>}
-                  {e.note ? ` · ${e.note}` : ""}
+          <li key={e.id} className="bg-white rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
+            <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
+              <span className="flex items-center gap-2.5 min-w-0">
+                <span className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${chip(e.channel)}`}>
+                  {e.category.charAt(0).toUpperCase()}
+                </span>
+                <span className="text-sm truncate min-w-0">
+                  <span className="block truncate">
+                    {e.category}
+                    {e.envelopeLineId && (
+                      <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
+                    )}
+                    {e.fundedBySavings && <span className="text-cyan-700"> · Savings</span>}
+                    {e.note ? ` · ${e.note}` : ""}
+                  </span>
+                  <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>
                 </span>
               </span>
               <span className="text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
@@ -175,6 +186,7 @@ export default function QuickAdd() {
           onClose={() => setEditing(null)}
         />
       )}
-    </main>
+      </main>
+    </>
   );
 }

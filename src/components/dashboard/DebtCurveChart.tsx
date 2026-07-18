@@ -12,7 +12,7 @@ const innerW = W - padL - padR, innerH = H - padT - padB;
 /** Single-series inline-SVG line of interest-bearing debt at each month-end. */
 export default function DebtCurveChart({ points }: { points: CurvePoint[] }) {
   return (
-    <section className="bg-white rounded-xl shadow p-4">
+    <section className="bg-white rounded-2xl shadow p-4">
       <h2 className="font-semibold text-sm mb-2">Debt over time</h2>
       {points.length === 0 ? (
         <p className="text-xs text-stone-400">Log a payment to see the curve.</p>

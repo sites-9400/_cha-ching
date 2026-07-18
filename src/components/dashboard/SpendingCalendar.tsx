@@ -45,7 +45,7 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
   }
 
   return (
-    <section className="bg-white rounded-xl shadow p-4">
+    <section className="bg-white rounded-2xl shadow p-4">
       <h2 className="font-semibold text-sm mb-3">Spending calendar</h2>
       <div className="flex items-center justify-center gap-2 mb-3">
         <button onClick={() => goToMonth(-1)} className="h-8 w-8 rounded-full bg-white shadow text-emerald-700">‹</button>
@@ -79,11 +79,16 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
       {openDay !== null && (
         <ul className="mt-3 flex flex-col gap-1.5">
           {dayExpenses.map((e) => (
-            <li key={e.id} className="bg-stone-50 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
-              <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2 min-w-0 flex-1 text-left">
-                <span className="flex items-center gap-2 min-w-0">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{label(e.channel)}</span>
-                  <span className="text-sm truncate">{e.category}{e.note ? ` · ${e.note}` : ""}</span>
+            <li key={e.id} className="bg-stone-50 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
+              <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <span className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${chip(e.channel)}`}>
+                    {e.category.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="text-sm truncate min-w-0">
+                    <span className="block truncate">{e.category}{e.note ? ` · ${e.note}` : ""}</span>
+                    <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>
+                  </span>
                 </span>
                 <span className="text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
               </button>

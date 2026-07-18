@@ -12,6 +12,7 @@ import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../li
 import { deleteMonthIncome, deleteMonthLine, setIncomeReceived, syncMonthFromTemplate } from "../lib/repo";
 import type { Debt, DebtCycle, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
+import HeaderBand from "./HeaderBand";
 import LineRow from "./LineRow";
 import DebtPlan, { type PaymentRec } from "./DebtPlan";
 import DueSoonStrip from "./DueSoonStrip";
@@ -28,7 +29,7 @@ export default function ThisMonth() {
   // minimum (start-of-cutoff view for SendPlan's "full" mode).
   const cycleMins = cycleMinimums(debts, cycles, payments, new Date());
   const cycleMinsGross = cycleMinimums(debts, cycles, [], new Date());
-  const expenses = useCollection<{ id: string; amount: number; date: string; envelopeLineId?: string }>(expensesCol());
+  const expenses = useCollection<{ id: string; amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean }>(expensesCol());
   const meta = useDoc<{ receivedIncomes?: Record<string, boolean> }>(monthDoc(viewedKey));
   const received = meta?.receivedIncomes ?? {};
   // For projected months the plan is forward-simulated from these globals:
@@ -40,37 +41,47 @@ export default function ThisMonth() {
 
   const projected = mode === "projected";
 
-  const header = (
-    <div className="flex items-center justify-center gap-2 mb-4">
-      <button
-        onClick={goPrev}
-        aria-label="Previous month"
-        className="h-10 w-10 flex items-center justify-center rounded-full bg-white shadow text-emerald-700 text-xl active:bg-stone-100"
-      >‹</button>
-      <div className="text-center min-w-[9rem]">
-        <h1 className="text-xl font-bold leading-tight">{monthLabel(viewedKey)}</h1>
-        {mode !== "current" && (
-          <span className="text-[11px] uppercase tracking-wide text-stone-400">
-            {mode === "past" ? "history" : projected ? "projected" : "started early"}
-          </span>
-        )}
-      </div>
-      <button
-        onClick={goNext}
-        aria-label="Next month"
-        className="h-10 w-10 flex items-center justify-center rounded-full bg-white shadow text-emerald-700 text-xl active:bg-stone-100"
-      >›</button>
-    </div>
+  const modeLabel = mode === "past" ? "history" : projected ? "projected" : "started early";
+  const navLeft = (
+    <button
+      onClick={goPrev}
+      aria-label="Previous month"
+      className="h-9 w-9 flex items-center justify-center rounded-full bg-white/20 text-white text-lg active:bg-white/30"
+    >‹</button>
+  );
+  const navRight = (
+    <button
+      onClick={goNext}
+      aria-label="Next month"
+      className="h-9 w-9 flex items-center justify-center rounded-full bg-white/20 text-white text-lg active:bg-white/30"
+    >›</button>
   );
 
   if (!ready) {
-    return <main className="p-4">{header}<div className="p-6 text-center text-stone-500">Setting up {monthLabel(viewedKey)}…</div></main>;
+    return (
+      <main className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          {navLeft}
+          <h1 className="text-xl font-bold leading-tight min-w-[9rem] text-center">{monthLabel(viewedKey)}</h1>
+          {navRight}
+        </div>
+        <div className="p-6 text-center text-stone-500">Setting up {monthLabel(viewedKey)}…</div>
+      </main>
+    );
   }
 
-  return (
-    <main className="p-4">
-      {header}
+  const totalSurplus = cutoffSummary(lines, incomes, 1).surplus + cutoffSummary(lines, incomes, 2).surplus;
 
+  return (
+    <>
+      <HeaderBand
+        title="TOTAL SURPLUS"
+        value={peso(totalSurplus)}
+        sub={`${monthLabel(viewedKey)}${mode !== "current" ? ` · ${modeLabel}` : ""}`}
+        left={navLeft}
+        right={navRight}
+      />
+      <main className="p-4">
       {mode === "current" && <DueSoonStrip />}
 
       {projected && (
@@ -117,7 +128,7 @@ export default function ThisMonth() {
         const closed = isCutoffClosed(lines, cutoff);
 
         return (
-          <section key={cutoff} className="mb-6 bg-white rounded-xl shadow p-4">
+          <section key={cutoff} className="mb-6 bg-white rounded-2xl shadow p-4">
             <h2 className="font-semibold mb-1 flex items-center gap-2">
               {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
               {editable && closed && (
@@ -196,6 +207,7 @@ export default function ThisMonth() {
 
       {adding && <AddOneOff monthKey={viewedKey} lines={lines} onClose={() => setAdding(false)} />}
       {editingLine && <EditLineDialog monthKey={viewedKey} line={editingLine} onClose={() => setEditingLine(null)} />}
-    </main>
+      </main>
+    </>
   );
 }

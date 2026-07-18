@@ -46,7 +46,7 @@
 .dark .text-red-600 { color: #f87171; }
 
 /* Shadows read as glow on dark — flatten them */
-.dark .shadow, .dark .shadow-xl { box-shadow: 0 0 0 1px #292524; }
+.dark .shadow, .dark .shadow-xl, .dark .shadow-lg { box-shadow: 0 0 0 1px #292524; }
 
 /* iOS Safari zooms the page when a focused input's font-size is < 16px.
    Force 16px on form controls only on iOS (the -webkit-touch-callout query

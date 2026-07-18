@@ -2,12 +2,14 @@ import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { currentMonthKey, monthIndex } from "../lib/clock";
+import { peso } from "../lib/format";
 import { categoriesCol, debtsCol, expensesCol, fundsCol, metaDoc } from "../lib/paths";
 import { updateMeta } from "../lib/repo";
 import { debtTotals } from "../lib/selectors";
 import { debtCurve } from "../lib/stats";
 import type { Category, Debt, Meta, SinkingFund } from "../lib/types";
 import type { PaymentRec } from "./DebtPlan";
+import HeaderBand from "./HeaderBand";
 import SavingsMeter from "./dashboard/SavingsMeter";
 import FundTiles from "./dashboard/FundTiles";
 import CategoryBars, { type DashExpense } from "./dashboard/CategoryBars";
@@ -30,9 +32,9 @@ export default function Dashboard() {
   const curve = debtCurve(blitz, payments.filter((p) => trackedIds.has(p.debtId)));
 
   return (
-    <main className="p-4 flex flex-col gap-4">
-      <h1 className="text-xl font-bold">Stats</h1>
-
+    <>
+      <HeaderBand title="SAVINGS" value={peso(meta?.savingsBalance ?? 0)} />
+      <main className="p-4 flex flex-col gap-4">
       <SpendingCalendar expenses={expenses} />
 
       <SavingsMeter
@@ -46,6 +48,7 @@ export default function Dashboard() {
       <CategoryBars expenses={expenses} monthKey={monthKey} categories={categories} />
 
       <FundTiles funds={funds} monthIndex={monthIndex(monthKey)} />
-    </main>
+      </main>
+    </>
   );
 }

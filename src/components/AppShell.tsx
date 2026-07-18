@@ -11,7 +11,7 @@ export default function AppShell() {
   const [tab, setTab] = useState<TabId>("month");
   return (
     <MonthProvider>
-      <div className="min-h-screen bg-stone-100 text-stone-900 pb-16 pt-[env(safe-area-inset-top)] max-w-md mx-auto">
+      <div className="min-h-screen bg-stone-100 text-stone-900 pb-16 max-w-md mx-auto">
         {tab === "month" && <ThisMonth />}
         {tab === "debts" && <Debts />}
         {tab === "add" && <QuickAdd />}

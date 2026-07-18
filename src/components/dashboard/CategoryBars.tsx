@@ -19,12 +19,12 @@ export default function CategoryBars(
   const budgetOf = new Map(categories.map((c) => [c.name, c.budget]));
 
   return (
-    <section className="bg-white rounded-xl shadow p-4">
+    <section className="bg-white rounded-2xl shadow p-4">
       <h2 className="font-semibold text-sm mb-3">Spending by category</h2>
       {totals.length === 0 ? (
         <p className="text-xs text-stone-400">No spending logged this month.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2.5">
           {totals.map((t) => {
             const items = expenses
               .filter((e) => e.category === t.category && e.date.slice(0, 7) === monthKey)

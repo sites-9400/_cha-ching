@@ -14,6 +14,7 @@ import DueSoonStrip from "./DueSoonStrip";
 import StatementDialog from "./StatementDialog";
 import type { PaymentRec } from "./DebtPlan";
 import { useAccounts } from "./AccountsProvider";
+import HeaderBand from "./HeaderBand";
 
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; projection basis until history exists
 
@@ -41,12 +42,13 @@ export default function Debts() {
   const freeMonth = projectDebtFreeMonth(debts, MONTHLY_PAYDOWN, currentMonthKey());
 
   return (
-    <main className="p-4">
-      <h1 className="text-xl font-bold mb-1">Debts</h1>
-      <p className="text-sm text-stone-500 mb-4">
-        {peso(totals.total)} left · interest-bearing clear by{" "}
-        <span className="font-semibold text-stone-700">{monthLabel(freeMonth)}</span>
-      </p>
+    <>
+      <HeaderBand
+        title="TOTAL DEBT"
+        value={peso(totals.total)}
+        sub={`interest-bearing clear by ${monthLabel(freeMonth)}`}
+      />
+      <main className="p-4">
       <DueSoonStrip />
       <ul className="flex flex-col gap-3">
         {active.map((d) => {
@@ -58,13 +60,18 @@ export default function Debts() {
           const cyclePaid = cycleKey ? paidInCycle(payments, d.id, d.statementDay!, cycleKey) : 0;
           const dueIn = cycleDue ? daysUntil(cycleDue.dueDate, today) : null;
           return (
-            <li key={d.id} className="bg-white rounded-xl shadow p-4">
+            <li key={d.id} className="bg-white rounded-2xl shadow p-4">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-sm flex items-center gap-2">
-                  {d.name}
-                  {d.isBNPL && <span className="text-[10px] text-emerald-600">0% BNPL</span>}
+                <span className="font-semibold text-sm flex items-center gap-2.5 min-w-0">
+                  <span className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${chip(d.channel)}`}>
+                    {d.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="truncate flex items-center gap-2">
+                    {d.name}
+                    {d.isBNPL && <span className="text-[10px] text-emerald-600">0% BNPL</span>}
+                  </span>
                 </span>
-                <span className="text-sm font-bold tabular-nums">{peso(d.currentBalance)}</span>
+                <span className="text-sm font-bold tabular-nums shrink-0">{peso(d.currentBalance)}</span>
               </div>
               <div className="h-2 rounded-full bg-stone-100 my-2 overflow-hidden">
                 <div className={`h-full ${d.isBNPL ? "bg-emerald-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
@@ -204,6 +211,7 @@ export default function Debts() {
           onCancel={() => setPayDebt(null)}
         />
       )}
-    </main>
+      </main>
+    </>
   );
 }

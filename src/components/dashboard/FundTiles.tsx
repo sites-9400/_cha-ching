@@ -8,13 +8,13 @@ const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct",
 export default function FundTiles({ funds, monthIndex }: { funds: SinkingFund[]; monthIndex: number }) {
   if (funds.length === 0) return null;
   return (
-    <section className="bg-white rounded-xl shadow p-4">
+    <section className="bg-white rounded-2xl shadow p-4">
       <h2 className="font-semibold text-sm mb-3">Sinking funds</h2>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2.5">
         {funds.map((f) => {
           const rel = nextRelease(f.releaseMonths, monthIndex);
           return (
-            <div key={f.id} className="rounded-lg bg-stone-50 p-3">
+            <div key={f.id} className="rounded-lg bg-stone-50 p-3.5">
               <p className="text-xs text-stone-500 truncate">{f.name}</p>
               <p className="text-lg font-bold tabular-nums">{peso(f.balance)}</p>
               <p className="text-[11px] text-stone-400">

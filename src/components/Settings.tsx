@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { lock } from "../lib/pinAuth";
 import { getThemePref, setThemePref, type ThemePref } from "../lib/theme";
+import HeaderBand from "./HeaderBand";
 import DebtsEditor from "./settings/DebtsEditor";
 import TemplateEditor from "./settings/TemplateEditor";
 import IncomesEditor from "./settings/IncomesEditor";
@@ -48,7 +49,7 @@ export default function Settings() {
 
   if (section) {
     return (
-      <main className="p-4">
+      <main className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <button onClick={() => setSection(null)} className="text-sm text-emerald-700 font-semibold mb-4">‹ Settings</button>
         <Editor section={section} />
       </main>
@@ -56,9 +57,10 @@ export default function Settings() {
   }
 
   return (
-    <main className="p-4">
-      <h1 className="text-xl font-bold mb-4">Settings</h1>
-      <div className="bg-white rounded-xl shadow px-4 py-3 mb-4 flex items-center justify-between">
+    <>
+      <HeaderBand title="Settings" />
+      <main className="p-4">
+      <div className="bg-white rounded-2xl shadow px-4 py-3 mb-4 flex items-center justify-between">
         <span className="text-sm">Appearance</span>
         <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
           {THEMES.map((t) => (
@@ -70,7 +72,7 @@ export default function Settings() {
           ))}
         </div>
       </div>
-      <ul className="bg-white rounded-xl shadow divide-y divide-stone-100 mb-6">
+      <ul className="bg-white rounded-2xl shadow divide-y divide-stone-100 mb-6">
         {ROWS.map((r) => (
           <li key={r.id}>
             <button onClick={() => setSection(r.id)} className="w-full flex items-center justify-between px-4 py-3 text-sm">
@@ -82,11 +84,12 @@ export default function Settings() {
       </ul>
       <button
         onClick={() => void lock()}
-        className="w-full py-3 rounded-xl bg-white shadow text-sm font-semibold text-red-600"
+        className="w-full py-3 rounded-2xl bg-white shadow text-sm font-semibold text-red-600"
       >
         Sign out
       </button>
-    </main>
+      </main>
+    </>
   );
 }
 

@@ -16,19 +16,33 @@ export default function TabBar({
 }: { active: TabId; onChange: (t: TabId) => void }) {
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 flex justify-around pb-[env(safe-area-inset-bottom)]">
-      {TABS.map(({ id, label, Icon }) => (
-        <button
-          key={id}
-          onClick={() => onChange(id)}
-          className={`flex-1 flex flex-col items-center gap-1 py-2 text-[11px] ${
-            active === id ? "text-emerald-700 font-semibold" : "text-stone-500"
-          }`}
-          aria-current={active === id ? "page" : undefined}
-        >
-          <Icon className="w-6 h-6" />
-          {label}
-        </button>
-      ))}
+      {TABS.map(({ id, label, Icon }) =>
+        id === "add" ? (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            aria-label={label}
+            aria-current={active === id ? "page" : undefined}
+            className="flex-1 flex flex-col items-center justify-start py-2"
+          >
+            <span className="h-14 w-14 -translate-y-3 rounded-full bg-emerald-600 text-white shadow-lg flex items-center justify-center">
+              <Icon className="w-7 h-7" />
+            </span>
+          </button>
+        ) : (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            className={`flex-1 flex flex-col items-center gap-1 py-2 text-[11px] ${
+              active === id ? "text-emerald-700 font-semibold" : "text-stone-500"
+            }`}
+            aria-current={active === id ? "page" : undefined}
+          >
+            <Icon className="w-6 h-6" />
+            {label}
+          </button>
+        ),
+      )}
     </nav>
   );
 }

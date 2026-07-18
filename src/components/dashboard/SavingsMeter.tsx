@@ -20,7 +20,7 @@ export default function SavingsMeter({
   }
 
   return (
-    <section className="bg-white rounded-xl shadow p-4">
+    <section className="bg-white rounded-2xl shadow p-4">
       <div className="flex items-center justify-between mb-2">
         <h2 className="font-semibold text-sm">Savings</h2>
         {editing ? (
