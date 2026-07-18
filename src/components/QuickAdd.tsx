@@ -6,6 +6,7 @@ import { categoriesCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
 import type { Category, Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
+import EditExpenseDialog from "./EditExpenseDialog";
 
 interface Expense extends ExpenseInput { id: string }
 
@@ -20,6 +21,7 @@ export default function QuickAdd() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [envelope, setEnvelope] = useState<string>(() => localStorage.getItem("quickadd-envelope") ?? "");
+  const [editing, setEditing] = useState<Expense | null>(null);
 
   const envelopes = lines
     .filter((l) => l.isEnvelope)
@@ -137,24 +139,31 @@ export default function QuickAdd() {
       <ul className="flex flex-col gap-1.5">
         {recent.map((e) => (
           <li key={e.id} className="bg-white rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
-            <span className="flex items-center gap-2 min-w-0">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{label(e.channel)}</span>
-              <span className="text-sm truncate">
-                {e.category}
-                {e.envelopeLineId && (
-                  <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
-                )}
-                {e.note ? ` · ${e.note}` : ""}
+            <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2 min-w-0 flex-1 text-left">
+              <span className="flex items-center gap-2 min-w-0">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${chip(e.channel)}`}>{label(e.channel)}</span>
+                <span className="text-sm truncate">
+                  {e.category}
+                  {e.envelopeLineId && (
+                    <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
+                  )}
+                  {e.note ? ` · ${e.note}` : ""}
+                </span>
               </span>
-            </span>
-            <span className="flex items-center gap-2 shrink-0">
-              <span className="text-sm font-semibold tabular-nums">{peso(e.amount)}</span>
-              <button onClick={() => void deleteExpense(e.id)} className="text-stone-300 text-xs">✕</button>
-            </span>
+              <span className="text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
+            </button>
+            <button onClick={() => void deleteExpense(e.id)} className="text-stone-300 text-xs shrink-0">✕</button>
           </li>
         ))}
         {recent.length === 0 && <li className="text-sm text-stone-400 px-3">No expenses logged yet.</li>}
       </ul>
+
+      {editing && (
+        <EditExpenseDialog
+          expense={editing} categories={cats} lines={lines}
+          onClose={() => setEditing(null)}
+        />
+      )}
     </main>
   );
 }

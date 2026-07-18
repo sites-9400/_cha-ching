@@ -1,5 +1,6 @@
 import {
-  collection, deleteDoc, doc, getDoc, getDocs, increment, setDoc, updateDoc, writeBatch,
+  collection, deleteDoc, deleteField, doc, getDoc, getDocs, increment, setDoc, updateDoc, writeBatch,
+  type UpdateData,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import {
@@ -88,6 +89,18 @@ export async function addExpense(e: ExpenseInput): Promise<void> {
 
 export async function deleteExpense(id: string): Promise<void> {
   await deleteDoc(doc(db, expensesCol(), id));
+}
+
+/** Patch a logged expense. `envelopeLineId: null` removes the field (retags to
+ *  unplanned) via Firestore's deleteField() — Firestore rejects literal undefined. */
+export async function updateExpense(
+  id: string, patch: Partial<Omit<ExpenseInput, "envelopeLineId">> & { envelopeLineId?: string | null },
+): Promise<void> {
+  const { envelopeLineId, ...rest } = patch;
+  const data: UpdateData<ExpenseInput> = { ...rest };
+  if (envelopeLineId === null) data.envelopeLineId = deleteField();
+  else if (envelopeLineId !== undefined) data.envelopeLineId = envelopeLineId;
+  await updateDoc(doc(db, expensesCol(), id), data);
 }
 
 /** Upsert a card's statement cycle (doc id = statement-month "YYYY-MM"). Idempotent. */
