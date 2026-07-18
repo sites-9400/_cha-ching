@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { addMonthIncome, addMonthLine } from "../lib/repo";
-import type { Channel } from "../lib/types";
+import { isCutoffClosed } from "../lib/selectors";
+import type { Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
-export default function AddOneOff({ monthKey, onClose }: { monthKey: string; onClose: () => void }) {
+export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: string; lines: MonthLine[]; onClose: () => void }) {
   const { names: CHANNELS } = useAccounts();
   const [kind, setKind] = useState<"expense" | "income">("expense");
   const [name, setName] = useState("");
@@ -42,7 +43,8 @@ export default function AddOneOff({ monthKey, onClose }: { monthKey: string; onC
         </label>
         <label className="flex items-center justify-between text-sm">Cutoff
           <select value={cutoff} onChange={(e) => setCutoff(Number(e.target.value) as 1 | 2)} className="text-sm border-b border-stone-300 outline-none">
-            <option value={1}>1</option><option value={2}>2</option>
+            <option value={1}>1{isCutoffClosed(lines, 1) ? " (closed)" : ""}</option>
+            <option value={2}>2{isCutoffClosed(lines, 2) ? " (closed)" : ""}</option>
           </select>
         </label>
         {kind === "expense" ? (

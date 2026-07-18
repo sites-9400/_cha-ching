@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
-import { cutoffSummary, unplannedForCutoff } from "../lib/selectors";
+import { cutoffSummary, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
 import { projectMonthPlan } from "../lib/project";
 import { lineComparators, LINE_SORTS, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
@@ -105,10 +105,16 @@ export default function ThisMonth() {
         const cutIncomes = incomes.filter((i) => i.cutoff === cutoff).sort((a, b) => a.day - b.day);
         const proj = projected ? projectMonthPlan(viewedKey, currentKey, debts, template, events, incomes) : null;
         const projAlloc = proj ? (cutoff === 1 ? proj.alloc.c1 : proj.alloc.c2) : null;
+        const closed = isCutoffClosed(lines, cutoff);
 
         return (
           <section key={cutoff} className="mb-6 bg-white rounded-xl shadow p-4">
-            <h2 className="font-semibold mb-1">{cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}</h2>
+            <h2 className="font-semibold mb-1 flex items-center gap-2">
+              {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
+              {editable && closed && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ CLOSED</span>
+              )}
+            </h2>
             {editable && (
               <div className="h-2 rounded-full bg-stone-100 mb-3 overflow-hidden">
                 <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
@@ -178,7 +184,7 @@ export default function ThisMonth() {
         );
       })}
 
-      {adding && <AddOneOff monthKey={viewedKey} onClose={() => setAdding(false)} />}
+      {adding && <AddOneOff monthKey={viewedKey} lines={lines} onClose={() => setAdding(false)} />}
       {editingLine && <EditLineDialog monthKey={viewedKey} line={editingLine} onClose={() => setEditingLine(null)} />}
     </main>
   );

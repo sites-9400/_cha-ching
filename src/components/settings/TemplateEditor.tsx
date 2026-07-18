@@ -5,6 +5,7 @@ import { currentMonthKey } from "../../lib/clock";
 import { peso } from "../../lib/format";
 import { debtsCol, monthLines, templateLines } from "../../lib/paths";
 import { addTemplateLine, updateTemplateLine, deleteTemplateLine, syncMonthFromTemplate } from "../../lib/repo";
+import { isCutoffClosed } from "../../lib/selectors";
 import type { Channel, Debt, MonthLine, TemplateLine } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
 
@@ -33,12 +34,21 @@ export default function TemplateEditor() {
   const sorted = [...lines].sort(compareBy[sort]);
   const [editing, setEditing] = useState<TemplateLine | Omit<TemplateLine, "id"> | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   if (editing) {
     return (
       <Form
         line={editing}
-        onDone={async () => { await syncMonthFromTemplate(monthKey); setEditing(null); }}
+        onDone={async (saved) => {
+          await syncMonthFromTemplate(monthKey);
+          setNotice(
+            isCutoffClosed(monthLineList, saved.cutoff)
+              ? `Cutoff ${saved.cutoff} is closed for ${monthKey} — this line starts next month.`
+              : null,
+          );
+          setEditing(null);
+        }}
         onCancel={() => setEditing(null)}
       />
     );
@@ -50,7 +60,13 @@ export default function TemplateEditor() {
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Template lines</h2>
-      <p className="text-xs text-stone-400 mb-3">Edits sync into the current month, keeping your ticks.</p>
+      <p className="text-xs text-stone-400 mb-3">Edits sync into the current month's open cutoffs, keeping your ticks. Closed cutoffs are frozen.</p>
+      {notice && (
+        <p className="mb-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 flex justify-between gap-2">
+          <span>{notice}</span>
+          <button onClick={() => setNotice(null)} className="font-semibold shrink-0">✕</button>
+        </p>
+      )}
       <div className="flex items-center gap-1.5 mb-3">
         <span className="text-[11px] text-stone-400">Sort</span>
         <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
@@ -107,7 +123,11 @@ export default function TemplateEditor() {
   );
 }
 
-function Form({ line, onDone, onCancel }: { line: TemplateLine | Omit<TemplateLine, "id">; onDone: () => void | Promise<void>; onCancel: () => void }) {
+function Form({ line, onDone, onCancel }: {
+  line: TemplateLine | Omit<TemplateLine, "id">;
+  onDone: (saved: Omit<TemplateLine, "id">) => void | Promise<void>;
+  onCancel: () => void;
+}) {
   const { names: CHANNELS } = useAccounts();
   const debts = useCollection<Debt>(debtsCol());
   const [f, setF] = useState(line);
@@ -117,7 +137,7 @@ function Form({ line, onDone, onCancel }: { line: TemplateLine | Omit<TemplateLi
   async function save() {
     if (!f.name.trim()) return;
     if (id) await updateTemplateLine(id, f); else await addTemplateLine(f);
-    await onDone();
+    await onDone(f);
   }
 
   return (
