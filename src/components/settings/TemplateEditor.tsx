@@ -170,6 +170,10 @@ function Form({ line, onDone, onCancel }: {
         </select>
       </label>
       <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
+      <label className="flex items-center justify-between text-sm">Envelope
+        <input type="checkbox" checked={!!f.isEnvelope} onChange={(e) => set("isEnvelope", e.target.checked)} />
+      </label>
+      <p className="text-[11px] text-stone-400 -mt-1">Quick Add can draw spending from this line instead of free cash.</p>
       <div className="flex gap-2 mt-2">
         <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>

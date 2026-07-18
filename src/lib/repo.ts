@@ -221,7 +221,7 @@ export async function deleteMonthLine(monthKey: string, id: string): Promise<voi
 /** Inline-edit a month line (name/amount/channel) for this month only; marks it
  *  overridden so a later template sync won't clobber the change. */
 export async function updateMonthLine(
-  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "debtId">>,
+  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "debtId" | "isEnvelope">>,
 ): Promise<void> {
   await updateDoc(doc(db, monthLines(monthKey), id), { ...patch, overridden: true });
 }

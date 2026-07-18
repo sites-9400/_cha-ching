@@ -11,12 +11,13 @@ export default function EditLineDialog(
   const [name, setName] = useState(line.name);
   const [amount, setAmount] = useState(String(line.amount));
   const [channel, setChannel] = useState<Channel>(line.channel);
+  const [isEnvelope, setIsEnvelope] = useState(!!line.isEnvelope);
   const amt = Number(amount);
   const valid = name.trim() !== "" && amt >= 0;
 
   async function save() {
     if (!valid) return;
-    await updateMonthLine(monthKey, line.id, { name: name.trim(), amount: amt, channel });
+    await updateMonthLine(monthKey, line.id, { name: name.trim(), amount: amt, channel, isEnvelope });
     onClose();
   }
 
@@ -34,6 +35,9 @@ export default function EditLineDialog(
           <select value={channel} onChange={(e) => setChannel(e.target.value)} className="text-sm border-b border-stone-300 outline-none">
             {names.map((c) => <option key={String(c)} value={String(c)}>{c}</option>)}
           </select>
+        </label>
+        <label className="flex items-center justify-between text-sm">Envelope
+          <input type="checkbox" checked={isEnvelope} onChange={(e) => setIsEnvelope(e.target.checked)} />
         </label>
         <p className="text-[11px] text-stone-400">Changes apply to {monthKey} only — the template stays as-is.</p>
         <div className="flex gap-2 mt-1">
