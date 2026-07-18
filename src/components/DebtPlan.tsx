@@ -14,10 +14,10 @@ export interface PaymentRec {
 const KIND_LABEL: Record<string, string> = { target: "target", spill: "spill", minimum: "min" };
 
 export default function DebtPlan({
-  freeCash, debts, payments, monthKey, cutoff, unplanned = 0, readOnly = false, cycleMins,
+  freeCash, debts, payments, monthKey, cutoff, unplanned = 0, readOnly = false, cycleMins, closed = false,
 }: {
   freeCash: number; debts: Debt[]; payments: PaymentRec[]; monthKey: string; cutoff: 1 | 2;
-  unplanned?: number; readOnly?: boolean; cycleMins?: ReadonlyMap<string, number>;
+  unplanned?: number; readOnly?: boolean; cycleMins?: ReadonlyMap<string, number>; closed?: boolean;
 }) {
   const [payDebt, setPayDebt] = useState<Debt | null>(null);
   const { chip, label } = useAccounts();
@@ -27,7 +27,9 @@ export default function DebtPlan({
   const paid = paidByDebt(payments, monthKey, cutoff);
   const paidTotal = [...paid.values()].reduce((s, n) => s + n, 0);
   const remaining = Math.max(0, freeCash - paidTotal);
-  const alloc = allocateCutoff(remaining, debts, cutoff, cycleMins);
+  // A closed cutoff is done allocating: its paid lines stay, but leftover free
+  // cash is never re-planned (e.g. after a debt-priority change).
+  const alloc = closed ? { lines: [], shortfall: 0 } : allocateCutoff(remaining, debts, cutoff, cycleMins);
 
   const paidLines = [...paid.entries()]
     .map(([debtId, amount]) => ({ debt: debts.find((d) => d.id === debtId), amount }))
@@ -41,7 +43,9 @@ export default function DebtPlan({
       <p className="text-xs font-semibold text-stone-500 mb-2">
         DEBT PLAN · free cash {peso(freeCash)}
         {unplanned > 0 && <span className="font-normal text-stone-400"> (after {peso(unplanned)} unplanned)</span>}
-        {paidTotal > 0 && <span className="font-normal text-emerald-600"> · {peso(remaining)} left</span>}
+        {closed
+          ? <span className="font-normal text-stone-400"> · closed</span>
+          : paidTotal > 0 && <span className="font-normal text-emerald-600"> · {peso(remaining)} left</span>}
       </p>
       <ul className="flex flex-col gap-1.5">
         {/* Already paid this cutoff — fixed, ticked, not re-derived. */}
