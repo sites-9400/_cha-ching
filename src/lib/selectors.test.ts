@@ -5,6 +5,7 @@ import {
   debtTotals,
   fundStateFor,
   generateMonthLines,
+  isCutoffClosed,
   projectDebtFreeMonth,
   unplannedForCutoff,
 } from "./selectors";
@@ -133,6 +134,25 @@ describe("fundStateFor", () => {
 describe("addMonths", () => {
   it("crosses year boundaries", () => {
     expect(addMonths("2026-11", 3)).toBe("2027-02");
+  });
+});
+
+describe("isCutoffClosed", () => {
+  it("is false for a cutoff with no lines", () => {
+    expect(isCutoffClosed([], 1)).toBe(false);
+  });
+  it("is false while any line is unticked", () => {
+    expect(isCutoffClosed([mk("a", 100, 1, "PAID"), mk("b", 100, 1)], 1)).toBe(false);
+  });
+  it("is true when every line is ticked (any non-blank status)", () => {
+    expect(
+      isCutoffClosed([mk("a", 100, 1, "PAID"), mk("b", 100, 1, "SENT"), mk("c", 100, 1, "TRANSFERRED")], 1),
+    ).toBe(true);
+  });
+  it("ignores the other cutoff's lines", () => {
+    const lines = [mk("a", 100, 1, "PAID"), mk("b", 100, 2)];
+    expect(isCutoffClosed(lines, 1)).toBe(true);
+    expect(isCutoffClosed(lines, 2)).toBe(false);
   });
 });
 

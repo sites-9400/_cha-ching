@@ -22,6 +22,12 @@ export function cutoffSummary(
   return { income, planned, ticked, surplus: income - planned };
 }
 
+/** A started cutoff is closed when it has lines and every one is ticked. Derived, never stored. */
+export function isCutoffClosed(lines: readonly MonthLine[], cutoff: 1 | 2): boolean {
+  const cut = lines.filter((l) => l.cutoff === cutoff);
+  return cut.length > 0 && cut.every((l) => l.status !== "");
+}
+
 /**
  * Sum of a month's unplanned (Quick Add) expenses attributed to `cutoff` by the
  * expense date's day (same due-day → cutoff rule the allocation uses). Reduces the
