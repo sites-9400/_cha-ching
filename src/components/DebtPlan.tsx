@@ -8,7 +8,7 @@ import type { Debt } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
 
 export interface PaymentRec {
-  id: string; debtId: string; amount: number; monthKey: string; cutoff: 1 | 2;
+  id: string; debtId: string; amount: number; monthKey: string; cutoff: 1 | 2; date: string;
 }
 
 const KIND_LABEL: Record<string, string> = { target: "target", spill: "spill", minimum: "min" };
