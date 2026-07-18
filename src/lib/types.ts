@@ -50,12 +50,24 @@ export interface Debt {
   startingBalance: number;
   currentBalance: number;
   dueDay?: number;
+  statementDay?: number; // credit cards: day the statement cuts; enables cycle tracking
   minimum?: number;
   creditLimit?: number; // for credit cards — remaining credit = creditLimit − currentBalance
   payoffOrder: number;
   channel: Channel;
   isBNPL: boolean;
   active: boolean;
+}
+
+/** One credit-card statement cycle, stored at debts/{id}/cycles/{YYYY-MM}
+ *  (key = the statement's month). */
+export interface DebtCycle {
+  id: string;              // "YYYY-MM" cycle key
+  debtId?: string;         // injected by useCollectionGroup
+  statementDate: string;   // "YYYY-MM-DD"
+  dueDate: string;         // "YYYY-MM-DD"
+  statementBalance: number;
+  minimumDue: number;
 }
 
 export interface EventItem {
