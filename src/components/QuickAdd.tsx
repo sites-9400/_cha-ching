@@ -26,8 +26,10 @@ export default function QuickAdd() {
   const envelopes = lines
     .filter((l) => l.isEnvelope)
     .sort((a, b) => a.cutoff - b.cutoff || a.order - b.order);
-  // A remembered envelope that no longer exists (new month, deleted line) falls back to Unplanned.
-  const activeEnvelope = envelopes.some((l) => l.id === envelope) ? envelope : "";
+  // "@savings" is the Savings source; a remembered envelope that no longer
+  // exists (new month, deleted line) falls back to Unplanned.
+  const activeEnvelope =
+    envelope === "@savings" || envelopes.some((l) => l.id === envelope) ? envelope : "";
   const pickEnvelope = (id: string) => {
     setEnvelope(id);
     localStorage.setItem("quickadd-envelope", id);
@@ -44,7 +46,9 @@ export default function QuickAdd() {
     try {
       await addExpense({
         amount: value, category, channel, note, date: new Date().toISOString(),
-        ...(activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
+        ...(activeEnvelope === "@savings"
+          ? { fundedBySavings: true }
+          : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
       });
       setAmount("");
       setNote("");
@@ -66,7 +70,7 @@ export default function QuickAdd() {
           <div className="flex items-baseline gap-1 border-b-2 border-stone-200 focus-within:border-emerald-500 pb-1">
             <span className="text-2xl font-bold text-stone-400">₱</span>
             <input
-              type="number" inputMode="decimal" placeholder="0" autoFocus
+              type="number" inputMode="decimal" placeholder="0"
               value={amount} onChange={(e) => setAmount(e.target.value)}
               className="flex-1 min-w-0 text-3xl font-bold tabular-nums outline-none bg-transparent"
             />
@@ -118,6 +122,12 @@ export default function QuickAdd() {
                 }`}
               >{l.name}</button>
             ))}
+            <button
+              onClick={() => pickEnvelope("@savings")}
+              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                activeEnvelope === "@savings" ? "bg-cyan-600 text-white" : "bg-stone-100 text-stone-600"
+              }`}
+            >Savings</button>
           </div>
         </div>
 
@@ -147,6 +157,7 @@ export default function QuickAdd() {
                   {e.envelopeLineId && (
                     <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
                   )}
+                  {e.fundedBySavings && <span className="text-cyan-700"> · Savings</span>}
                   {e.note ? ` · ${e.note}` : ""}
                 </span>
               </span>

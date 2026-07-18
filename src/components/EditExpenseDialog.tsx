@@ -15,7 +15,10 @@ export default function EditExpenseDialog(
   const [amount, setAmount] = useState(String(expense.amount));
   const [category, setCategory] = useState(expense.category);
   const [channel, setChannel] = useState<Channel>(expense.channel);
-  const [envelope, setEnvelope] = useState(expense.envelopeLineId ?? "");
+  // "@savings" sentinel = paid from savings (fundedBySavings on the doc).
+  const [envelope, setEnvelope] = useState(
+    expense.fundedBySavings ? "@savings" : (expense.envelopeLineId ?? ""),
+  );
   const [note, setNote] = useState(expense.note);
   const [date, setDate] = useState(expense.date.slice(0, 10));
 
@@ -29,13 +32,18 @@ export default function EditExpenseDialog(
 
   async function save() {
     if (!valid) return;
-    const patch: Partial<Omit<ExpenseInput, "envelopeLineId">> & { envelopeLineId?: string | null } = {};
+    const patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings">>
+      & { envelopeLineId?: string | null; fundedBySavings?: boolean | null } = {};
     if (amt !== expense.amount) patch.amount = amt;
     if (category !== expense.category) patch.category = category;
     if (channel !== expense.channel) patch.channel = channel;
     if (note !== expense.note) patch.note = note;
     if (date !== expense.date.slice(0, 10)) patch.date = `${date}${expense.date.slice(10)}`;
-    if (envelope !== (expense.envelopeLineId ?? "")) patch.envelopeLineId = envelope || null;
+    const was = expense.fundedBySavings ? "@savings" : (expense.envelopeLineId ?? "");
+    if (envelope !== was) {
+      patch.fundedBySavings = envelope === "@savings" ? true : null;
+      patch.envelopeLineId = envelope && envelope !== "@savings" ? envelope : null;
+    }
     await updateExpense(expense.id, patch);
     onClose();
   }
@@ -95,6 +103,12 @@ export default function EditExpenseDialog(
                 }`}
               >{l.name}</button>
             ))}
+            <button
+              onClick={() => setEnvelope("@savings")}
+              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                envelope === "@savings" ? "bg-cyan-600 text-white" : "bg-stone-100 text-stone-600"
+              }`}
+            >Savings</button>
           </div>
         </div>
 

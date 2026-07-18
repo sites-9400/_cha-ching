@@ -50,7 +50,7 @@ export function envelopeSpent(
  *    allocates cash that was already spent.
  */
 export function unplannedForCutoff(
-  expenses: readonly { amount: number; date: string; envelopeLineId?: string }[],
+  expenses: readonly { amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean }[],
   monthKey: string,
   cutoff: 1 | 2,
   lines: readonly MonthLine[],
@@ -67,6 +67,7 @@ export function unplannedForCutoff(
   let total = 0;
   for (const e of expenses) {
     if (e.date.slice(0, 7) !== monthKey) continue;
+    if (e.fundedBySavings) continue; // paid from savings — never touches cutoff cash
     const envLine = e.envelopeLineId ? lineById.get(e.envelopeLineId) : undefined;
     if (envLine?.isEnvelope) continue; // drawn from the envelope, counted below as excess only
     if (attribute(Number(e.date.slice(8, 10))) === cutoff) total += e.amount;

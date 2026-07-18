@@ -5,7 +5,7 @@ import type { Category, Channel } from "../../lib/types";
 
 export interface DashExpense {
   id: string; amount: number; category: string; date: string; note?: string;
-  envelopeLineId?: string; channel: Channel;
+  envelopeLineId?: string; fundedBySavings?: boolean; channel: Channel;
 }
 
 /** This month's unplanned spending by category (single-hue bars); tap to see notes.

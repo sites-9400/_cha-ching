@@ -89,26 +89,57 @@ export async function writeMonth(
 export interface ExpenseInput {
   amount: number; category: string; channel: string; note: string; date: string;
   envelopeLineId?: string; // month line the spending draws from; absent = unplanned
+  fundedBySavings?: boolean; // paid from savings — skips cutoff math, deducts savingsBalance
 }
 
 export async function addExpense(e: ExpenseInput): Promise<void> {
-  await setDoc(doc(collection(db, expensesCol())), e);
+  const batch = writeBatch(db);
+  batch.set(doc(collection(db, expensesCol())), e);
+  if (e.fundedBySavings) batch.update(doc(db, metaDoc()), { savingsBalance: increment(-e.amount) });
+  await batch.commit();
 }
 
 export async function deleteExpense(id: string): Promise<void> {
-  await deleteDoc(doc(db, expensesCol(), id));
+  const ref = doc(db, expensesCol(), id);
+  const snap = await getDoc(ref);
+  const batch = writeBatch(db);
+  batch.delete(ref);
+  if (snap.exists() && snap.data().fundedBySavings) {
+    batch.update(doc(db, metaDoc()), { savingsBalance: increment(snap.data().amount as number) });
+  }
+  await batch.commit();
 }
 
-/** Patch a logged expense. `envelopeLineId: null` removes the field (retags to
- *  unplanned) via Firestore's deleteField() — Firestore rejects literal undefined. */
+/** Patch a logged expense. `envelopeLineId`/`fundedBySavings: null` removes the
+ *  field via deleteField() — Firestore rejects literal undefined. Savings-funded
+ *  changes (amount edits, toggling the source) adjust savingsBalance by the delta. */
 export async function updateExpense(
-  id: string, patch: Partial<Omit<ExpenseInput, "envelopeLineId">> & { envelopeLineId?: string | null },
+  id: string,
+  patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings">>
+    & { envelopeLineId?: string | null; fundedBySavings?: boolean | null },
 ): Promise<void> {
-  const { envelopeLineId, ...rest } = patch;
+  const ref = doc(db, expensesCol(), id);
+  const snap = await getDoc(ref);
+  const old = (snap.data() ?? {}) as ExpenseInput;
+
+  const { envelopeLineId, fundedBySavings, ...rest } = patch;
   const data: UpdateData<ExpenseInput> = { ...rest };
   if (envelopeLineId === null) data.envelopeLineId = deleteField();
   else if (envelopeLineId !== undefined) data.envelopeLineId = envelopeLineId;
-  await updateDoc(doc(db, expensesCol(), id), data);
+  if (fundedBySavings === null || fundedBySavings === false) data.fundedBySavings = deleteField();
+  else if (fundedBySavings === true) data.fundedBySavings = true;
+
+  // Savings delta: what the old doc deducted vs what the new state should deduct.
+  const wasFunded = !!old.fundedBySavings;
+  const nowFunded = fundedBySavings === undefined ? wasFunded : fundedBySavings === true;
+  const oldDeduct = wasFunded ? old.amount : 0;
+  const newDeduct = nowFunded ? (patch.amount ?? old.amount) : 0;
+  const delta = oldDeduct - newDeduct; // positive → give back to savings
+
+  const batch = writeBatch(db);
+  batch.update(ref, data);
+  if (delta !== 0) batch.update(doc(db, metaDoc()), { savingsBalance: increment(delta) });
+  await batch.commit();
 }
 
 /** Upsert a card's statement cycle (doc id = statement-month "YYYY-MM"). Idempotent. */

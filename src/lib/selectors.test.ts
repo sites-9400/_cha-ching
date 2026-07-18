@@ -225,4 +225,10 @@ describe("unplannedForCutoff", () => {
   it("ignores other months", () => {
     expect(unplannedForCutoff([exp(100, "2026-06-15T10:00:00.000Z")], "2026-07", 1, openLines)).toBe(0);
   });
+
+  it("excludes savings-funded expenses from free cash entirely", () => {
+    const expenses = [{ amount: 5000, date: "2026-07-15T10:00:00.000Z", fundedBySavings: true }];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(0);
+  });
 });
