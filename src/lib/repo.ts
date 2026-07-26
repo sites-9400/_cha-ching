@@ -295,6 +295,36 @@ export async function addMonthLine(monthKey: string, line: Omit<MonthLine, "id">
 export async function deleteMonthLine(monthKey: string, id: string): Promise<void> {
   await deleteDoc(doc(db, monthLines(monthKey), id));
 }
+/** Remove a line from THIS month only, keeping the template intact. The doc is
+ *  kept (flagged `skipped`) so the skip can be undone, and `overridden` stops
+ *  template sync from resurrecting it. A ticked debt line is reversed first —
+ *  its payment doc is deleted and the debt's balance restored — all in one
+ *  batch, so a failure can't strand a restored balance without its payment. */
+export async function skipLineForMonth(monthKey: string, line: MonthLine): Promise<void> {
+  const batch = writeBatch(db);
+  if (line.status !== "" && line.debtId) {
+    const snap = await getDocs(collection(db, debtPayments(line.debtId)));
+    for (const d of snap.docs) {
+      if (d.data().lineId === line.id) {
+        batch.delete(d.ref);
+        batch.update(doc(db, debtsCol(), line.debtId), {
+          currentBalance: increment(d.data().amount as number),
+        });
+      }
+    }
+  }
+  batch.update(doc(db, monthLines(monthKey), line.id), {
+    status: "", paidDate: "", overridden: true, skipped: true,
+  });
+  await batch.commit();
+}
+
+/** Undo a skip. Clearing `overridden` re-arms template sync, so the line
+ *  refreshes from the template on the next sync. */
+export async function unskipLine(monthKey: string, id: string): Promise<void> {
+  await updateDoc(doc(db, monthLines(monthKey), id), { skipped: false, overridden: false });
+}
+
 /** Inline-edit a month line (name/amount/channel) for this month only; marks it
  *  overridden so a later template sync won't clobber the change. */
 export async function updateMonthLine(
