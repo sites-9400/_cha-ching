@@ -72,7 +72,7 @@ export default function ThisMonth() {
     );
   }
 
-  const totalSurplus = cutoffSummary(lines, incomes, 1).surplus + cutoffSummary(lines, incomes, 2).surplus;
+  const totalSurplus = cutoffSummary(lines, incomes, 1, received).surplus + cutoffSummary(lines, incomes, 2, received).surplus;
 
   return (
     <>
@@ -119,7 +119,7 @@ export default function ThisMonth() {
       </div>
 
       {([1, 2] as const).map((cutoff) => {
-        const s = cutoffSummary(lines, incomes, cutoff);
+        const s = cutoffSummary(lines, incomes, cutoff, received);
         const unplanned = editable ? unplannedForCutoff(expenses, viewedKey, cutoff, lines) : 0;
         const freeCash = Math.max(0, s.surplus - unplanned);
         const pct = s.planned > 0 ? Math.round((s.ticked / s.planned) * 100) : 0;
@@ -149,12 +149,15 @@ export default function ThisMonth() {
                   const on = received[i.id] === true;
                   return (
                     <li key={i.id} className="flex items-center justify-between gap-2 text-sm">
-                      <span className="truncate text-emerald-800">↓ {i.name}</span>
+                      <span className="truncate text-emerald-800">
+                        ↓ {i.name}
+                        {i.toSavings && <span className="ml-1 text-[10px] text-cyan-700">→ savings</span>}
+                      </span>
                       <span className="flex items-center gap-2 shrink-0">
                         <span className="tabular-nums text-emerald-800">{peso(i.amount)}</span>
                         {editable && (
                           <button
-                            onClick={() => void setIncomeReceived(viewedKey, i.id, !on)}
+                            onClick={() => void setIncomeReceived(viewedKey, i, !on)}
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${on ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-400"}`}
                           >{on ? "RECEIVED" : "receive"}</button>
                         )}

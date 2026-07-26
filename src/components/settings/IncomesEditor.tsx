@@ -66,6 +66,10 @@ function Form({ income, onDone }: { income: Income | Omit<Income, "id">; onDone:
           <option value={1}>1</option><option value={2}>2</option>
         </select>
       </label>
+      <label className="flex items-center justify-between text-sm">Goes to savings
+        <input type="checkbox" checked={!!f.toSavings} onChange={(e) => set("toSavings", e.target.checked)} />
+      </label>
+      <p className="text-[11px] text-stone-400 -mt-1">Receiving this income moves it into savings instead of spendable cash.</p>
       <div className="flex gap-2 mt-2">
         <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>

@@ -3,8 +3,8 @@ import { peso } from "../../lib/format";
 
 /** Savings balance against the ₱ floor — a single value vs a threshold. */
 export default function SavingsMeter({
-  balance, floor, onSave,
-}: { balance: number; floor: number; onSave: (v: number) => void | Promise<void> }) {
+  balance, floor, onSave, onAdd,
+}: { balance: number; floor: number; onSave: (v: number) => void | Promise<void>; onAdd: () => void }) {
   const [editing, setEditing] = useState(false);
   const [raw, setRaw] = useState(String(balance));
 
@@ -49,6 +49,7 @@ export default function SavingsMeter({
           ? `Below floor by ${peso(floor - balance)}`
           : `${peso(balance - floor)} above the ${peso(floor)} floor`}
       </p>
+      <button onClick={onAdd} className="mt-3 text-sm font-semibold text-emerald-700">+ Add to savings</button>
     </section>
   );
 }

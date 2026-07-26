@@ -5,14 +5,15 @@ import {
 import { db } from "./firebase";
 import {
   accountsCol, categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
-  metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, subscriptionsCol, templateIncomes, templateLines,
+  metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, savingsMovesCol, subscriptionsCol,
+  templateIncomes, templateLines,
 } from "./paths";
 import { BACKUP_KEEP, backupsToPrune, type MonthBackup } from "./backups";
 import { reconcileLines } from "./reconcile";
 import { generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
-  Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SinkingFund, Subscription,
-  TemplateLine,
+  Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SavingsMove, SinkingFund,
+  Subscription, TemplateLine,
 } from "./types";
 
 /** Strip undefined-valued keys — Firestore rejects literal `undefined`. */
@@ -64,11 +65,41 @@ export async function toggleLinePaid(monthKey: string, line: MonthLine): Promise
   await batch.commit();
 }
 
-/** Tick/untick an income line as RECEIVED for a month (stored on the month meta doc). */
+/** Tick/untick an income as RECEIVED for a month (stored on the month meta doc).
+ *  An income flagged `toSavings` also moves the money: receiving credits the
+ *  savings balance and records a move; unticking reverses both. Mirrors
+ *  `toggleLinePaid`'s untick path — the move is located by incomeId + monthKey. */
 export async function setIncomeReceived(
-  monthKey: string, incomeId: string, received: boolean,
+  monthKey: string, income: Income, received: boolean,
 ): Promise<void> {
-  await updateDoc(doc(db, monthDoc(monthKey)), { [`receivedIncomes.${incomeId}`]: received });
+  if (!income.toSavings) {
+    await updateDoc(doc(db, monthDoc(monthKey)), { [`receivedIncomes.${income.id}`]: received });
+    return;
+  }
+
+  const batch = writeBatch(db);
+  batch.update(doc(db, monthDoc(monthKey)), { [`receivedIncomes.${income.id}`]: received });
+
+  if (received) {
+    batch.set(doc(collection(db, savingsMovesCol())), {
+      amount: income.amount, direction: "in", source: income.name,
+      date: new Date().toISOString(), incomeId: income.id, monthKey,
+    });
+    batch.update(doc(db, metaDoc()), { savingsBalance: increment(income.amount) });
+  } else {
+    // Reverse only what was actually recorded — if the move was already deleted
+    // by hand, the balance must not be decremented a second time.
+    const snap = await getDocs(collection(db, savingsMovesCol()));
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (data.incomeId === income.id && data.monthKey === monthKey) {
+        batch.delete(d.ref);
+        batch.update(doc(db, metaDoc()), { savingsBalance: increment(-(data.amount as number)) });
+      }
+    }
+  }
+
+  await batch.commit();
 }
 
 /** Create a month: its meta doc + all line docs, in one batch. */
@@ -267,6 +298,27 @@ export async function deleteSubscription(id: string): Promise<void> {
 /** Patch the household meta (savingsBalance, floor, currency) on the root doc. */
 export async function updateMeta(patch: Partial<Meta>): Promise<void> {
   await updateDoc(doc(db, metaDoc()), patch);
+}
+
+/** Record a savings movement and move the balance in the same batch, so the
+ *  balance can never drift from the history that explains it. */
+export async function addSavingsMove(move: Omit<SavingsMove, "id">): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(collection(db, savingsMovesCol())), stripUndefined(move));
+  batch.update(doc(db, metaDoc()), {
+    savingsBalance: increment(move.direction === "in" ? move.amount : -move.amount),
+  });
+  await batch.commit();
+}
+
+/** Undo a movement: delete it and reverse its effect on the balance. */
+export async function deleteSavingsMove(move: SavingsMove): Promise<void> {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, savingsMovesCol(), move.id));
+  batch.update(doc(db, metaDoc()), {
+    savingsBalance: increment(move.direction === "in" ? -move.amount : move.amount),
+  });
+  await batch.commit();
 }
 
 // ── Accounts (custom channels + account numbers) ─────────────────────────────

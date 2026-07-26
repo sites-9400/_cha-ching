@@ -12,6 +12,7 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
   const [channel, setChannel] = useState<Channel>("CASH");
   const [cutoff, setCutoff] = useState<1 | 2>(2);
   const [day, setDay] = useState("28");
+  const [toSavings, setToSavings] = useState(false);
   const amt = Number(amount);
   const valid = name.trim() !== "" && amt > 0;
 
@@ -20,7 +21,7 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
     if (kind === "expense") {
       await addMonthLine(monthKey, { name: name.trim(), amount: amt, channel, cutoff, order: 900, oneOff: true, status: "" });
     } else {
-      await addMonthIncome(monthKey, { name: name.trim(), amount: amt, day: Number(day) || 1, cutoff });
+      await addMonthIncome(monthKey, { name: name.trim(), amount: amt, day: Number(day) || 1, cutoff, toSavings });
     }
     onClose();
   }
@@ -54,9 +55,14 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
             </select>
           </label>
         ) : (
-          <label className="flex items-center justify-between text-sm">Day (1–31)
-            <input type="number" value={day} onChange={(e) => setDay(e.target.value)} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
-          </label>
+          <>
+            <label className="flex items-center justify-between text-sm">Day (1–31)
+              <input type="number" value={day} onChange={(e) => setDay(e.target.value)} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
+            </label>
+            <label className="flex items-center justify-between text-sm">Goes to savings
+              <input type="checkbox" checked={toSavings} onChange={(e) => setToSavings(e.target.checked)} />
+            </label>
+          </>
         )}
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
