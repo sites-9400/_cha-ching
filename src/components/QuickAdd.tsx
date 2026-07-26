@@ -4,6 +4,7 @@ import { currentMonthKey } from "../lib/clock";
 import { peso } from "../lib/format";
 import { categoriesCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
+import { activeLines } from "../lib/selectors";
 import type { Category, Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 import ChannelIcon from "./ChannelIcon";
@@ -16,7 +17,8 @@ export default function QuickAdd() {
   const { names: CHANNELS, chip, label } = useAccounts();
   const categories = useCollection<Category>(categoriesCol());
   const expenses = useCollection<Expense>(expensesCol());
-  const lines = useCollection<MonthLine>(monthLines(currentMonthKey()));
+  const allLines = useCollection<MonthLine>(monthLines(currentMonthKey()));
+  const lines = activeLines(allLines);
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [channel, setChannel] = useState<Channel>("CASH");

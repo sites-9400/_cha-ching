@@ -5,7 +5,7 @@ import { currentMonthKey } from "../../lib/clock";
 import { peso } from "../../lib/format";
 import { debtsCol, monthLines, templateLines } from "../../lib/paths";
 import { addTemplateLine, updateTemplateLine, deleteTemplateLine, syncMonthFromTemplate } from "../../lib/repo";
-import { isCutoffClosed } from "../../lib/selectors";
+import { activeLines, isCutoffClosed } from "../../lib/selectors";
 import type { Channel, Debt, MonthLine, TemplateLine } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
 
@@ -28,7 +28,8 @@ const compareBy: Record<SortKey, (a: TemplateLine, b: TemplateLine) => number> =
 export default function TemplateEditor() {
   const monthKey = currentMonthKey();
   const lines = useCollection<TemplateLine>(templateLines());
-  const monthLineList = useCollection<MonthLine>(monthLines(monthKey));
+  const allMonthLines = useCollection<MonthLine>(monthLines(monthKey));
+  const monthLineList = activeLines(allMonthLines);
   const { chip, label } = useAccounts();
   const [sort, setSort] = useState<SortKey>("cutoff");
   const sorted = [...lines].sort(compareBy[sort]);

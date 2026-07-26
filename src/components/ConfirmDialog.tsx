@@ -2,12 +2,14 @@ interface ConfirmDialogProps {
   title: string;
   message: string;
   confirmLabel?: string;
+  secondaryLabel?: string;
   onConfirm: () => void | Promise<void>;
+  onSecondary?: () => void | Promise<void>;
   onCancel: () => void;
 }
 
 export default function ConfirmDialog({
-  title, message, confirmLabel = "Delete", onConfirm, onCancel,
+  title, message, confirmLabel = "Delete", secondaryLabel, onConfirm, onSecondary, onCancel,
 }: ConfirmDialogProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onCancel}>
@@ -20,6 +22,14 @@ export default function ConfirmDialog({
             {confirmLabel}
           </button>
         </div>
+        {onSecondary && (
+          <button
+            onClick={() => void onSecondary()}
+            className="mt-2 w-full py-2 rounded-lg text-sm font-semibold text-red-700 bg-red-50"
+          >
+            {secondaryLabel}
+          </button>
+        )}
       </div>
     </div>
   );

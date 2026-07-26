@@ -4,6 +4,7 @@ import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey, monthLabel } from "../../lib/clock";
 import { addMonths, peso } from "../../lib/format";
 import { categoriesCol, monthLines } from "../../lib/paths";
+import { activeLines } from "../../lib/selectors";
 import { dailyTotals } from "../../lib/stats";
 import type { Category, MonthLine } from "../../lib/types";
 import ChannelIcon from "../ChannelIcon";
@@ -28,7 +29,8 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
   const [openDay, setOpenDay] = useState<number | null>(null);
   const [editing, setEditing] = useState<DashExpense | null>(null);
   const categories = useCollection<Category>(categoriesCol());
-  const lines = useCollection<MonthLine>(monthLines(monthKey));
+  const allLines = useCollection<MonthLine>(monthLines(monthKey));
+  const lines = activeLines(allLines);
 
   const totals = dailyTotals(expenses, monthKey);
   const [y, m] = monthKey.split("-").map(Number);

@@ -9,7 +9,7 @@ import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../lib/paths";
-import { deleteMonthIncome, deleteMonthLine, setIncomeReceived, syncMonthFromTemplate } from "../lib/repo";
+import { deleteMonthIncome, deleteMonthLine, deleteTemplateLine, setIncomeReceived, skipLineForMonth, syncMonthFromTemplate, toggleLinePaid, unskipLine } from "../lib/repo";
 import type { Debt, DebtCycle, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import HeaderBand from "./HeaderBand";
@@ -19,9 +19,10 @@ import DueSoonStrip from "./DueSoonStrip";
 import SendPlan from "./SendPlan";
 import AddOneOff from "./AddOneOff";
 import EditLineDialog from "./EditLineDialog";
+import ConfirmDialog from "./ConfirmDialog";
 
 export default function ThisMonth() {
-  const { viewedKey, currentKey, mode, editable, lines, incomes, ready, goPrev, goNext, start } = useMonth();
+  const { viewedKey, currentKey, mode, editable, lines, skippedLines, incomes, ready, goPrev, goNext, start } = useMonth();
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const cycles = useCollectionGroup<DebtCycle>("cycles");
@@ -38,6 +39,7 @@ export default function ThisMonth() {
   const [adding, setAdding] = useState(false);
   const [editingLine, setEditingLine] = useState<MonthLine | null>(null);
   const [lineSort, setLineSort] = useState<LineSortKey>("order");
+  const [confirmLine, setConfirmLine] = useState<MonthLine | null>(null);
 
   const projected = mode === "projected";
 
@@ -122,6 +124,7 @@ export default function ThisMonth() {
         const freeCash = Math.max(0, s.surplus - unplanned);
         const pct = s.planned > 0 ? Math.round((s.ticked / s.planned) * 100) : 0;
         const cutLines = lines.filter((l) => l.cutoff === cutoff).sort(lineComparators[lineSort]);
+        const cutSkipped = skippedLines.filter((l) => l.cutoff === cutoff);
         const cutIncomes = incomes.filter((i) => i.cutoff === cutoff).sort((a, b) => a.day - b.day);
         const proj = projected ? projectMonthPlan(viewedKey, currentKey, debts, template, events, incomes) : null;
         const projAlloc = proj ? (cutoff === 1 ? proj.alloc.c1 : proj.alloc.c2) : null;
@@ -181,11 +184,31 @@ export default function ThisMonth() {
                           .reduce((s, x) => s + x.amount, 0)
                       : (l.status !== "" ? l.amount : 0)
                     : undefined}
-                  onDelete={editable && l.oneOff ? () => void deleteMonthLine(viewedKey, l.id) : undefined}
+                  onDelete={editable && !closed
+                    ? (l.oneOff
+                        ? () => void deleteMonthLine(viewedKey, l.id)
+                        : () => setConfirmLine(l))
+                    : undefined}
                   onEdit={editable ? () => setEditingLine(l) : undefined}
                 />
               ))}
             </ul>
+
+            {cutSkipped.length > 0 && (
+              <ul className="mt-2 flex flex-col gap-1">
+                {cutSkipped.map((l) => (
+                  <li key={l.id} className="flex items-center justify-between gap-2 text-xs text-stone-400">
+                    <span className="truncate">{l.name} · skipped this month</span>
+                    {editable && (
+                      <button
+                        onClick={() => void unskipLine(viewedKey, l.id)}
+                        className="shrink-0 font-semibold text-emerald-700"
+                      >undo</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {mode !== "past" && !projected && (
               <>
@@ -218,6 +241,32 @@ export default function ThisMonth() {
 
       {adding && <AddOneOff monthKey={viewedKey} lines={lines} onClose={() => setAdding(false)} />}
       {editingLine && <EditLineDialog monthKey={viewedKey} line={editingLine} onClose={() => setEditingLine(null)} />}
+      {confirmLine && (
+        <ConfirmDialog
+          title={`Remove ${confirmLine.name}?`}
+          message="Skip it for this month only, or delete it from your recurring template so it stops appearing in future months too."
+          confirmLabel="Just this month"
+          secondaryLabel="Remove from template too"
+          onConfirm={async () => {
+            await skipLineForMonth(viewedKey, confirmLine);
+            setConfirmLine(null);
+          }}
+          onSecondary={async () => {
+            // Reverse a logged debt payment before the line disappears, so the
+            // debt's balance and its payment history stay consistent.
+            if (confirmLine.status !== "" && confirmLine.debtId) {
+              await toggleLinePaid(viewedKey, confirmLine);
+            }
+            await deleteTemplateLine(confirmLine.id);
+            // Delete the month line directly: template sync leaves `overridden`
+            // lines alone, so an inline-edited line would otherwise survive.
+            await deleteMonthLine(viewedKey, confirmLine.id);
+            await syncMonthFromTemplate(viewedKey);
+            setConfirmLine(null);
+          }}
+          onCancel={() => setConfirmLine(null)}
+        />
+      )}
       </main>
     </>
   );

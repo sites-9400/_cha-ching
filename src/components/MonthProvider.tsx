@@ -5,7 +5,7 @@ import {
   eventsCol, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "../lib/paths";
 import { startMonth } from "../lib/repo";
-import { generateMonthLines } from "../lib/selectors";
+import { activeLines, generateMonthLines } from "../lib/selectors";
 import type { EventItem, Income, MonthLine, TemplateLine } from "../lib/types";
 import { useCollection } from "../hooks/useCollection";
 import { useDoc } from "../hooks/useDoc";
@@ -18,6 +18,7 @@ interface MonthCtx {
   mode: MonthMode;
   editable: boolean;
   lines: MonthLine[];
+  skippedLines: MonthLine[];
   incomes: Income[];
   ready: boolean;
   goPrev: () => void;
@@ -74,8 +75,13 @@ export default function MonthProvider({ children }: { children: React.ReactNode 
   }, [viewedKey, currentKey, monthMeta, template, events, templateIncomeList]);
 
   const lines = useMemo<MonthLine[]>(
-    () => (isProjected ? generateMonthLines(template, events, viewedKey) : savedLines),
+    () => (isProjected ? generateMonthLines(template, events, viewedKey) : activeLines(savedLines)),
     [isProjected, template, events, viewedKey, savedLines],
+  );
+
+  const skippedLines = useMemo<MonthLine[]>(
+    () => (isProjected ? [] : savedLines.filter((l) => l.skipped)),
+    [isProjected, savedLines],
   );
 
   const incomes = useMemo<Income[]>(
@@ -88,7 +94,7 @@ export default function MonthProvider({ children }: { children: React.ReactNode 
     : !loadingMeta && exists && savedLines.length > 0;
 
   const value: MonthCtx = {
-    viewedKey, currentKey, mode, editable, lines, incomes, ready,
+    viewedKey, currentKey, mode, editable, lines, skippedLines, incomes, ready,
     goPrev: () => setViewedKey((k) => addMonths(k, -1)),
     goNext: () => setViewedKey((k) => addMonths(k, 1)),
     start: () => { void startMonth(viewedKey); },
