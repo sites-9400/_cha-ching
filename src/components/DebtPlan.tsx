@@ -9,6 +9,8 @@ import ConfirmPayDialog from "./ConfirmPayDialog";
 
 export interface PaymentRec {
   id: string; debtId: string; amount: number; monthKey: string; cutoff: 1 | 2; date: string;
+  /** Set when the payment came from ticking a month line PAID (`toggleLinePaid`). */
+  lineId?: string;
 }
 
 const KIND_LABEL: Record<string, string> = { target: "target", spill: "spill", minimum: "min" };

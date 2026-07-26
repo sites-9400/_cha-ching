@@ -5,6 +5,8 @@ import { toCsv, downloadCsv, type Column } from "../../lib/export";
 import type { Debt } from "../../lib/types";
 import type { PaymentRec } from "../DebtPlan";
 import type { ExpenseInput } from "../../lib/repo";
+import { useMonth } from "../MonthProvider";
+import { monthExportRows, MONTH_EXPORT_COLUMNS } from "../../lib/monthExport";
 
 interface Expense extends ExpenseInput { id: string }
 
@@ -12,6 +14,7 @@ export default function ExportData() {
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const expenses = useCollection<Expense>(expensesCol());
+  const { viewedKey, lines } = useMonth();
 
   const exports: { label: string; file: string; run: () => void }[] = [
     {
@@ -38,6 +41,13 @@ export default function ExportData() {
         { key: "debtId", label: "DebtId" }, { key: "monthKey", label: "Month" },
         { key: "cutoff", label: "Cutoff" }, { key: "amount", label: "Amount" },
       ] as Column<PaymentRec>[])),
+    },
+    {
+      label: `This month (${viewedKey})`, file: `month-${viewedKey}.csv`,
+      run: () => downloadCsv(
+        `month-${viewedKey}.csv`,
+        toCsv(monthExportRows(lines, payments, debts, viewedKey), MONTH_EXPORT_COLUMNS),
+      ),
     },
   ];
 
