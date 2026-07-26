@@ -9,16 +9,26 @@ export interface CutoffSummary {
   surplus: number;
 }
 
+/** A cutoff's money. An income flagged `toSavings` counts as income AND as
+ *  planned — it arrives but is already spoken for, so surplus is unchanged;
+ *  once received it also counts as ticked, so the progress bar can complete. */
 export function cutoffSummary(
   lines: MonthLine[],
   incomes: Income[],
   cutoff: 1 | 2,
+  received?: Record<string, boolean>,
 ): CutoffSummary {
   const inCut = <T extends { cutoff: 1 | 2 }>(xs: T[]): T[] => xs.filter((x) => x.cutoff === cutoff);
-  const income = inCut(incomes).reduce((s, i) => s + i.amount, 0);
+  const cutIncomes = inCut(incomes);
+  const income = cutIncomes.reduce((s, i) => s + i.amount, 0);
+  const swept = cutIncomes.filter((i) => i.toSavings);
+  const sweptTotal = swept.reduce((s, i) => s + i.amount, 0);
+  const sweptReceived = swept
+    .filter((i) => received?.[i.id] === true)
+    .reduce((s, i) => s + i.amount, 0);
   const cutLines = inCut(lines);
-  const planned = cutLines.reduce((s, l) => s + l.amount, 0);
-  const ticked = cutLines.filter((l) => l.status !== "").reduce((s, l) => s + l.amount, 0);
+  const planned = cutLines.reduce((s, l) => s + l.amount, 0) + sweptTotal;
+  const ticked = cutLines.filter((l) => l.status !== "").reduce((s, l) => s + l.amount, 0) + sweptReceived;
   return { income, planned, ticked, surplus: income - planned };
 }
 

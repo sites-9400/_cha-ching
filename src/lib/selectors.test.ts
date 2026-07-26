@@ -320,3 +320,31 @@ describe("activeLines", () => {
     expect(isCutoffClosed(activeLines(lines), 1)).toBe(true);
   });
 });
+
+describe("cutoffSummary with income routed to savings", () => {
+  const incomes = [
+    { id: "sal", name: "Salary", amount: 25000, day: 13, cutoff: 1 as const },
+    { id: "gig", name: "Side gig", amount: 5000, day: 20, cutoff: 1 as const, toSavings: true },
+  ];
+
+  it("counts a toSavings income in both income and planned, leaving surplus unchanged", () => {
+    const withFlag = cutoffSummary([], incomes, 1);
+    expect(withFlag.income).toBe(30000);
+    expect(withFlag.planned).toBe(5000);
+    expect(withFlag.surplus).toBe(25000);
+
+    const withoutGig = cutoffSummary([], [incomes[0]], 1);
+    expect(withFlag.surplus).toBe(withoutGig.surplus);
+  });
+
+  it("counts a received toSavings income in ticked so the bar can reach 100%", () => {
+    expect(cutoffSummary([], incomes, 1, { gig: true }).ticked).toBe(5000);
+    expect(cutoffSummary([], incomes, 1, { gig: false }).ticked).toBe(0);
+    expect(cutoffSummary([], incomes, 1).ticked).toBe(0);
+  });
+
+  it("leaves a normal income untouched by the received parameter", () => {
+    const s = cutoffSummary([], [incomes[0]], 1, { sal: true });
+    expect(s).toMatchObject({ income: 25000, planned: 0, ticked: 0, surplus: 25000 });
+  });
+});

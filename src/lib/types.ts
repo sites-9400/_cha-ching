@@ -44,6 +44,7 @@ export interface Income {
   amount: number;
   day: number; // 13 | 25 | 29
   cutoff: 1 | 2;
+  toSavings?: boolean; // received money goes to savings, not spendable cash
 }
 
 export interface Debt {
@@ -88,6 +89,19 @@ export interface SinkingFund {
   monthlyDeposit: number;
   releaseMonths: number[]; // e.g. [3, 6, 9, 12]
   balance: number;
+}
+
+/** One deliberate movement of savings. `amount` is always positive; `direction`
+ *  carries the sign. Written together with the balance increment, so the balance
+ *  always has a history that explains it. */
+export interface SavingsMove {
+  id: string;
+  amount: number;
+  direction: "in" | "out";
+  source: string;    // free text — "Side gig", "Correction", an income's name
+  date: string;      // ISO
+  incomeId?: string; // set when created by ticking a toSavings income…
+  monthKey?: string; // …together these locate the move to reverse on untick
 }
 
 export interface Category { id: string; name: string; order: number; budget?: number }
