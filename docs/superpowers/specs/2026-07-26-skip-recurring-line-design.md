@@ -126,6 +126,12 @@ onSecondary?: () => void | Promise<void>;
 - Undo on a line whose template entry has since been deleted leaves an
   unskipped, non-overridden line, which the next `syncMonthFromTemplate`
   removes — correct, since the template no longer has it.
+- If the template entry is deleted while the line is still skipped, the skipped
+  doc is not cleaned up: `reconcileLines`' `deletes` filter excludes overridden
+  lines, and a skipped line is always overridden. It remains in Firestore,
+  permanently hidden by `activeLines` and absent from every calculation. This
+  is the accepted cost of the `overridden` flag being what stops template sync
+  from resurrecting the line.
 
 ## Testing
 
