@@ -35,6 +35,7 @@ export interface MonthLine extends TemplateLine {
   paidDate?: string; // ISO date
   oneOff: boolean;
   overridden?: boolean; // inline-edited for this month; template sync must not clobber it
+  skipped?: boolean; // removed from THIS month only; hidden from the view and all money math
 }
 
 export interface Income {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addMonths } from "./format";
 import {
+  activeLines,
   cutoffSummary,
   debtTotals,
   envelopeSpent,
@@ -299,5 +300,23 @@ describe("budget groups", () => {
     const over = [gexp(12000, "2026-07-15T10:00:00.000Z")]; // 2,000 past the funded 10,000
     expect(unplannedForCutoff(over, "2026-07", 1, partial)).toBe(0);
     expect(unplannedForCutoff(over, "2026-07", 2, partial)).toBe(2000);
+  });
+});
+
+describe("activeLines", () => {
+  it("drops lines flagged skipped", () => {
+    const rows = activeLines([mk("a", 0, 1), { ...mk("b", 0, 1), skipped: true }]);
+    expect(rows.map((l) => l.id)).toEqual(["a"]);
+  });
+
+  it("keeps lines with skipped false or the field absent", () => {
+    const rows = activeLines([mk("a", 0, 1), { ...mk("b", 0, 1), skipped: false }]);
+    expect(rows.map((l) => l.id)).toEqual(["a", "b"]);
+  });
+
+  it("lets a cutoff close when its only unticked line is skipped", () => {
+    const lines = [mk("a", 0, 1, "PAID"), { ...mk("b", 0, 1), skipped: true }];
+    expect(isCutoffClosed(lines, 1)).toBe(false);
+    expect(isCutoffClosed(activeLines(lines), 1)).toBe(true);
   });
 });

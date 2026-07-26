@@ -28,6 +28,12 @@ export function isCutoffClosed(lines: readonly MonthLine[], cutoff: 1 | 2): bool
   return cut.length > 0 && cut.every((l) => l.status !== "");
 }
 
+/** Month lines that count. A skipped line was removed from this month only —
+ *  it stays in Firestore so the skip can be undone, but it is hidden from the
+ *  month view and from every money calculation. Pure. */
+export const activeLines = <T extends { skipped?: boolean }>(lines: readonly T[]): T[] =>
+  lines.filter((l) => !l.skipped);
+
 /** Sum of this month's Quick Add expenses drawn from envelope line `lineId`. */
 export function envelopeSpent(
   expenses: readonly { amount: number; date: string; envelopeLineId?: string }[],

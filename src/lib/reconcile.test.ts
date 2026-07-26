@@ -141,3 +141,20 @@ describe("reconcileLines with closed cutoffs", () => {
     expect(patches).toEqual([]);
   });
 });
+
+describe("reconcileLines — skipped lines", () => {
+  it("never resurrects a skipped line while its template line still exists", () => {
+    const template = [T({ id: "netflix", name: "Netflix", amount: 549 })];
+    const month = [M({ id: "netflix", name: "Netflix", amount: 549, overridden: true, skipped: true })];
+    const { upserts, deletes } = reconcileLines(template, month);
+    expect(upserts).toEqual([]);
+    expect(deletes).toEqual([]);
+  });
+
+  it("leaves a skipped line alone even when its template line was removed", () => {
+    const month = [M({ id: "netflix", overridden: true, skipped: true })];
+    const { upserts, deletes } = reconcileLines([], month);
+    expect(upserts).toEqual([]);
+    expect(deletes).toEqual([]);
+  });
+});
