@@ -9,3 +9,6 @@ users-export.json
 
 # Playwright MCP scratch
 .playwright-mcp
+
+# Subagent-driven-development scratch (briefs, reports, ledgers)
+.superpowers
