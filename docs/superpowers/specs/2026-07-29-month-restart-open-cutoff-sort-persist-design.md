@@ -65,12 +65,11 @@ copy that states what is kept and what is rolled back.
 
 ## B. Open at the latest unclosed cutoff
 
-- New pure selector in `src/lib/selectors.ts`:
-  `openCutoff(lines): 1 | 2 | null` — 1 if cutoff 1 is not closed
-  (`isCutoffClosed`), else 2 if not closed, else `null` (month done). An
-  empty cutoff counts as not closed (existing `isCutoffClosed` semantics).
-- `ThisMonth` gains per-cutoff collapsed state, initialized **once** when
-  lines first load: closed cutoffs start collapsed. A collapsed section
+- `ThisMonth` gains per-cutoff collapsed state, initialized from the
+  existing `isCutoffClosed` selector when lines first load (and re-initialized
+  when browsing to another month): closed cutoffs start collapsed. An empty
+  cutoff counts as open (existing `isCutoffClosed` semantics). No new
+  selector — per-cutoff collapse driven by `isCutoffClosed` IS the feature. A collapsed section
   renders as a slim header bar ("✓ CLOSED" style, matching the existing
   badge) that toggles expansion on tap; expanded sections can be collapsed
   the same way.
@@ -91,10 +90,11 @@ copy that states what is kept and what is rolled back.
 
 Vitest (`--no-file-parallelism`):
 
-1. `openCutoff`: both open → 1; cutoff 1 closed → 2; both closed → null;
-   empty cutoff counts as open.
-2. Sort-key validation helper (exported from `lineSort.ts`): valid keys pass
-   through, garbage falls back to `"order"`.
+1. Sort-key validation helper (`parseLineSortKey`, exported from
+   `lineSort.ts`): valid keys pass through, garbage/null falls back to
+   `"order"`.
+2. `isCutoffClosed` is already covered by existing tests; the collapse init
+   is thin view state over it.
 3. `restartMonth`'s Firestore sequence is review-covered (repo layer has no
    test seams), mirroring the tested untick/skip reversal patterns.
 
