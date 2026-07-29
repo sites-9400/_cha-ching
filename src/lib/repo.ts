@@ -516,3 +516,51 @@ export async function startMonth(monthKey: string): Promise<void> {
   const incomes = iSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Income[];
   await writeMonth(monthKey, generateMonthLines(template, events, monthKey), incomes);
 }
+
+/** Regenerate a month fresh from the template + events. Tick-created
+ *  bookkeeping is reversed doc-by-doc first — line payments (monthKey +
+ *  lineId) restore their debt's balance, income savings moves (monthKey +
+ *  incomeId) restore the savings balance — so re-ticking the restarted month
+ *  records everything correctly. Expenses stay: they are real spending, not
+ *  tick bookkeeping. backupMonth snapshots the old state first. */
+export async function restartMonth(monthKey: string): Promise<void> {
+  await backupMonth(monthKey, "month restart");
+  const [tSnap, eSnap, lSnap, iSnap, dSnap, sSnap] = await Promise.all([
+    getDocs(collection(db, templateLines())),
+    getDocs(collection(db, eventsCol())),
+    getDocs(collection(db, monthLines(monthKey))),
+    getDocs(collection(db, monthIncomes(monthKey))),
+    getDocs(collection(db, debtsCol())),
+    getDocs(collection(db, savingsMovesCol())),
+  ]);
+  const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
+  const events = eSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as EventItem[];
+
+  const batch = writeBatch(db);
+  // Reverse line-generated debt payments (Debt Plan extras carry no lineId).
+  for (const debt of dSnap.docs) {
+    const pSnap = await getDocs(collection(db, debtPayments(debt.id)));
+    for (const p of pSnap.docs) {
+      const data = p.data();
+      if (data.monthKey === monthKey && data.lineId) {
+        batch.delete(p.ref);
+        batch.update(doc(db, debtsCol(), debt.id), { currentBalance: increment(data.amount as number) });
+      }
+    }
+  }
+  // Reverse income-tick savings moves (manual deposits/corrections carry no incomeId).
+  for (const m of sSnap.docs) {
+    const data = m.data();
+    if (data.monthKey === monthKey && data.incomeId) {
+      batch.delete(m.ref);
+      batch.update(doc(db, metaDoc()), { savingsBalance: increment(-(data.amount as number)) });
+    }
+  }
+  for (const d of lSnap.docs) batch.delete(d.ref);
+  for (const d of iSnap.docs) batch.delete(d.ref);
+  for (const l of generateMonthLines(template, events, monthKey)) {
+    batch.set(doc(db, monthLines(monthKey), l.id), l);
+  }
+  batch.set(doc(db, monthDoc(monthKey)), { startedAt: new Date().toISOString(), receivedIncomes: {} });
+  await batch.commit();
+}

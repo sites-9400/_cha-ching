@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lineComparators, LINE_SORTS } from "./lineSort";
+import { lineComparators, LINE_SORTS, parseLineSortKey } from "./lineSort";
 import type { LineStatus } from "./types";
 
 const line = (name: string, order: number, status: LineStatus) =>
@@ -23,5 +23,17 @@ describe("paid-first sort", () => {
 
   it("is offered as a sort option", () => {
     expect(LINE_SORTS.map((s) => s.key)).toContain("paid");
+  });
+});
+
+describe("parseLineSortKey", () => {
+  it("passes through every known key", () => {
+    for (const s of LINE_SORTS) expect(parseLineSortKey(s.key)).toBe(s.key);
+  });
+
+  it("falls back to order for garbage or null", () => {
+    expect(parseLineSortKey("bogus")).toBe("order");
+    expect(parseLineSortKey(null)).toBe("order");
+    expect(parseLineSortKey("")).toBe("order");
   });
 });

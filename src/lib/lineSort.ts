@@ -20,3 +20,8 @@ export const LINE_SORTS: { key: LineSortKey; label: string }[] = [
   { key: "name", label: "Name" },
   { key: "paid", label: "Paid first" },
 ];
+
+/** Parse a persisted sort key; anything unknown falls back to "order". */
+export function parseLineSortKey(raw: string | null): LineSortKey {
+  return LINE_SORTS.some((s) => s.key === raw) ? (raw as LineSortKey) : "order";
+}

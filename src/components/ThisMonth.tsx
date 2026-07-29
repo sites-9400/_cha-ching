@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { cutoffSummary, envelopeSpent, groupSpent, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
 import { cycleMinimums } from "../lib/cycles";
 import { projectMonthPlan } from "../lib/project";
-import { lineComparators, LINE_SORTS, type LineSortKey } from "../lib/lineSort";
+import { lineComparators, LINE_SORTS, parseLineSortKey, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../lib/paths";
-import { deleteMonthIncome, deleteMonthLine, deleteTemplateLine, setIncomeReceived, skipLineForMonth, syncMonthFromTemplate, toggleLinePaid, unskipLine } from "../lib/repo";
+import { deleteMonthIncome, deleteMonthLine, deleteTemplateLine, restartMonth, setIncomeReceived, skipLineForMonth, syncMonthFromTemplate, toggleLinePaid, unskipLine } from "../lib/repo";
 import type { Debt, DebtCycle, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import HeaderBand from "./HeaderBand";
@@ -38,8 +38,27 @@ export default function ThisMonth() {
   const events = useCollection<EventItem>(eventsCol());
   const [adding, setAdding] = useState(false);
   const [editingLine, setEditingLine] = useState<MonthLine | null>(null);
-  const [lineSort, setLineSort] = useState<LineSortKey>("order");
+  const [lineSort, setLineSortState] = useState<LineSortKey>(() => parseLineSortKey(localStorage.getItem("month-line-sort")));
+  const setLineSort = (k: LineSortKey) => {
+    setLineSortState(k);
+    localStorage.setItem("month-line-sort", k);
+  };
   const [confirmLine, setConfirmLine] = useState<MonthLine | null>(null);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  // Closed cutoffs start collapsed so the open cutoff sits on top. Initialized
+  // on load / month change only — ticking a cutoff closed mid-session must not
+  // snap it shut. null = not yet initialized (render falls back to live state).
+  const [collapsed, setCollapsed] = useState<Record<1 | 2, boolean> | null>(null);
+  useEffect(() => {
+    if (!ready) return;
+    setCollapsed({ 1: isCutoffClosed(lines, 1), 2: isCutoffClosed(lines, 2) });
+    // Re-init on month change only — `lines` deliberately not a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, viewedKey]);
+  const toggleCutoff = (c: 1 | 2) => setCollapsed((prev) => {
+    const base = prev ?? { 1: isCutoffClosed(lines, 1), 2: isCutoffClosed(lines, 2) };
+    return { ...base, [c]: !base[c] };
+  });
 
   const projected = mode === "projected";
 
@@ -100,6 +119,7 @@ export default function ThisMonth() {
             {mode === "current" && (
               <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-semibold text-stone-500">Sync from template</button>
             )}
+            <button onClick={() => setConfirmRestart(true)} className="font-semibold text-red-600">Restart month</button>
           </div>
           <p className="text-[11px] text-stone-400 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
         </div>
@@ -129,14 +149,40 @@ export default function ThisMonth() {
         const proj = projected ? projectMonthPlan(viewedKey, currentKey, debts, template, events, incomes) : null;
         const projAlloc = proj ? (cutoff === 1 ? proj.alloc.c1 : proj.alloc.c2) : null;
         const closed = isCutoffClosed(lines, cutoff);
+        const isCollapsed = collapsed ? collapsed[cutoff] : closed;
+
+        if (isCollapsed) {
+          return (
+            <section key={cutoff} className="mb-6">
+              <button
+                onClick={() => toggleCutoff(cutoff)}
+                className="w-full bg-white rounded-2xl shadow px-4 py-3 flex items-center justify-between"
+              >
+                <span className="font-semibold flex items-center gap-2 text-sm">
+                  {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
+                  {closed && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ CLOSED</span>
+                  )}
+                </span>
+                <span className="text-sm text-stone-400 flex items-center gap-2">
+                  <span className="tabular-nums text-emerald-700 font-semibold">{peso(s.surplus)}</span>
+                  ▸
+                </span>
+              </button>
+            </section>
+          );
+        }
 
         return (
           <section key={cutoff} className="mb-6 bg-white rounded-2xl shadow p-4">
             <h2 className="font-semibold mb-1 flex items-center gap-2">
-              {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
-              {editable && closed && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ CLOSED</span>
-              )}
+              <button onClick={() => toggleCutoff(cutoff)} className="flex items-center gap-2">
+                {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
+                {editable && closed && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ CLOSED</span>
+                )}
+                <span className="text-stone-300 text-xs">▾</span>
+              </button>
             </h2>
             {editable && (
               <div className="h-2 rounded-full bg-stone-100 mb-3 overflow-hidden">
@@ -268,6 +314,18 @@ export default function ThisMonth() {
             setConfirmLine(null);
           }}
           onCancel={() => setConfirmLine(null)}
+        />
+      )}
+      {confirmRestart && (
+        <ConfirmDialog
+          title={`Restart ${monthLabel(viewedKey)}?`}
+          message="Lines are regenerated fresh from your template: ticks, inline edits, skips, and one-offs are cleared, and the debt payments and savings moves made by ticking are rolled back. Logged expenses are kept. A backup is saved first (Settings → Backups)."
+          confirmLabel="Restart"
+          onConfirm={async () => {
+            await restartMonth(viewedKey);
+            setConfirmRestart(false);
+          }}
+          onCancel={() => setConfirmRestart(false)}
         />
       )}
       </main>
