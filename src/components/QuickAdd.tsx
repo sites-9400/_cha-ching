@@ -13,6 +13,7 @@ import ChannelIcon from "./ChannelIcon";
 import HeaderBand from "./HeaderBand";
 import DueSoonStrip from "./DueSoonStrip";
 import EditExpenseDialog from "./EditExpenseDialog";
+import ImportExpenses from "./ImportExpenses";
 import PaidFromPicker from "./PaidFromPicker";
 
 export default function QuickAdd() {
@@ -30,6 +31,7 @@ export default function QuickAdd() {
   const [when, setWhen] = useState(""); // "" = now
   const [envelope, setEnvelope] = useState<string>(() => localStorage.getItem("quickadd-envelope") ?? "");
   const [editing, setEditing] = useState<Expense | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const envelopes = lines
     .filter((l) => l.isEnvelope && !l.budgetGroup)
@@ -176,7 +178,10 @@ export default function QuickAdd() {
         >Save{value > 0 ? ` ${peso(value)}` : ""}</button>
       </div>
 
-      <h2 className="font-semibold mt-6 mb-2 text-sm text-stone-600">Recent</h2>
+      <div className="flex items-center justify-between mt-6 mb-2">
+        <h2 className="font-semibold text-sm text-stone-600">Recent</h2>
+        <button onClick={() => setImporting(true)} className="text-xs font-semibold text-emerald-700">📷 Import</button>
+      </div>
       <ul className="flex flex-col gap-1.5">
         {recent.map((e) => (
           <li key={e.id} className="bg-white rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
@@ -213,6 +218,7 @@ export default function QuickAdd() {
           onClose={() => setEditing(null)}
         />
       )}
+      {importing && <ImportExpenses onClose={() => setImporting(false)} />}
       </main>
     </>
   );
