@@ -5,6 +5,7 @@ import {
   cutoffSummary,
   debtTotals,
   envelopeSpent,
+  focusCutoff,
   groupSpent,
   generateMonthLines,
   isCutoffClosed,
@@ -139,6 +140,32 @@ describe("isCutoffClosed", () => {
     const lines = [mk("a", 100, 1, "PAID"), mk("b", 100, 2)];
     expect(isCutoffClosed(lines, 1)).toBe(true);
     expect(isCutoffClosed(lines, 2)).toBe(false);
+  });
+});
+
+describe("focusCutoff", () => {
+  const bothOpen = [mk("a", 100, 1), mk("b", 100, 2)];
+  const cutoff2Closed = [mk("a", 100, 1), mk("b", 100, 2, "PAID")];
+  const bothClosed = [mk("a", 100, 1, "PAID"), mk("b", 100, 2, "PAID")];
+
+  it("day 15 (in cutoff 1's window) focuses cutoff 1 when both are open", () => {
+    expect(focusCutoff(bothOpen, 15)).toBe(1);
+  });
+
+  it("day 29 (outside cutoff 1's window) focuses cutoff 2 when both are open", () => {
+    expect(focusCutoff(bothOpen, 29)).toBe(2);
+  });
+
+  it("falls back to cutoff 1 when the date-current cutoff 2 is closed", () => {
+    expect(focusCutoff(cutoff2Closed, 29)).toBe(1);
+  });
+
+  it("returns null when both cutoffs are closed", () => {
+    expect(focusCutoff(bothClosed, 29)).toBeNull();
+  });
+
+  it("day 5 belongs to cutoff 2 (1-12 rolls to cutoff 2)", () => {
+    expect(focusCutoff(bothOpen, 5)).toBe(2);
   });
 });
 

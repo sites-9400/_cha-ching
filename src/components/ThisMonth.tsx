@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { monthLabel } from "../lib/clock";
+import { localIso, monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
-import { cutoffSummary, isCutoffClosed } from "../lib/selectors";
+import { cutoffSummary, focusCutoff, isCutoffClosed } from "../lib/selectors";
 import { cycleMinimums } from "../lib/cycles";
 import { LINE_SORTS, parseLineSortKey, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
@@ -51,7 +51,8 @@ export default function ThisMonth() {
   const [collapsed, setCollapsed] = useState<Record<1 | 2, boolean> | null>(null);
   useEffect(() => {
     if (!ready) return;
-    setCollapsed({ 1: isCutoffClosed(lines, 1), 2: isCutoffClosed(lines, 2) });
+    const focus = focusCutoff(lines, Number(localIso().slice(8, 10)));
+    setCollapsed({ 1: focus !== 1, 2: focus !== 2 });
     // Re-init on month change only — `lines` deliberately not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, viewedKey]);

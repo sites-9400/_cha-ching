@@ -38,6 +38,16 @@ export function isCutoffClosed(lines: readonly MonthLine[], cutoff: 1 | 2): bool
   return cut.length > 0 && cut.every((l) => l.status !== "");
 }
 
+/** The cutoff to focus on open: the one `day` falls in (13–24 → 1, else 2),
+ *  falling back to the other if the current one is closed; null when both
+ *  are closed. Pure. */
+export function focusCutoff(lines: readonly MonthLine[], day: number): 1 | 2 | null {
+  const current = cutoffForDueDay(day);
+  if (!isCutoffClosed(lines, current)) return current;
+  const other = current === 1 ? 2 : 1;
+  return isCutoffClosed(lines, other) ? null : other;
+}
+
 /** Month lines that count. A skipped line was removed from this month only —
  *  it stays in Firestore so the skip can be undone, but it is hidden from the
  *  month view and from every money calculation. Pure. */
