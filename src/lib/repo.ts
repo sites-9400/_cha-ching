@@ -122,12 +122,14 @@ export interface ExpenseInput {
   envelopeLineId?: string; // month line the spending draws from; absent = unplanned
   fundedBySavings?: boolean; // paid from savings — skips cutoff math, deducts savingsBalance
   budgetGroup?: string; // budget-group pool the spending draws from (e.g. "Allowance")
+  paidWithDebtId?: string; // charged to this debt — skips cutoff math, grows currentBalance
 }
 
 export async function addExpense(e: ExpenseInput): Promise<void> {
   const batch = writeBatch(db);
   batch.set(doc(collection(db, expensesCol())), e);
   if (e.fundedBySavings) batch.update(doc(db, metaDoc()), { savingsBalance: increment(-e.amount) });
+  if (e.paidWithDebtId) batch.update(doc(db, debtsCol(), e.paidWithDebtId), { currentBalance: increment(e.amount) });
   await batch.commit();
 }
 
@@ -139,22 +141,31 @@ export async function deleteExpense(id: string): Promise<void> {
   if (snap.exists() && snap.data().fundedBySavings) {
     batch.update(doc(db, metaDoc()), { savingsBalance: increment(snap.data().amount as number) });
   }
+  const debtId = snap.exists() ? (snap.data().paidWithDebtId as string | undefined) : undefined;
+  if (debtId) {
+    const debtRef = doc(db, debtsCol(), debtId);
+    if ((await getDoc(debtRef)).exists()) {
+      batch.update(debtRef, { currentBalance: increment(-(snap.data()!.amount as number)) });
+    }
+  }
   await batch.commit();
 }
 
 /** Patch a logged expense. `envelopeLineId`/`fundedBySavings: null` removes the
  *  field via deleteField() — Firestore rejects literal undefined. Savings-funded
- *  changes (amount edits, toggling the source) adjust savingsBalance by the delta. */
+ *  changes (amount edits, toggling the source) adjust savingsBalance by the delta;
+ *  card-paid changes adjust the affected debt balances the same way. */
 export async function updateExpense(
   id: string,
-  patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup">>
-    & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null },
+  patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup" | "paidWithDebtId">>
+    & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null;
+        paidWithDebtId?: string | null },
 ): Promise<void> {
   const ref = doc(db, expensesCol(), id);
   const snap = await getDoc(ref);
   const old = (snap.data() ?? {}) as ExpenseInput;
 
-  const { envelopeLineId, fundedBySavings, budgetGroup, ...rest } = patch;
+  const { envelopeLineId, fundedBySavings, budgetGroup, paidWithDebtId, ...rest } = patch;
   const data: UpdateData<ExpenseInput> = { ...rest };
   if (envelopeLineId === null) data.envelopeLineId = deleteField();
   else if (envelopeLineId !== undefined) data.envelopeLineId = envelopeLineId;
@@ -162,6 +173,8 @@ export async function updateExpense(
   else if (fundedBySavings === true) data.fundedBySavings = true;
   if (budgetGroup === null) data.budgetGroup = deleteField();
   else if (budgetGroup !== undefined) data.budgetGroup = budgetGroup;
+  if (paidWithDebtId === null) data.paidWithDebtId = deleteField();
+  else if (paidWithDebtId !== undefined) data.paidWithDebtId = paidWithDebtId;
 
   // Savings delta: what the old doc deducted vs what the new state should deduct.
   const wasFunded = !!old.fundedBySavings;
@@ -170,9 +183,25 @@ export async function updateExpense(
   const newDeduct = nowFunded ? (patch.amount ?? old.amount) : 0;
   const delta = oldDeduct - newDeduct; // positive → give back to savings
 
+  // Debt delta: reverse what the old doc charged, apply what the new state charges.
+  const oldDebtId = old.paidWithDebtId;
+  const newDebtId = paidWithDebtId === undefined ? oldDebtId : (paidWithDebtId ?? undefined);
+  const newAmount = patch.amount ?? old.amount;
+  const debtOps: { debtId: string; delta: number }[] = [];
+  if (oldDebtId === newDebtId) {
+    if (oldDebtId && newAmount !== old.amount) debtOps.push({ debtId: oldDebtId, delta: newAmount - old.amount });
+  } else {
+    if (oldDebtId) debtOps.push({ debtId: oldDebtId, delta: -old.amount });
+    if (newDebtId) debtOps.push({ debtId: newDebtId, delta: newAmount });
+  }
+
   const batch = writeBatch(db);
   batch.update(ref, data);
   if (delta !== 0) batch.update(doc(db, metaDoc()), { savingsBalance: increment(delta) });
+  for (const op of debtOps) {
+    const debtRef = doc(db, debtsCol(), op.debtId);
+    if ((await getDoc(debtRef)).exists()) batch.update(debtRef, { currentBalance: increment(op.delta) });
+  }
   await batch.commit();
 }
 

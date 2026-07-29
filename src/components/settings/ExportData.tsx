@@ -19,11 +19,17 @@ export default function ExportData() {
   const exports: { label: string; file: string; run: () => void }[] = [
     {
       label: "Expenses", file: "expenses.csv",
-      run: () => downloadCsv("expenses.csv", toCsv(expenses, [
-        { key: "date", label: "Date" }, { key: "amount", label: "Amount" },
-        { key: "category", label: "Category" }, { key: "channel", label: "Channel" },
-        { key: "note", label: "Note" },
-      ] as Column<Expense>[])),
+      run: () => downloadCsv("expenses.csv", toCsv(
+        expenses.map((e) => ({
+          ...e,
+          paidWith: e.paidWithDebtId ? (debts.find((d) => d.id === e.paidWithDebtId)?.name ?? e.paidWithDebtId) : "",
+        })),
+        [
+          { key: "date", label: "Date" }, { key: "amount", label: "Amount" },
+          { key: "category", label: "Category" }, { key: "channel", label: "Channel" },
+          { key: "note", label: "Note" }, { key: "paidWith", label: "Paid with" },
+        ] as Column<Expense & { paidWith: string }>[],
+      )),
     },
     {
       label: "Debts", file: "debts.csv",

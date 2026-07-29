@@ -235,6 +235,12 @@ describe("unplannedForCutoff", () => {
     expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(0);
   });
 
+  it("excludes card-paid expenses from free cash entirely", () => {
+    const expenses = [{ amount: 5000, date: "2026-07-15T10:00:00.000Z", paidWithDebtId: "rcbc" }];
+    expect(unplannedForCutoff(expenses, "2026-07", 1, openLines)).toBe(0);
+    expect(unplannedForCutoff(expenses, "2026-07", 2, openLines)).toBe(0);
+  });
+
   it("an UNTICKED envelope line offers no budget yet — its spending is all excess", () => {
     const lines = [env("allow", 1, 1000), mk("misc", 50, 1), mk("rent", 100, 2)]; // allow not ticked
     const expenses = [exp(300, "2026-07-15T10:00:00.000Z", "allow")];

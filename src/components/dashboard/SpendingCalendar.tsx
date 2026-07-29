@@ -3,10 +3,10 @@ import { useCollection } from "../../hooks/useCollection";
 import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey, monthLabel } from "../../lib/clock";
 import { addMonths, peso } from "../../lib/format";
-import { categoriesCol, monthLines } from "../../lib/paths";
+import { categoriesCol, debtsCol, monthLines } from "../../lib/paths";
 import { activeLines } from "../../lib/selectors";
 import { dailyTotals } from "../../lib/stats";
-import type { Category, MonthLine } from "../../lib/types";
+import type { Category, Debt, MonthLine } from "../../lib/types";
 import ChannelIcon from "../ChannelIcon";
 import EditExpenseDialog from "../EditExpenseDialog";
 import type { DashExpense } from "./CategoryBars";
@@ -31,6 +31,8 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
   const categories = useCollection<Category>(categoriesCol());
   const allLines = useCollection<MonthLine>(monthLines(monthKey));
   const lines = activeLines(allLines);
+  const debts = useCollection<Debt>(debtsCol());
+  const activeDebts = debts.filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
 
   const totals = dailyTotals(expenses, monthKey);
   const [y, m] = monthKey.split("-").map(Number);
@@ -101,7 +103,7 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
       {editing && (
         <EditExpenseDialog
           expense={{ ...editing, note: editing.note ?? "" }}
-          categories={categories} lines={lines}
+          categories={categories} lines={lines} debts={activeDebts}
           onClose={() => setEditing(null)}
         />
       )}

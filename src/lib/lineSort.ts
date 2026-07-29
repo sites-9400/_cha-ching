@@ -1,8 +1,8 @@
-import type { Channel } from "./types";
+import type { Channel, LineStatus } from "./types";
 
-export type LineSortKey = "order" | "amount" | "channel" | "name";
+export type LineSortKey = "order" | "amount" | "channel" | "name" | "paid";
 
-interface Sortable { name: string; amount: number; channel: Channel; order: number }
+interface Sortable { name: string; amount: number; channel: Channel; order: number; status: LineStatus }
 
 /** Comparators for sorting expense lines within a cutoff. Pure. */
 export const lineComparators: Record<LineSortKey, (a: Sortable, b: Sortable) => number> = {
@@ -10,6 +10,7 @@ export const lineComparators: Record<LineSortKey, (a: Sortable, b: Sortable) => 
   amount: (a, b) => b.amount - a.amount, // biggest first
   channel: (a, b) => String(a.channel).localeCompare(String(b.channel)) || (a.order - b.order),
   name: (a, b) => a.name.localeCompare(b.name),
+  paid: (a, b) => Number(b.status !== "") - Number(a.status !== "") || (a.order - b.order),
 };
 
 export const LINE_SORTS: { key: LineSortKey; label: string }[] = [
@@ -17,4 +18,5 @@ export const LINE_SORTS: { key: LineSortKey; label: string }[] = [
   { key: "amount", label: "Amount" },
   { key: "channel", label: "Channel" },
   { key: "name", label: "Name" },
+  { key: "paid", label: "Paid first" },
 ];

@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { currentMonthKey } from "../lib/clock";
 import { peso } from "../lib/format";
-import { categoriesCol, expensesCol, monthLines } from "../lib/paths";
+import { categoriesCol, debtsCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
 import { activeLines } from "../lib/selectors";
-import type { Category, Channel, MonthLine } from "../lib/types";
+import type { Category, Channel, Debt, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 import ChannelIcon from "./ChannelIcon";
 import HeaderBand from "./HeaderBand";
@@ -19,6 +19,8 @@ export default function QuickAdd() {
   const expenses = useCollection<Expense>(expensesCol());
   const allLines = useCollection<MonthLine>(monthLines(currentMonthKey()));
   const lines = activeLines(allLines);
+  const debts = useCollection<Debt>(debtsCol());
+  const activeDebts = debts.filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [channel, setChannel] = useState<Channel>("CASH");
@@ -31,11 +33,13 @@ export default function QuickAdd() {
     .filter((l) => l.isEnvelope && !l.budgetGroup)
     .sort((a, b) => a.cutoff - b.cutoff || a.order - b.order);
   const groups = [...new Set(lines.filter((l) => l.isEnvelope && l.budgetGroup).map((l) => l.budgetGroup!))].sort();
-  // "@savings" = Savings; "@group:X" = budget group X. A remembered source that
-  // no longer exists (new month, deleted line) falls back to Unplanned.
+  // "@savings" = Savings; "@group:X" = budget group X; "@debt:ID" = charged to
+  // that debt. A remembered source that no longer exists (new month, deleted
+  // line, deactivated debt) falls back to Unplanned.
   const activeEnvelope =
     envelope === "@savings"
     || (envelope.startsWith("@group:") && groups.includes(envelope.slice(7)))
+    || (envelope.startsWith("@debt:") && activeDebts.some((d) => d.id === envelope.slice(6)))
     || envelopes.some((l) => l.id === envelope)
       ? envelope : "";
   const pickEnvelope = (id: string) => {
@@ -62,7 +66,9 @@ export default function QuickAdd() {
           ? { fundedBySavings: true }
           : activeEnvelope.startsWith("@group:")
             ? { budgetGroup: activeEnvelope.slice(7) }
-            : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
+            : activeEnvelope.startsWith("@debt:")
+              ? { paidWithDebtId: activeEnvelope.slice(6) }
+              : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
       });
       setAmount("");
       setNote("");
@@ -151,6 +157,14 @@ export default function QuickAdd() {
                 activeEnvelope === "@savings" ? "bg-cyan-600 text-white" : "bg-stone-100 text-stone-600"
               }`}
             >Savings</button>
+            {activeDebts.map((d) => (
+              <button
+                key={d.id} onClick={() => pickEnvelope(`@debt:${d.id}`)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  activeEnvelope === `@debt:${d.id}` ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600"
+                }`}
+              >💳 {d.name}</button>
+            ))}
           </div>
         </div>
 
@@ -183,6 +197,9 @@ export default function QuickAdd() {
                     )}
                     {e.fundedBySavings && <span className="text-cyan-700"> · Savings</span>}
                     {e.budgetGroup && <span className="text-emerald-700"> · {e.budgetGroup}</span>}
+                    {e.paidWithDebtId && (
+                      <span className="text-violet-700"> · 💳 {debts.find((d) => d.id === e.paidWithDebtId)?.name ?? "card"}</span>
+                    )}
                     {e.note ? ` · ${e.note}` : ""}
                   </span>
                   <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>
@@ -198,7 +215,7 @@ export default function QuickAdd() {
 
       {editing && (
         <EditExpenseDialog
-          expense={editing} categories={cats} lines={lines}
+          expense={editing} categories={cats} lines={lines} debts={activeDebts}
           onClose={() => setEditing(null)}
         />
       )}

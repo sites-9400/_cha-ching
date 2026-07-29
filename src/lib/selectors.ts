@@ -57,6 +57,7 @@ export function envelopeSpent(
 
 type ExpenseLike = {
   amount: number; date: string; envelopeLineId?: string; fundedBySavings?: boolean; budgetGroup?: string;
+  paidWithDebtId?: string;
 };
 
 /** Envelope lines per budget group ("" ≡ ungrouped, excluded). Pure. */
@@ -97,7 +98,7 @@ export function groupSpent(
  *  - each budget group's overspend excess (spent − combined amount, min 0),
  *    charged once to the group's latest cutoff.
  * Expenses whose envelopeLineId/budgetGroup no longer matches anything count
- * as envelope-less. Savings-funded expenses never touch cutoff cash.
+ * as envelope-less. Savings-funded and card-paid expenses never touch cutoff cash.
  */
 export function unplannedForCutoff(
   expenses: readonly ExpenseLike[],
@@ -119,6 +120,7 @@ export function unplannedForCutoff(
   for (const e of expenses) {
     if (e.date.slice(0, 7) !== monthKey) continue;
     if (e.fundedBySavings) continue; // paid from savings — never touches cutoff cash
+    if (e.paidWithDebtId) continue; // charged to a card — debt grew instead; cash leaves when the bill is paid
     if (e.budgetGroup && groups.has(e.budgetGroup)) continue; // drawn from a group pool
     const envLine = e.envelopeLineId ? lineById.get(e.envelopeLineId) : undefined;
     if (envLine?.isEnvelope) continue; // drawn from the envelope, counted below as excess only

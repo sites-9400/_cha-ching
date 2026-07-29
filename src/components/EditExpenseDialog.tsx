@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { updateExpense, type ExpenseInput } from "../lib/repo";
-import type { Category, Channel, MonthLine } from "../lib/types";
+import type { Category, Channel, Debt, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
 interface Expense extends ExpenseInput { id: string }
@@ -8,17 +8,18 @@ interface Expense extends ExpenseInput { id: string }
 /** Edit a logged expense: amount, category, account, envelope, note, date.
  *  Styled to match EditLineDialog. */
 export default function EditExpenseDialog(
-  { expense, categories, lines, onClose }:
-  { expense: Expense; categories: Category[]; lines: MonthLine[]; onClose: () => void },
+  { expense, categories, lines, debts, onClose }:
+  { expense: Expense; categories: Category[]; lines: MonthLine[]; debts: Debt[]; onClose: () => void },
 ) {
   const { names: CHANNELS, chip } = useAccounts();
   const [amount, setAmount] = useState(String(expense.amount));
   const [category, setCategory] = useState(expense.category);
   const [channel, setChannel] = useState<Channel>(expense.channel);
-  // "@savings" = paid from savings; "@group:X" = budget group X.
+  // "@savings" = paid from savings; "@group:X" = budget group X; "@debt:ID" = charged to that debt.
   const [envelope, setEnvelope] = useState(
     expense.fundedBySavings ? "@savings"
     : expense.budgetGroup ? `@group:${expense.budgetGroup}`
+    : expense.paidWithDebtId ? `@debt:${expense.paidWithDebtId}`
     : (expense.envelopeLineId ?? ""),
   );
   const [note, setNote] = useState(expense.note);
@@ -35,8 +36,9 @@ export default function EditExpenseDialog(
 
   async function save() {
     if (!valid) return;
-    const patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup">>
-      & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null } = {};
+    const patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup" | "paidWithDebtId">>
+      & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null;
+          paidWithDebtId?: string | null } = {};
     if (amt !== expense.amount) patch.amount = amt;
     if (category !== expense.category) patch.category = category;
     if (channel !== expense.channel) patch.channel = channel;
@@ -44,10 +46,12 @@ export default function EditExpenseDialog(
     if (date !== expense.date.slice(0, 10)) patch.date = `${date}${expense.date.slice(10)}`;
     const was = expense.fundedBySavings ? "@savings"
       : expense.budgetGroup ? `@group:${expense.budgetGroup}`
+      : expense.paidWithDebtId ? `@debt:${expense.paidWithDebtId}`
       : (expense.envelopeLineId ?? "");
     if (envelope !== was) {
       patch.fundedBySavings = envelope === "@savings" ? true : null;
       patch.budgetGroup = envelope.startsWith("@group:") ? envelope.slice(7) : null;
+      patch.paidWithDebtId = envelope.startsWith("@debt:") ? envelope.slice(6) : null;
       patch.envelopeLineId = envelope && !envelope.startsWith("@") ? envelope : null;
     }
     await updateExpense(expense.id, patch);
@@ -123,6 +127,14 @@ export default function EditExpenseDialog(
                 envelope === "@savings" ? "bg-cyan-600 text-white" : "bg-stone-100 text-stone-600"
               }`}
             >Savings</button>
+            {debts.map((d) => (
+              <button
+                key={d.id} onClick={() => setEnvelope(`@debt:${d.id}`)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                  envelope === `@debt:${d.id}` ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600"
+                }`}
+              >💳 {d.name}</button>
+            ))}
           </div>
         </div>
 
