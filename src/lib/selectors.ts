@@ -1,6 +1,6 @@
 import { addMonths } from "./format";
 import { cutoffForDueDay } from "./allocate";
-import type { Debt, EventItem, Income, MonthLine, SinkingFund, TemplateLine } from "./types";
+import type { Debt, EventItem, Income, MonthLine, TemplateLine } from "./types";
 
 export interface CutoffSummary {
   income: number;
@@ -185,19 +185,4 @@ export function generateMonthLines(
       oneOff: true,
     }));
   return [...base, ...oneOffs];
-}
-
-export interface FundState {
-  deposit: number;
-  release: number;
-  balanceAfter: number;
-}
-
-/** What the fund does in calendar month `monthIndex` (1-12): deposit always, release all after deposit on release months. */
-export function fundStateFor(fund: SinkingFund, monthIndex: number): FundState {
-  const deposit = fund.monthlyDeposit;
-  const afterDeposit = fund.balance + deposit;
-  const isRelease = fund.releaseMonths.includes(monthIndex);
-  const release = isRelease ? afterDeposit : 0;
-  return { deposit, release, balanceAfter: afterDeposit - release };
 }

@@ -123,3 +123,13 @@ export interface Meta {
   currency: string;
   incomeChannel?: string; // account where salary lands; netted out of the send calculator
 }
+
+export interface ExpenseInput {
+  amount: number; category: string; channel: string; note: string; date: string;
+  envelopeLineId?: string; // month line the spending draws from; absent = unplanned
+  fundedBySavings?: boolean; // paid from savings — skips cutoff math, deducts savingsBalance
+  budgetGroup?: string; // budget-group pool the spending draws from (e.g. "Allowance")
+  paidWithDebtId?: string; // charged to this debt — skips cutoff math, grows currentBalance
+}
+
+export interface Expense extends ExpenseInput { id: string }

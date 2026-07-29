@@ -6,13 +6,12 @@ import {
   debtTotals,
   envelopeSpent,
   groupSpent,
-  fundStateFor,
   generateMonthLines,
   isCutoffClosed,
   projectDebtFreeMonth,
   unplannedForCutoff,
 } from "./selectors";
-import type { Debt, EventItem, Income, MonthLine, SinkingFund, TemplateLine } from "./types";
+import type { Debt, EventItem, Income, MonthLine, TemplateLine } from "./types";
 
 const mk = (
   name: string,
@@ -115,22 +114,6 @@ describe("generateMonthLines", () => {
     const lines = generateMonthLines([], evs, "2026-08");
     expect(lines.find((l) => l.name === "Payday bonus spend")).toMatchObject({ cutoff: 1 });
     expect(lines.find((l) => l.name === "Rent-week trip")).toMatchObject({ cutoff: 2 });
-  });
-});
-
-describe("fundStateFor", () => {
-  const fund: SinkingFund = {
-    id: "shop",
-    name: "Shopping",
-    monthlyDeposit: 2000,
-    releaseMonths: [3, 6, 9, 12],
-    balance: 0,
-  };
-  it("deposits monthly and releases full balance on release months", () => {
-    // Jul(7): +2000→2000 · Aug(8): +2000→4000 · Sep(9): release 6000→0
-    expect(fundStateFor(fund, 7)).toMatchObject({ deposit: 2000, release: 0 });
-    const sep = fundStateFor({ ...fund, balance: 4000 }, 9);
-    expect(sep).toMatchObject({ deposit: 2000, release: 6000, balanceAfter: 0 });
   });
 });
 

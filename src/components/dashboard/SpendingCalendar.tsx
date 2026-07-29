@@ -6,10 +6,9 @@ import { addMonths, peso } from "../../lib/format";
 import { categoriesCol, debtsCol, monthLines } from "../../lib/paths";
 import { activeLines } from "../../lib/selectors";
 import { dailyTotals } from "../../lib/stats";
-import type { Category, Debt, MonthLine } from "../../lib/types";
+import type { Category, Debt, Expense, MonthLine } from "../../lib/types";
 import ChannelIcon from "../ChannelIcon";
 import EditExpenseDialog from "../EditExpenseDialog";
-import type { DashExpense } from "./CategoryBars";
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -23,11 +22,11 @@ function compact(n: number): string {
 }
 
 /** Month-grid (Mon-start) of Quick Add spending; tap a day to see + edit its expenses. */
-export default function SpendingCalendar({ expenses }: { expenses: DashExpense[] }) {
+export default function SpendingCalendar({ expenses }: { expenses: Expense[] }) {
   const { chip, label } = useAccounts();
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [openDay, setOpenDay] = useState<number | null>(null);
-  const [editing, setEditing] = useState<DashExpense | null>(null);
+  const [editing, setEditing] = useState<Expense | null>(null);
   const categories = useCollection<Category>(categoriesCol());
   const allLines = useCollection<MonthLine>(monthLines(monthKey));
   const lines = activeLines(allLines);
@@ -102,7 +101,7 @@ export default function SpendingCalendar({ expenses }: { expenses: DashExpense[]
       )}
       {editing && (
         <EditExpenseDialog
-          expense={{ ...editing, note: editing.note ?? "" }}
+          expense={editing}
           categories={categories} lines={lines} debts={activeDebts}
           onClose={() => setEditing(null)}
         />

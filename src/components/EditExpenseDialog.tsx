@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { updateExpense, type ExpenseInput } from "../lib/repo";
+import { decodePaidFromPatch, encodePaidFrom } from "../lib/paidFrom";
+import { updateExpense } from "../lib/repo";
 import { showToast } from "../lib/toast";
-import type { Category, Channel, Debt, MonthLine } from "../lib/types";
+import type { Category, Channel, Debt, Expense, ExpenseInput, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
-
-interface Expense extends ExpenseInput { id: string }
+import PaidFromPicker from "./PaidFromPicker";
 
 /** Edit a logged expense: amount, category, account, envelope, note, date.
  *  Styled to match EditLineDialog. */
@@ -17,12 +17,7 @@ export default function EditExpenseDialog(
   const [category, setCategory] = useState(expense.category);
   const [channel, setChannel] = useState<Channel>(expense.channel);
   // "@savings" = paid from savings; "@group:X" = budget group X; "@debt:ID" = charged to that debt.
-  const [envelope, setEnvelope] = useState(
-    expense.fundedBySavings ? "@savings"
-    : expense.budgetGroup ? `@group:${expense.budgetGroup}`
-    : expense.paidWithDebtId ? `@debt:${expense.paidWithDebtId}`
-    : (expense.envelopeLineId ?? ""),
-  );
+  const [envelope, setEnvelope] = useState(encodePaidFrom(expense));
   const [note, setNote] = useState(expense.note);
   const [date, setDate] = useState(expense.date.slice(0, 10));
 
@@ -45,16 +40,8 @@ export default function EditExpenseDialog(
     if (channel !== expense.channel) patch.channel = channel;
     if (note !== expense.note) patch.note = note;
     if (date !== expense.date.slice(0, 10)) patch.date = `${date}${expense.date.slice(10)}`;
-    const was = expense.fundedBySavings ? "@savings"
-      : expense.budgetGroup ? `@group:${expense.budgetGroup}`
-      : expense.paidWithDebtId ? `@debt:${expense.paidWithDebtId}`
-      : (expense.envelopeLineId ?? "");
-    if (envelope !== was) {
-      patch.fundedBySavings = envelope === "@savings" ? true : null;
-      patch.budgetGroup = envelope.startsWith("@group:") ? envelope.slice(7) : null;
-      patch.paidWithDebtId = envelope.startsWith("@debt:") ? envelope.slice(6) : null;
-      patch.envelopeLineId = envelope && !envelope.startsWith("@") ? envelope : null;
-    }
+    const was = encodePaidFrom(expense);
+    if (envelope !== was) Object.assign(patch, decodePaidFromPatch(envelope));
     void updateExpense(expense.id, patch).catch((err) => {
       console.error(err);
       showToast("Edit didn't save — check connection");
@@ -102,44 +89,7 @@ export default function EditExpenseDialog(
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-1.5">Paid from</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setEnvelope("")}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                envelope === "" ? "bg-stone-700 text-white" : "bg-stone-100 text-stone-600"
-              }`}
-            >Unplanned</button>
-            {groups.map((g) => (
-              <button
-                key={g} onClick={() => setEnvelope(`@group:${g}`)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  envelope === `@group:${g}` ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
-                }`}
-              >{g}</button>
-            ))}
-            {envelopes.map((l) => (
-              <button
-                key={l.id} onClick={() => setEnvelope(l.id)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  envelope === l.id ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
-                }`}
-              >{l.name}</button>
-            ))}
-            <button
-              onClick={() => setEnvelope("@savings")}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                envelope === "@savings" ? "bg-cyan-600 text-white" : "bg-stone-100 text-stone-600"
-              }`}
-            >Savings</button>
-            {debts.map((d) => (
-              <button
-                key={d.id} onClick={() => setEnvelope(`@debt:${d.id}`)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  envelope === `@debt:${d.id}` ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600"
-                }`}
-              >💳 {d.name}</button>
-            ))}
-          </div>
+          <PaidFromPicker value={envelope} onPick={setEnvelope} groups={groups} envelopes={envelopes} debts={debts} />
         </div>
 
         <input placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)}

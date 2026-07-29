@@ -9,7 +9,10 @@ export interface SavingsEntry {
   kind: "move" | "expense";  // expense rows are read-only in the UI
 }
 
-interface SavingsExpense {
+// NOTE: NOT a `Pick<Expense, …>` — Expense.note/category are required (always
+// set by addExpense), but this shape must stay optional: callers here only
+// need read access to whatever an expense happens to carry.
+export interface SavingsExpense {
   id: string;
   amount: number;
   date: string;

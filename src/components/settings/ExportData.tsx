@@ -2,13 +2,10 @@ import { useCollection } from "../../hooks/useCollection";
 import { useCollectionGroup } from "../../hooks/useCollectionGroup";
 import { debtsCol, expensesCol } from "../../lib/paths";
 import { toCsv, downloadCsv, type Column } from "../../lib/export";
-import type { Debt } from "../../lib/types";
+import type { Debt, Expense } from "../../lib/types";
 import type { PaymentRec } from "../DebtPlan";
-import type { ExpenseInput } from "../../lib/repo";
 import { useMonth } from "../MonthProvider";
 import { monthExportRows, MONTH_EXPORT_COLUMNS } from "../../lib/monthExport";
-
-interface Expense extends ExpenseInput { id: string }
 
 export default function ExportData() {
   const debts = useCollection<Debt>(debtsCol());

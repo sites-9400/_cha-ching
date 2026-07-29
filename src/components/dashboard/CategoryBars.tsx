@@ -1,17 +1,12 @@
 import { useState } from "react";
 import { peso } from "../../lib/format";
 import { categoryTotals } from "../../lib/stats";
-import type { Category, Channel } from "../../lib/types";
-
-export interface DashExpense {
-  id: string; amount: number; category: string; date: string; note?: string;
-  envelopeLineId?: string; fundedBySavings?: boolean; channel: Channel;
-}
+import type { Category, Expense } from "../../lib/types";
 
 /** This month's unplanned spending by category (single-hue bars); tap to see notes.
  *  Categories with a monthly budget scale their bar to spent/budget and turn red past 100%. */
 export default function CategoryBars(
-  { expenses, monthKey, categories }: { expenses: DashExpense[]; monthKey: string; categories: Category[] },
+  { expenses, monthKey, categories }: { expenses: Expense[]; monthKey: string; categories: Category[] },
 ) {
   const totals = categoryTotals(expenses, monthKey);
   const [open, setOpen] = useState<string | null>(null);

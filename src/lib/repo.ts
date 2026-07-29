@@ -4,6 +4,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { localIso } from "./clock";
+import { expenseDeltas } from "./expenseDeltas";
 import {
   accountsCol, categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
   metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, savingsMovesCol, subscriptionsCol,
@@ -13,9 +14,11 @@ import { BACKUP_KEEP, backupsToPrune, type MonthBackup } from "./backups";
 import { reconcileLines } from "./reconcile";
 import { activeLines, generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
-  Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SavingsMove, SinkingFund,
-  Subscription, TemplateLine,
+  Account, Category, Debt, EventItem, ExpenseInput, Income, LineStatus, Meta, MonthLine, SavingsMove,
+  SinkingFund, Subscription, TemplateLine,
 } from "./types";
+
+export type { ExpenseInput } from "./types";
 
 /** Strip undefined-valued keys — Firestore rejects literal `undefined`. */
 function stripUndefined<T extends object>(obj: T): Partial<T> {
@@ -105,25 +108,14 @@ export async function setIncomeReceived(
 
 /** Create a month: its meta doc + all line docs, in one batch. */
 export async function writeMonth(
-  monthKey: string, lines: MonthLine[], incomes: Income[],
+  monthKey: string, lines: MonthLine[],
 ): Promise<void> {
   await backupMonth(monthKey, "month generate"); // no-op unless lines already exist
   const batch = writeBatch(db);
   const monthMetaRef = doc(db, monthDoc(monthKey));
-  batch.set(monthMetaRef, {
-    startedAt: localIso(),
-    incomes: incomes.map((i) => ({ name: i.name, amount: i.amount, received: false })),
-  });
+  batch.set(monthMetaRef, { startedAt: localIso() });
   for (const l of lines) batch.set(doc(db, monthLines(monthKey), l.id), l);
   await batch.commit();
-}
-
-export interface ExpenseInput {
-  amount: number; category: string; channel: string; note: string; date: string;
-  envelopeLineId?: string; // month line the spending draws from; absent = unplanned
-  fundedBySavings?: boolean; // paid from savings — skips cutoff math, deducts savingsBalance
-  budgetGroup?: string; // budget-group pool the spending draws from (e.g. "Allowance")
-  paidWithDebtId?: string; // charged to this debt — skips cutoff math, grows currentBalance
 }
 
 export async function addExpense(e: ExpenseInput): Promise<void> {
@@ -177,29 +169,12 @@ export async function updateExpense(
   if (paidWithDebtId === null) data.paidWithDebtId = deleteField();
   else if (paidWithDebtId !== undefined) data.paidWithDebtId = paidWithDebtId;
 
-  // Savings delta: what the old doc deducted vs what the new state should deduct.
-  const wasFunded = !!old.fundedBySavings;
-  const nowFunded = fundedBySavings === undefined ? wasFunded : fundedBySavings === true;
-  const oldDeduct = wasFunded ? old.amount : 0;
-  const newDeduct = nowFunded ? (patch.amount ?? old.amount) : 0;
-  const delta = oldDeduct - newDeduct; // positive → give back to savings
-
-  // Debt delta: reverse what the old doc charged, apply what the new state charges.
-  const oldDebtId = old.paidWithDebtId;
-  const newDebtId = paidWithDebtId === undefined ? oldDebtId : (paidWithDebtId ?? undefined);
-  const newAmount = patch.amount ?? old.amount;
-  const debtOps: { debtId: string; delta: number }[] = [];
-  if (oldDebtId === newDebtId) {
-    if (oldDebtId && newAmount !== old.amount) debtOps.push({ debtId: oldDebtId, delta: newAmount - old.amount });
-  } else {
-    if (oldDebtId) debtOps.push({ debtId: oldDebtId, delta: -old.amount });
-    if (newDebtId) debtOps.push({ debtId: newDebtId, delta: newAmount });
-  }
+  const deltas = expenseDeltas(old, { amount: patch.amount, fundedBySavings, paidWithDebtId });
 
   const batch = writeBatch(db);
   batch.update(ref, data);
-  if (delta !== 0) batch.update(doc(db, metaDoc()), { savingsBalance: increment(delta) });
-  for (const op of debtOps) {
+  if (deltas.savingsDelta !== 0) batch.update(doc(db, metaDoc()), { savingsBalance: increment(deltas.savingsDelta) });
+  for (const op of deltas.debtOps) {
     const debtRef = doc(db, debtsCol(), op.debtId);
     if ((await getDoc(debtRef)).exists()) batch.update(debtRef, { currentBalance: increment(op.delta) });
   }
@@ -573,15 +548,13 @@ export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
 export async function startMonth(monthKey: string): Promise<void> {
   const metaRef = doc(db, monthDoc(monthKey));
   if ((await getDoc(metaRef)).exists()) return;
-  const [tSnap, eSnap, iSnap] = await Promise.all([
+  const [tSnap, eSnap] = await Promise.all([
     getDocs(collection(db, templateLines())),
     getDocs(collection(db, eventsCol())),
-    getDocs(collection(db, templateIncomes())),
   ]);
   const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
   const events = eSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as EventItem[];
-  const incomes = iSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as Income[];
-  await writeMonth(monthKey, generateMonthLines(template, events, monthKey), incomes);
+  await writeMonth(monthKey, generateMonthLines(template, events, monthKey));
 }
 
 /** Regenerate a month fresh from the template + events. Tick-created

@@ -2,12 +2,8 @@ import { useCollection } from "../../hooks/useCollection";
 import { peso } from "../../lib/format";
 import { savingsMovesCol } from "../../lib/paths";
 import { deleteSavingsMove } from "../../lib/repo";
-import { savingsHistory } from "../../lib/savings";
+import { savingsHistory, type SavingsExpense } from "../../lib/savings";
 import type { SavingsMove } from "../../lib/types";
-
-interface SavingsExpense {
-  id: string; amount: number; date: string; note?: string; category?: string; fundedBySavings?: boolean;
-}
 
 export default function SavingsHistory({ expenses }: { expenses: readonly SavingsExpense[] }) {
   const moves = useCollection<SavingsMove>(savingsMovesCol());

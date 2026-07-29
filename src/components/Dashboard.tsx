@@ -8,14 +8,14 @@ import { categoriesCol, debtsCol, expensesCol, fundsCol, metaDoc } from "../lib/
 import { addSavingsMove } from "../lib/repo";
 import { debtTotals } from "../lib/selectors";
 import { debtCurve } from "../lib/stats";
-import type { Category, Debt, Meta, SinkingFund } from "../lib/types";
+import type { Category, Debt, Expense, Meta, SinkingFund } from "../lib/types";
 import type { PaymentRec } from "./DebtPlan";
 import HeaderBand from "./HeaderBand";
 import SavingsMeter from "./dashboard/SavingsMeter";
 import SavingsHistory from "./dashboard/SavingsHistory";
 import SavingsMoveDialog from "./dashboard/SavingsMoveDialog";
 import FundTiles from "./dashboard/FundTiles";
-import CategoryBars, { type DashExpense } from "./dashboard/CategoryBars";
+import CategoryBars from "./dashboard/CategoryBars";
 import DebtCurveChart from "./dashboard/DebtCurveChart";
 import SpendingCalendar from "./dashboard/SpendingCalendar";
 
@@ -23,7 +23,7 @@ export default function Dashboard() {
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const funds = useCollection<SinkingFund>(fundsCol());
-  const expenses = useCollection<DashExpense>(expensesCol());
+  const expenses = useCollection<Expense>(expensesCol());
   const categories = useCollection<Category>(categoriesCol());
   const meta = useDoc<Meta>(metaDoc());
   const [movingSavings, setMovingSavings] = useState(false);

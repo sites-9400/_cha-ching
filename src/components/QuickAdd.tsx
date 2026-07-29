@@ -3,17 +3,17 @@ import { useCollection } from "../hooks/useCollection";
 import { currentMonthKey, localIso } from "../lib/clock";
 import { peso } from "../lib/format";
 import { categoriesCol, debtsCol, expensesCol, monthLines } from "../lib/paths";
-import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
+import { decodePaidFrom } from "../lib/paidFrom";
+import { addExpense, deleteExpense } from "../lib/repo";
 import { activeLines } from "../lib/selectors";
 import { showToast } from "../lib/toast";
-import type { Category, Channel, Debt, MonthLine } from "../lib/types";
+import type { Category, Channel, Debt, Expense, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 import ChannelIcon from "./ChannelIcon";
 import HeaderBand from "./HeaderBand";
 import DueSoonStrip from "./DueSoonStrip";
 import EditExpenseDialog from "./EditExpenseDialog";
-
-interface Expense extends ExpenseInput { id: string }
+import PaidFromPicker from "./PaidFromPicker";
 
 export default function QuickAdd() {
   const { names: CHANNELS, chip, label } = useAccounts();
@@ -62,13 +62,7 @@ export default function QuickAdd() {
     if (!canSave) return;
     void addExpense({
       amount: value, category, channel, note, date: when ? `${when}T12:00:00` : localIso(),
-      ...(activeEnvelope === "@savings"
-        ? { fundedBySavings: true }
-        : activeEnvelope.startsWith("@group:")
-          ? { budgetGroup: activeEnvelope.slice(7) }
-          : activeEnvelope.startsWith("@debt:")
-            ? { paidWithDebtId: activeEnvelope.slice(6) }
-            : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
+      ...decodePaidFrom(activeEnvelope),
     }).catch((err) => {
       console.error(err);
       showToast("Expense didn't save — check connection");
@@ -139,44 +133,7 @@ export default function QuickAdd() {
 
         <div>
           <Label>Paid from</Label>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => pickEnvelope("")}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                activeEnvelope === "" ? "bg-stone-700 text-white" : "bg-stone-100 text-stone-600"
-              }`}
-            >Unplanned</button>
-            {groups.map((g) => (
-              <button
-                key={g} onClick={() => pickEnvelope(`@group:${g}`)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeEnvelope === `@group:${g}` ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
-                }`}
-              >{g}</button>
-            ))}
-            {envelopes.map((l) => (
-              <button
-                key={l.id} onClick={() => pickEnvelope(l.id)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeEnvelope === l.id ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
-                }`}
-              >{l.name}</button>
-            ))}
-            <button
-              onClick={() => pickEnvelope("@savings")}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                activeEnvelope === "@savings" ? "bg-cyan-600 text-white" : "bg-stone-100 text-stone-600"
-              }`}
-            >Savings</button>
-            {activeDebts.map((d) => (
-              <button
-                key={d.id} onClick={() => pickEnvelope(`@debt:${d.id}`)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  activeEnvelope === `@debt:${d.id}` ? "bg-violet-600 text-white" : "bg-stone-100 text-stone-600"
-                }`}
-              >💳 {d.name}</button>
-            ))}
-          </div>
+          <PaidFromPicker value={activeEnvelope} onPick={pickEnvelope} groups={groups} envelopes={envelopes} debts={activeDebts} />
         </div>
 
         <div>

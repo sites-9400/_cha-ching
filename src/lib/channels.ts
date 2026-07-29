@@ -74,10 +74,6 @@ const LOGOS: Record<string, string> = {
 /** Logo path for a channel, or undefined when it should use the initial circle. */
 export const channelLogo = (c: string): string | undefined => LOGOS[c];
 
-export const isBuiltinChannel = (name: string): boolean => name in CHIP;
-
-export const channelChip = (c: Channel): string => CHIP[c] ?? "bg-gray-200 text-gray-800";
-
 /** For values whose type isn't statically known (e.g. Firestore reads). Built-ins only. */
 export const channelChipSafe = (c: string): string =>
   CHIP[c] ?? "bg-gray-200 text-gray-800";
