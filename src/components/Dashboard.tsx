@@ -17,6 +17,7 @@ import SavingsMoveDialog from "./dashboard/SavingsMoveDialog";
 import FundTiles from "./dashboard/FundTiles";
 import CategoryBars from "./dashboard/CategoryBars";
 import DebtCurveChart from "./dashboard/DebtCurveChart";
+import ExpenseSearch from "./dashboard/ExpenseSearch";
 import SpendingCalendar from "./dashboard/SpendingCalendar";
 
 export default function Dashboard() {
@@ -43,7 +44,7 @@ export default function Dashboard() {
 
       <SavingsMeter
         balance={meta?.savingsBalance ?? 0}
-        floor={meta?.savingsFloor ?? 100000}
+        floor={meta?.savingsFloor ?? 0}
         onAdd={() => setMovingSavings(true)}
         onSave={(v) => {
           // A typed-over balance is a correction: record the delta so the
@@ -64,6 +65,8 @@ export default function Dashboard() {
       <DebtCurveChart points={curve} />
 
       <CategoryBars expenses={expenses} monthKey={monthKey} categories={categories} />
+
+      <ExpenseSearch expenses={expenses} />
 
       <FundTiles funds={funds} monthIndex={monthIndex(monthKey)} />
       {movingSavings && <SavingsMoveDialog onClose={() => setMovingSavings(false)} />}

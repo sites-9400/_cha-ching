@@ -6,6 +6,7 @@ import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
 import { logDebtPayment, setDebtCycle, setDebtMinimum, undoDebtPayment, updateDebt } from "../lib/repo";
 import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
+import { averagePaydown } from "../lib/stats";
 import { cutoffForDueDay } from "../lib/allocate";
 import { currentCycleKey, cycleDates, daysUntil, paidInCycle } from "../lib/cycles";
 import { showToast } from "../lib/toast";
@@ -18,7 +19,7 @@ import type { PaymentRec } from "./DebtPlan";
 import { useAccounts } from "./AccountsProvider";
 import HeaderBand from "./HeaderBand";
 
-const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; projection basis until history exists
+const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; fallback only, used when no payment history exists yet
 
 export default function Debts() {
   const { chip, label } = useAccounts();
@@ -48,14 +49,16 @@ export default function Debts() {
   const active = [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const cleared = [...debts].filter((d) => !d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const totals = debtTotals(debts);
-  const freeMonth = projectDebtFreeMonth(debts, MONTHLY_PAYDOWN, currentMonthKey());
+  const trackedIds = new Set(debts.filter((d) => d.active && !d.isBNPL).map((d) => d.id));
+  const monthlyPaydown = averagePaydown(payments, trackedIds, thisMonth, 3, MONTHLY_PAYDOWN);
+  const freeMonth = projectDebtFreeMonth(debts, monthlyPaydown, thisMonth);
 
   return (
     <>
       <HeaderBand
         title="TOTAL DEBT"
         value={peso(totals.total)}
-        sub={`interest-bearing clear by ${monthLabel(freeMonth)}`}
+        sub={`interest-bearing clear by ${monthLabel(freeMonth)} · ~${peso(Math.round(monthlyPaydown))}/mo`}
       />
       <main className="p-4">
       <DueSoonStrip />

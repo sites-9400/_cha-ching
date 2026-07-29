@@ -64,3 +64,23 @@ export function nextRelease(releaseMonths: readonly number[], fromMonthIndex: nu
   const sorted = [...releaseMonths].sort((a, b) => a - b);
   return sorted.find((m) => m >= fromMonthIndex) ?? sorted[0];
 }
+
+/** Average monthly paydown of tracked (non-BNPL) debt over the most recent
+ *  `monthsBack` distinct payment months, excluding the current (partial)
+ *  month. Falls back to `fallback` when there is no completed history. */
+export function averagePaydown(
+  payments: readonly { debtId: string; monthKey: string; amount: number }[],
+  trackedDebtIds: ReadonlySet<string>,
+  currentMonthKey: string,
+  monthsBack = 3,
+  fallback = 0,
+): number {
+  const byMonth = new Map<string, number>();
+  for (const p of payments) {
+    if (!trackedDebtIds.has(p.debtId) || p.monthKey >= currentMonthKey) continue;
+    byMonth.set(p.monthKey, (byMonth.get(p.monthKey) ?? 0) + p.amount);
+  }
+  const months = [...byMonth.keys()].sort().slice(-monthsBack);
+  if (months.length === 0) return fallback;
+  return months.reduce((s, m) => s + (byMonth.get(m) ?? 0), 0) / months.length;
+}

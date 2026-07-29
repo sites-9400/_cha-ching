@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryTotals, dailyTotals, debtCurve, nextRelease } from "./stats";
+import { averagePaydown, categoryTotals, dailyTotals, debtCurve, nextRelease } from "./stats";
 
 describe("debtCurve", () => {
   it("reconstructs end-of-month balance from live total + later payments", () => {
@@ -60,6 +60,39 @@ describe("dailyTotals", () => {
   });
   it("returns an empty map for empty input", () => {
     expect(dailyTotals([], "2026-07")).toEqual(new Map());
+  });
+});
+
+describe("averagePaydown", () => {
+  const trackedIds = new Set(["a", "b"]);
+  it("averages only tracked debts' months", () => {
+    const pays = [
+      { debtId: "a", monthKey: "2026-04", amount: 1000 },
+      { debtId: "c", monthKey: "2026-04", amount: 9999 }, // untracked (e.g. BNPL)
+      { debtId: "b", monthKey: "2026-05", amount: 500 },
+    ];
+    expect(averagePaydown(pays, trackedIds, "2026-07")).toBe((1000 + 500) / 2);
+  });
+  it("excludes the current (partial) month", () => {
+    const pays = [
+      { debtId: "a", monthKey: "2026-06", amount: 1000 },
+      { debtId: "a", monthKey: "2026-07", amount: 50000 }, // current month, in progress
+    ];
+    expect(averagePaydown(pays, trackedIds, "2026-07")).toBe(1000);
+  });
+  it("takes the latest 3 distinct months", () => {
+    const pays = [
+      { debtId: "a", monthKey: "2026-01", amount: 100 },
+      { debtId: "a", monthKey: "2026-02", amount: 200 },
+      { debtId: "a", monthKey: "2026-03", amount: 300 },
+      { debtId: "a", monthKey: "2026-04", amount: 400 },
+    ];
+    expect(averagePaydown(pays, trackedIds, "2026-07")).toBe((200 + 300 + 400) / 3);
+  });
+  it("falls back when there is no completed history", () => {
+    expect(averagePaydown([], trackedIds, "2026-07", 3, 90164)).toBe(90164);
+    const onlyCurrent = [{ debtId: "a", monthKey: "2026-07", amount: 500 }];
+    expect(averagePaydown(onlyCurrent, trackedIds, "2026-07", 3, 90164)).toBe(90164);
   });
 });
 

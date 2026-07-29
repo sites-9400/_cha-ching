@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { peso } from "../../lib/format";
+import { addMonths, peso } from "../../lib/format";
 import { categoryTotals } from "../../lib/stats";
 import type { Category, Expense } from "../../lib/types";
 
@@ -9,6 +9,7 @@ export default function CategoryBars(
   { expenses, monthKey, categories }: { expenses: Expense[]; monthKey: string; categories: Category[] },
 ) {
   const totals = categoryTotals(expenses, monthKey);
+  const prevTotals = new Map(categoryTotals(expenses, addMonths(monthKey, -1)).map((t) => [t.category, t.total]));
   const [open, setOpen] = useState<string | null>(null);
   const max = totals.reduce((m, t) => Math.max(m, t.total), 0) || 1;
   const budgetOf = new Map(categories.map((c) => [c.name, c.budget]));
@@ -30,12 +31,20 @@ export default function CategoryBars(
             const pct = hasBudget ? Math.min(100, (t.total / budget) * 100) : (t.total / max) * 100;
             const barColor = hasBudget && t.total > budget ? "bg-red-500" : "bg-emerald-500";
             const rightLabel = hasBudget ? `${peso(t.total)} of ${peso(budget)}` : peso(t.total);
+            const prev = prevTotals.get(t.category);
             return (
               <li key={t.category}>
                 <button onClick={() => setOpen(isOpen ? null : t.category)} className="w-full text-left">
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="font-medium">{t.category}</span>
-                    <span className="tabular-nums">{rightLabel}</span>
+                    <span className="tabular-nums">
+                      {rightLabel}
+                      {prev != null && prev > 0 && (
+                        <span className={`ml-1.5 text-[10px] ${t.total > prev ? "text-red-600" : "text-emerald-600"}`}>
+                          {t.total > prev ? "↑" : "↓"}{Math.abs(Math.round(((t.total - prev) / prev) * 100))}%
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="h-2.5 rounded-full bg-stone-100 overflow-hidden">
                     <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
