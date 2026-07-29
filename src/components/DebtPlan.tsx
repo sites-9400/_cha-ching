@@ -4,6 +4,7 @@ import { peso } from "../lib/format";
 import { logDebtPayment } from "../lib/repo";
 import { allocateCutoff } from "../lib/allocate";
 import { paidByDebt } from "../lib/funding";
+import { showToast } from "../lib/toast";
 import type { Debt } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
 
@@ -94,8 +95,11 @@ export default function DebtPlan({
           debtName={payDebt.name}
           currentBalance={payDebt.currentBalance}
           defaultAmount={alloc.lines.find((l) => l.debtId === payDebt.id)?.amount ?? payDebt.currentBalance}
-          onConfirm={async (amt) => {
-            await logDebtPayment(payDebt.id, amt, monthKey, cutoff);
+          onConfirm={(amt) => {
+            void logDebtPayment(payDebt.id, amt, monthKey, cutoff).catch((err) => {
+              console.error(err);
+              showToast("Payment didn't save — check connection");
+            });
             setPayDebt(null);
           }}
           onCancel={() => setPayDebt(null)}

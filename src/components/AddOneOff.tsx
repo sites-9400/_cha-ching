@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { addMonthIncome, addMonthLine } from "../lib/repo";
 import { isCutoffClosed } from "../lib/selectors";
+import { showToast } from "../lib/toast";
 import type { Channel, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
@@ -16,13 +17,15 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
   const amt = Number(amount);
   const valid = name.trim() !== "" && amt > 0;
 
-  async function save() {
+  function save() {
     if (!valid) return;
-    if (kind === "expense") {
-      await addMonthLine(monthKey, { name: name.trim(), amount: amt, channel, cutoff, order: 900, oneOff: true, status: "" });
-    } else {
-      await addMonthIncome(monthKey, { name: name.trim(), amount: amt, day: Number(day) || 1, cutoff, toSavings });
-    }
+    const write = kind === "expense"
+      ? addMonthLine(monthKey, { name: name.trim(), amount: amt, channel, cutoff, order: 900, oneOff: true, status: "" })
+      : addMonthIncome(monthKey, { name: name.trim(), amount: amt, day: Number(day) || 1, cutoff, toSavings });
+    void write.catch((err) => {
+      console.error(err);
+      showToast("One-off didn't save — check connection");
+    });
     onClose();
   }
 
@@ -66,7 +69,7 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
         )}
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-          <button onClick={() => void save()} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Add</button>
+          <button onClick={save} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Add</button>
         </div>
       </div>
     </div>

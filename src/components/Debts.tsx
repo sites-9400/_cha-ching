@@ -8,6 +8,7 @@ import { logDebtPayment, setDebtCycle, setDebtMinimum, undoDebtPayment, updateDe
 import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
 import { cutoffForDueDay } from "../lib/allocate";
 import { currentCycleKey, cycleDates, daysUntil, paidInCycle } from "../lib/cycles";
+import { showToast } from "../lib/toast";
 import type { Debt, DebtCycle } from "../lib/types";
 import ChannelIcon from "./ChannelIcon";
 import ConfirmPayDialog from "./ConfirmPayDialog";
@@ -32,9 +33,14 @@ export default function Debts() {
   const [showCleared, setShowCleared] = useState(false);
   const today = new Date();
 
-  async function saveMin(id: string) {
+  function saveMin(id: string) {
     const v = Number(minValue);
-    if (v >= 0) await setDebtMinimum(id, v);
+    if (v >= 0) {
+      void setDebtMinimum(id, v).catch((err) => {
+        console.error(err);
+        showToast("Minimum didn't save — check connection");
+      });
+    }
     setMinEditId(null);
     setMinValue("");
   }
@@ -125,7 +131,7 @@ export default function Debts() {
                       />
                     </div>
                     <button
-                      onClick={() => void saveMin(d.id)}
+                      onClick={() => saveMin(d.id)}
                       className="text-xs font-semibold text-white bg-emerald-600 rounded-lg px-3 py-1.5"
                     >
                       Save
@@ -227,10 +233,13 @@ export default function Debts() {
             cycles.find((c) => c.debtId === stmtDebt.id && c.id === currentCycleKey(stmtDebt.statementDay!, today))?.minimumDue
             ?? stmtDebt.minimum ?? 0
           }
-          onConfirm={async (bal, min) => {
+          onConfirm={(bal, min) => {
             const key = currentCycleKey(stmtDebt.statementDay!, today);
             const dates = cycleDates(stmtDebt.statementDay!, stmtDebt.dueDay ?? stmtDebt.statementDay!, key);
-            await setDebtCycle(stmtDebt.id, key, { ...dates, statementBalance: bal, minimumDue: min });
+            void setDebtCycle(stmtDebt.id, key, { ...dates, statementBalance: bal, minimumDue: min }).catch((err) => {
+              console.error(err);
+              showToast("Statement didn't save — check connection");
+            });
             setStmtDebt(null);
           }}
           onCancel={() => setStmtDebt(null)}
@@ -241,8 +250,11 @@ export default function Debts() {
           debtName={payDebt.name}
           currentBalance={payDebt.currentBalance}
           defaultAmount={payDebt.currentBalance}
-          onConfirm={async (amt) => {
-            await logDebtPayment(payDebt.id, amt, currentMonthKey(), cutoffForDueDay(payDebt.dueDay));
+          onConfirm={(amt) => {
+            void logDebtPayment(payDebt.id, amt, currentMonthKey(), cutoffForDueDay(payDebt.dueDay)).catch((err) => {
+              console.error(err);
+              showToast("Payment didn't save — check connection");
+            });
             setPayDebt(null);
           }}
           onCancel={() => setPayDebt(null)}

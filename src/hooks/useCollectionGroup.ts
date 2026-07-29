@@ -1,6 +1,7 @@
 import { collectionGroup, onSnapshot, query } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "../lib/firebase";
+import { showToast } from "../lib/toast";
 
 /**
  * Live-subscribe to a collection group (e.g. every debt's "payments").
@@ -10,10 +11,15 @@ import { db } from "../lib/firebase";
 export function useCollectionGroup<T>(groupId: string): T[] {
   const [items, setItems] = useState<T[]>([]);
   useEffect(() => {
-    const un = onSnapshot(query(collectionGroup(db, groupId)), (snap) =>
-      setItems(
+    const un = onSnapshot(
+      query(collectionGroup(db, groupId)),
+      (snap) => setItems(
         snap.docs.map((d) => ({ id: d.id, debtId: d.ref.parent.parent?.id, ...d.data() }) as T),
       ),
+      (err) => {
+        console.error("[sync]", groupId, err);
+        showToast("Sync error — check connection or reload");
+      },
     );
     return un;
   }, [groupId]);

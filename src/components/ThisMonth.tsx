@@ -10,6 +10,7 @@ import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
 import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../lib/paths";
 import { deleteMonthIncome, deleteMonthLine, deleteTemplateLine, restartMonth, setIncomeReceived, skipLineForMonth, syncMonthFromTemplate, toggleLinePaid, unskipLine } from "../lib/repo";
+import { showToast } from "../lib/toast";
 import type { Debt, DebtCycle, EventItem, MonthLine, TemplateLine } from "../lib/types";
 import { useMonth } from "./MonthProvider";
 import HeaderBand from "./HeaderBand";
@@ -327,7 +328,12 @@ export default function ThisMonth() {
           message="Lines are regenerated fresh from your template: ticks, inline edits, skips, and one-offs are cleared, and the debt payments and savings moves made by ticking are rolled back. Logged expenses are kept. A backup is saved first (Settings → Backups)."
           confirmLabel="Restart"
           onConfirm={async () => {
-            await restartMonth(viewedKey);
+            try {
+              await restartMonth(viewedKey);
+            } catch (err) {
+              console.error(err);
+              showToast("Restart failed — nothing was changed");
+            }
             setConfirmRestart(false);
           }}
           onCancel={() => setConfirmRestart(false)}

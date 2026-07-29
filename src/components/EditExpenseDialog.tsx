@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { updateExpense, type ExpenseInput } from "../lib/repo";
+import { showToast } from "../lib/toast";
 import type { Category, Channel, Debt, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
@@ -34,7 +35,7 @@ export default function EditExpenseDialog(
   const amt = Number(amount);
   const valid = amt > 0 && date !== "";
 
-  async function save() {
+  function save() {
     if (!valid) return;
     const patch: Partial<Omit<ExpenseInput, "envelopeLineId" | "fundedBySavings" | "budgetGroup" | "paidWithDebtId">>
       & { envelopeLineId?: string | null; fundedBySavings?: boolean | null; budgetGroup?: string | null;
@@ -54,7 +55,10 @@ export default function EditExpenseDialog(
       patch.paidWithDebtId = envelope.startsWith("@debt:") ? envelope.slice(6) : null;
       patch.envelopeLineId = envelope && !envelope.startsWith("@") ? envelope : null;
     }
-    await updateExpense(expense.id, patch);
+    void updateExpense(expense.id, patch).catch((err) => {
+      console.error(err);
+      showToast("Edit didn't save — check connection");
+    });
     onClose();
   }
 
@@ -148,7 +152,7 @@ export default function EditExpenseDialog(
 
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-          <button onClick={() => void save()} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+          <button onClick={save} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
         </div>
       </div>
     </div>

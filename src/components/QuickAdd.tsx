@@ -5,10 +5,12 @@ import { peso } from "../lib/format";
 import { categoriesCol, debtsCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
 import { activeLines } from "../lib/selectors";
+import { showToast } from "../lib/toast";
 import type { Category, Channel, Debt, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 import ChannelIcon from "./ChannelIcon";
 import HeaderBand from "./HeaderBand";
+import DueSoonStrip from "./DueSoonStrip";
 import EditExpenseDialog from "./EditExpenseDialog";
 
 interface Expense extends ExpenseInput { id: string }
@@ -25,7 +27,7 @@ export default function QuickAdd() {
   const [category, setCategory] = useState("Food");
   const [channel, setChannel] = useState<Channel>("CASH");
   const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [when, setWhen] = useState(""); // "" = now
   const [envelope, setEnvelope] = useState<string>(() => localStorage.getItem("quickadd-envelope") ?? "");
   const [editing, setEditing] = useState<Expense | null>(null);
 
@@ -54,27 +56,35 @@ export default function QuickAdd() {
     .filter((e) => e.date.slice(0, 7) === monthKey)
     .reduce((s, e) => s + e.amount, 0);
   const value = Number(amount);
-  const canSave = value > 0 && !busy;
+  const canSave = value > 0;
 
-  async function save() {
+  function save() {
     if (!canSave) return;
-    setBusy(true);
-    try {
-      await addExpense({
-        amount: value, category, channel, note, date: localIso(),
-        ...(activeEnvelope === "@savings"
-          ? { fundedBySavings: true }
-          : activeEnvelope.startsWith("@group:")
-            ? { budgetGroup: activeEnvelope.slice(7) }
-            : activeEnvelope.startsWith("@debt:")
-              ? { paidWithDebtId: activeEnvelope.slice(6) }
-              : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
-      });
-      setAmount("");
-      setNote("");
-    } finally {
-      setBusy(false);
-    }
+    void addExpense({
+      amount: value, category, channel, note, date: when ? `${when}T12:00:00` : localIso(),
+      ...(activeEnvelope === "@savings"
+        ? { fundedBySavings: true }
+        : activeEnvelope.startsWith("@group:")
+          ? { budgetGroup: activeEnvelope.slice(7) }
+          : activeEnvelope.startsWith("@debt:")
+            ? { paidWithDebtId: activeEnvelope.slice(6) }
+            : activeEnvelope ? { envelopeLineId: activeEnvelope } : {}),
+    }).catch((err) => {
+      console.error(err);
+      showToast("Expense didn't save — check connection");
+    });
+    setAmount("");
+    setNote("");
+    setWhen("");
+  }
+
+  function removeExpense(e: Expense) {
+    const { id: _id, ...data } = e;
+    void deleteExpense(e.id).catch(() => showToast("Delete failed — check connection"));
+    showToast(`Deleted ${peso(e.amount)} · ${e.category}`, {
+      action: { label: "Undo", run: () => void addExpense(data).catch(() => showToast("Undo failed — re-add manually")) },
+      duration: 6000,
+    });
   }
 
   const Label = ({ children }: { children: React.ReactNode }) => (
@@ -85,6 +95,7 @@ export default function QuickAdd() {
     <>
       <HeaderBand title="SPENT THIS MONTH" value={peso(spentThisMonth)} />
       <main className="p-4">
+      <DueSoonStrip />
       <div className="bg-white rounded-2xl shadow p-5 flex flex-col gap-5">
         <div>
           <Label>Amount</Label>
@@ -176,8 +187,34 @@ export default function QuickAdd() {
           />
         </div>
 
+        <div>
+          <Label>Date</Label>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setWhen("")}
+              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                when === "" ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+              }`}
+            >Today</button>
+            <button
+              onClick={() => setWhen(localIso(new Date(Date.now() - 86400000)).slice(0, 10))}
+              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                when !== "" && when === localIso(new Date(Date.now() - 86400000)).slice(0, 10)
+                  ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+              }`}
+            >Yesterday</button>
+            <input
+              type="date"
+              value={when}
+              max={localIso().slice(0, 10)}
+              onChange={(e) => setWhen(e.target.value)}
+              className="text-xs bg-stone-100 text-stone-600 rounded-full px-3 py-1.5 outline-none"
+            />
+          </div>
+        </div>
+
         <button
-          onClick={() => void save()} disabled={!canSave}
+          onClick={save} disabled={!canSave}
           className="bg-emerald-600 disabled:bg-stone-300 text-white font-semibold rounded-xl py-3.5 text-base"
         >Save{value > 0 ? ` ${peso(value)}` : ""}</button>
       </div>
@@ -207,7 +244,7 @@ export default function QuickAdd() {
               </span>
               <span className="text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
             </button>
-            <button onClick={() => void deleteExpense(e.id)} className="text-stone-300 text-xs shrink-0">✕</button>
+            <button onClick={() => removeExpense(e)} className="text-stone-300 text-xs shrink-0">✕</button>
           </li>
         ))}
         {recent.length === 0 && <li className="text-sm text-stone-400 px-3">No expenses logged yet.</li>}
