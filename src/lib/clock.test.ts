@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { currentMonthKey, monthIndex, monthLabel } from "./clock";
+import { currentMonthKey, localIso, monthIndex, monthLabel } from "./clock";
 
 describe("clock", () => {
   it("formats a Date to YYYY-MM", () => {
@@ -13,5 +13,17 @@ describe("clock", () => {
   it("renders a human month label", () => {
     expect(monthLabel("2026-07")).toBe("July 2026");
     expect(monthLabel("2027-02")).toBe("February 2027");
+  });
+});
+
+describe("localIso", () => {
+  it("formats local calendar parts with zero-padding", () => {
+    const d = new Date(2026, 0, 5, 3, 7, 9); // Jan 5, 03:07:09 LOCAL
+    expect(localIso(d)).toBe("2026-01-05T03:07:09");
+  });
+  it("keeps a pre-8am local time on the same local day (the UTC+8 bug)", () => {
+    const d = new Date(2026, 7, 14, 1, 30, 0); // Aug 14, 1:30am local
+    expect(localIso(d).slice(0, 10)).toBe("2026-08-14");
+    expect(localIso(d).slice(8, 10)).toBe("14");
   });
 });

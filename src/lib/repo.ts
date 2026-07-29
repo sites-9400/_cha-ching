@@ -3,6 +3,7 @@ import {
   type UpdateData,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { localIso } from "./clock";
 import {
   accountsCol, categoriesCol, debtCycles, debtPayments, debtsCol, eventsCol, expensesCol, fundsCol,
   metaDoc, monthBackups, monthDoc, monthIncomes, monthLines, savingsMovesCol, subscriptionsCol,
@@ -26,7 +27,7 @@ export async function setLineStatus(
   monthKey: string, lineId: string, status: LineStatus,
 ): Promise<void> {
   const ref = doc(db, monthLines(monthKey), lineId);
-  await updateDoc(ref, { status, paidDate: status === "" ? "" : new Date().toISOString() });
+  await updateDoc(ref, { status, paidDate: status === "" ? "" : localIso() });
 }
 
 /**
@@ -47,11 +48,11 @@ export async function toggleLinePaid(monthKey: string, line: MonthLine): Promise
 
   if (goingPaid) {
     batch.set(doc(collection(db, debtPayments(line.debtId))), {
-      amount: line.amount, date: new Date().toISOString(),
+      amount: line.amount, date: localIso(),
       monthKey, cutoff: line.cutoff, lineId: line.id,
     });
     batch.update(debtRef, { currentBalance: increment(-line.amount) });
-    batch.update(lineRef, { status: "PAID", paidDate: new Date().toISOString() });
+    batch.update(lineRef, { status: "PAID", paidDate: localIso() });
   } else {
     const snap = await getDocs(collection(db, debtPayments(line.debtId)));
     for (const d of snap.docs) {
@@ -83,7 +84,7 @@ export async function setIncomeReceived(
   if (received) {
     batch.set(doc(collection(db, savingsMovesCol())), {
       amount: income.amount, direction: "in", source: income.name,
-      date: new Date().toISOString(), incomeId: income.id, monthKey,
+      date: localIso(), incomeId: income.id, monthKey,
     });
     batch.update(doc(db, metaDoc()), { savingsBalance: increment(income.amount) });
   } else {
@@ -110,7 +111,7 @@ export async function writeMonth(
   const batch = writeBatch(db);
   const monthMetaRef = doc(db, monthDoc(monthKey));
   batch.set(monthMetaRef, {
-    startedAt: new Date().toISOString(),
+    startedAt: localIso(),
     incomes: incomes.map((i) => ({ name: i.name, amount: i.amount, received: false })),
   });
   for (const l of lines) batch.set(doc(db, monthLines(monthKey), l.id), l);
@@ -224,7 +225,7 @@ export async function logDebtPayment(
 ): Promise<void> {
   const batch = writeBatch(db);
   batch.set(doc(collection(db, debtPayments(debtId))), {
-    amount, date: new Date().toISOString(), monthKey, cutoff,
+    amount, date: localIso(), monthKey, cutoff,
   });
   batch.update(doc(db, debtsCol(), debtId), { currentBalance: increment(-amount) });
   await batch.commit();
@@ -561,6 +562,6 @@ export async function restartMonth(monthKey: string): Promise<void> {
   for (const l of generateMonthLines(template, events, monthKey)) {
     batch.set(doc(db, monthLines(monthKey), l.id), l);
   }
-  batch.set(doc(db, monthDoc(monthKey)), { startedAt: new Date().toISOString(), receivedIncomes: {} });
+  batch.set(doc(db, monthDoc(monthKey)), { startedAt: localIso(), receivedIncomes: {} });
   await batch.commit();
 }

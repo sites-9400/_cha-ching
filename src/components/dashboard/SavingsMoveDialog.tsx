@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { localIso } from "../../lib/clock";
 import { addSavingsMove } from "../../lib/repo";
 
 export default function SavingsMoveDialog({ onClose }: { onClose: () => void }) {
   const [direction, setDirection] = useState<"in" | "out">("in");
   const [amount, setAmount] = useState("");
   const [source, setSource] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(localIso().slice(0, 10));
   const amt = Number(amount);
   const valid = amt > 0 && source.trim() !== "";
 
@@ -13,7 +14,7 @@ export default function SavingsMoveDialog({ onClose }: { onClose: () => void }) 
     if (!valid) return;
     await addSavingsMove({
       amount: amt, direction, source: source.trim(),
-      date: new Date(`${date}T00:00:00`).toISOString(),
+      date: `${date}T12:00:00`,
     });
     onClose();
   }

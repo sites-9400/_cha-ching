@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
-import { currentMonthKey } from "../lib/clock";
+import { currentMonthKey, localIso } from "../lib/clock";
 import { peso } from "../lib/format";
 import { categoriesCol, debtsCol, expensesCol, monthLines } from "../lib/paths";
 import { addExpense, deleteExpense, type ExpenseInput } from "../lib/repo";
@@ -61,7 +61,7 @@ export default function QuickAdd() {
     setBusy(true);
     try {
       await addExpense({
-        amount: value, category, channel, note, date: new Date().toISOString(),
+        amount: value, category, channel, note, date: localIso(),
         ...(activeEnvelope === "@savings"
           ? { fundedBySavings: true }
           : activeEnvelope.startsWith("@group:")

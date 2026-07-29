@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
-import { currentMonthKey, monthIndex } from "../lib/clock";
+import { currentMonthKey, localIso, monthIndex } from "../lib/clock";
 import { peso } from "../lib/format";
 import { categoriesCol, debtsCol, expensesCol, fundsCol, metaDoc } from "../lib/paths";
 import { addSavingsMove } from "../lib/repo";
@@ -54,7 +54,7 @@ export default function Dashboard() {
             amount: Math.abs(delta),
             direction: delta > 0 ? "in" : "out",
             source: "Correction",
-            date: new Date().toISOString(),
+            date: localIso(),
           });
         }}
       />
