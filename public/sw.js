@@ -31,8 +31,10 @@ self.addEventListener("fetch", (event) => {
       (async () => {
         try {
           const fresh = await fetch(req);
-          const cache = await caches.open(CACHE);
-          cache.put("/index.html", fresh.clone());
+          if (fresh.ok) {
+            const cache = await caches.open(CACHE);
+            cache.put("/index.html", fresh.clone());
+          }
           return fresh;
         } catch {
           const cache = await caches.open(CACHE);
