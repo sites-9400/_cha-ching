@@ -11,7 +11,7 @@ import {
 } from "./paths";
 import { BACKUP_KEEP, backupsToPrune, type MonthBackup } from "./backups";
 import { reconcileLines } from "./reconcile";
-import { generateMonthLines, isCutoffClosed } from "./selectors";
+import { activeLines, generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
   Account, Category, Debt, EventItem, Income, LineStatus, Meta, MonthLine, SavingsMove, SinkingFund,
   Subscription, TemplateLine,
@@ -418,8 +418,24 @@ export async function updateMonthLine(
 export async function addMonthIncome(monthKey: string, income: Omit<Income, "id">): Promise<void> {
   await setDoc(doc(collection(db, monthIncomes(monthKey))), income);
 }
-export async function deleteMonthIncome(monthKey: string, id: string): Promise<void> {
-  await deleteDoc(doc(db, monthIncomes(monthKey), id));
+/** Delete a month one-off income. Its received flag is cleared, and a
+ *  received to-savings income's recorded move is reversed (mirrors
+ *  setIncomeReceived's untick path). */
+export async function deleteMonthIncome(monthKey: string, income: Income): Promise<void> {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, monthIncomes(monthKey), income.id));
+  batch.update(doc(db, monthDoc(monthKey)), { [`receivedIncomes.${income.id}`]: deleteField() });
+  if (income.toSavings) {
+    const snap = await getDocs(collection(db, savingsMovesCol()));
+    for (const d of snap.docs) {
+      const data = d.data();
+      if (data.incomeId === income.id && data.monthKey === monthKey) {
+        batch.delete(d.ref);
+        batch.update(doc(db, metaDoc()), { savingsBalance: increment(-(data.amount as number)) });
+      }
+    }
+  }
+  await batch.commit();
 }
 
 // ── Month backups (safety snapshots) ─────────────────────────────────────────
@@ -453,18 +469,44 @@ export async function backupMonth(monthKey: string, reason: string): Promise<voi
   await batch.commit();
 }
 
-/** Restore a month from a backup: current state is snapshotted first, then
- *  lines/incomes/received flags are replaced wholesale with the backup's. */
+/** Restore a month from a backup. Tick-created bookkeeping is fully
+ *  reconciled: every line payment and income savings move for the month is
+ *  reversed, then re-created from the backup's ticked lines and received
+ *  flags — so debt and savings balances always match the restored state.
+ *  Recreated docs are stamped at restore time. Current state is snapshotted
+ *  first. */
 export async function restoreMonthBackup(monthKey: string, backupId: string): Promise<void> {
   const backupSnap = await getDoc(doc(db, monthBackups(monthKey), backupId));
   if (!backupSnap.exists()) return;
   const backup = backupSnap.data() as Omit<MonthBackup, "id">;
   await backupMonth(monthKey, "restore");
-  const [lSnap, iSnap] = await Promise.all([
+  const [lSnap, iSnap, dSnap, sSnap, tiSnap] = await Promise.all([
     getDocs(collection(db, monthLines(monthKey))),
     getDocs(collection(db, monthIncomes(monthKey))),
+    getDocs(collection(db, debtsCol())),
+    getDocs(collection(db, savingsMovesCol())),
+    getDocs(collection(db, templateIncomes())),
   ]);
   const batch = writeBatch(db);
+  // Reverse this month's line-generated payments and income savings moves.
+  for (const debt of dSnap.docs) {
+    const pSnap = await getDocs(collection(db, debtPayments(debt.id)));
+    for (const p of pSnap.docs) {
+      const data = p.data();
+      if (data.monthKey === monthKey && data.lineId) {
+        batch.delete(p.ref);
+        batch.update(doc(db, debtsCol(), debt.id), { currentBalance: increment(data.amount as number) });
+      }
+    }
+  }
+  for (const m of sSnap.docs) {
+    const data = m.data();
+    if (data.monthKey === monthKey && data.incomeId) {
+      batch.delete(m.ref);
+      batch.update(doc(db, metaDoc()), { savingsBalance: increment(-(data.amount as number)) });
+    }
+  }
+  // Replace lines and one-off incomes with the backup's.
   for (const d of lSnap.docs) batch.delete(d.ref);
   for (const d of iSnap.docs) batch.delete(d.ref);
   for (const l of backup.lines) {
@@ -476,6 +518,30 @@ export async function restoreMonthBackup(monthKey: string, backupId: string): Pr
     batch.set(doc(db, monthIncomes(monthKey), id), rest);
   }
   batch.set(doc(db, monthDoc(monthKey)), { receivedIncomes: backup.receivedIncomes }, { merge: true });
+  // Re-create the bookkeeping the restored state implies.
+  const debtIds = new Set(dSnap.docs.map((d) => d.id));
+  for (const l of backup.lines) {
+    if (l.status !== "" && l.debtId && debtIds.has(l.debtId) && !l.skipped) {
+      batch.set(doc(collection(db, debtPayments(l.debtId))), {
+        amount: l.amount, date: localIso(), monthKey, cutoff: l.cutoff, lineId: l.id,
+      });
+      batch.update(doc(db, debtsCol(), l.debtId), { currentBalance: increment(-l.amount) });
+    }
+  }
+  const incomeById = new Map<string, Income>([
+    ...tiSnap.docs.map((d) => [d.id, { id: d.id, ...d.data() } as Income] as const),
+    ...backup.incomes.map((i) => [i.id, i as Income] as const),
+  ]);
+  for (const [incomeId, received] of Object.entries(backup.receivedIncomes)) {
+    const inc = incomeById.get(incomeId);
+    if (received && inc?.toSavings) {
+      batch.set(doc(collection(db, savingsMovesCol())), {
+        amount: inc.amount, direction: "in", source: inc.name,
+        date: localIso(), incomeId, monthKey,
+      });
+      batch.update(doc(db, metaDoc()), { savingsBalance: increment(inc.amount) });
+    }
+  }
   await batch.commit();
 }
 
@@ -488,7 +554,7 @@ export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
   ]);
   const template = tSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as TemplateLine[];
   const lines = mSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as MonthLine[];
-  const closed = new Set(([1, 2] as const).filter((c) => isCutoffClosed(lines, c)));
+  const closed = new Set(([1, 2] as const).filter((c) => isCutoffClosed(activeLines(lines), c)));
   const { upserts, deletes, patches } = reconcileLines(template, lines, closed);
   const batch = writeBatch(db);
   for (const l of upserts) {

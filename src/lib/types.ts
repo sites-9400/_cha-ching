@@ -45,6 +45,7 @@ export interface Income {
   day: number; // 13 | 25 | 29
   cutoff: 1 | 2;
   toSavings?: boolean; // received money goes to savings, not spendable cash
+  oneOff?: boolean; // month one-off (lives in months/{key}/incomes); template incomes lack it
 }
 
 export interface Debt {

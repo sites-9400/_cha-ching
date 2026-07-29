@@ -85,7 +85,7 @@ export default function MonthProvider({ children }: { children: React.ReactNode 
   );
 
   const incomes = useMemo<Income[]>(
-    () => (isProjected ? templateIncomeList : [...templateIncomeList, ...monthIncomeList]),
+    () => (isProjected ? templateIncomeList : [...templateIncomeList, ...monthIncomeList.map((i) => ({ ...i, oneOff: true }))]),
     [isProjected, templateIncomeList, monthIncomeList],
   );
 

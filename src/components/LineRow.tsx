@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { peso } from "../lib/format";
 import { toggleLinePaid } from "../lib/repo";
 import type { MonthLine } from "../lib/types";
@@ -12,6 +12,7 @@ export default function LineRow(
   const poolTotal = budgetTotal ?? line.amount;
   const { chip, label } = useAccounts();
   const ticked = line.status !== "";
+  const [busy, setBusy] = useState(false);
 
   // Long-press (~450ms) opens the editor; a normal tap toggles PAID.
   const timer = useRef<number | null>(null);
@@ -25,7 +26,9 @@ export default function LineRow(
   const handleClick = () => {
     clearPress();
     if (longPressed.current) { longPressed.current = false; return; } // swallow the click after a long-press
-    if (!readOnly) void toggleLinePaid(monthKey, line);
+    if (readOnly || busy) return;
+    setBusy(true);
+    void toggleLinePaid(monthKey, line).finally(() => setBusy(false));
   };
 
   return (

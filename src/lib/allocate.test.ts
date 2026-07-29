@@ -72,6 +72,16 @@ describe("allocateCutoff", () => {
     expect(a.lines.reduce((s, l) => s + l.amount, 0)).toBeLessThanOrEqual(400);
   });
 
+  it("shortfall counts the target debt's own due minimum, capped by its balance", () => {
+    // Target's minimum (500) exceeds its remaining balance (200) — the shortfall
+    // must count the capped amount (200), not the raw minimum.
+    const target = D({ id: "t", name: "t", payoffOrder: 1, currentBalance: 200, dueDay: 16, minimum: 500 });
+    const other = D({ id: "o", name: "o", payoffOrder: 2, currentBalance: 10000, dueDay: 16, minimum: 300 });
+    // freeCash covers only the other debt's minimum; nothing left for the target's.
+    const a = allocateCutoff(300, [target, other], 1);
+    expect(a.shortfall).toBe(200);
+  });
+
   it("excludes BNPL debts from allocation entirely", () => {
     const a = allocateCutoff(999999, debtsJuly(), 2);
     expect(a.lines.some((l) => l.debtId === "laptop")).toBe(false);

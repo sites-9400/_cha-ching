@@ -44,6 +44,7 @@ export default function ThisMonth() {
     localStorage.setItem("month-line-sort", k);
   };
   const [confirmLine, setConfirmLine] = useState<MonthLine | null>(null);
+  const [busyIncome, setBusyIncome] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
   // Closed cutoffs start collapsed so the open cutoff sits on top. Initialized
   // on load / month change only — ticking a cutoff closed mid-session must not
@@ -203,11 +204,15 @@ export default function ThisMonth() {
                         <span className="tabular-nums text-emerald-800">{peso(i.amount)}</span>
                         {editable && (
                           <button
-                            onClick={() => void setIncomeReceived(viewedKey, i, !on)}
+                            onClick={() => {
+                              if (busyIncome === i.id) return;
+                              setBusyIncome(i.id);
+                              void setIncomeReceived(viewedKey, i, !on).finally(() => setBusyIncome(null));
+                            }}
                             className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${on ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-400"}`}
                           >{on ? "RECEIVED" : "receive"}</button>
                         )}
-                        {editable && <button onClick={() => void deleteMonthIncome(viewedKey, i.id)} className="text-stone-300 text-xs">✕</button>}
+                        {editable && i.oneOff && <button onClick={() => void deleteMonthIncome(viewedKey, i)} className="text-stone-300 text-xs">✕</button>}
                       </span>
                     </li>
                   );

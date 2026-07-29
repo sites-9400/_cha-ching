@@ -46,14 +46,14 @@ export function allocateCutoff(
   let remaining = freeCash;
   let requiredMin = 0;
 
-  // Minimums pass: non-target debts assigned to this cutoff, with a positive minimum.
+  // Minimums pass: count every due minimum; reserve only for non-targets
+  // (the waterfall pays the target first, so it needs no reservation).
   for (const d of cands) {
-    if (target && d.id === target.id) continue;
     if (cutoffForDueDay(d.dueDay) !== cutoff) continue;
-    // Entered statement cycle → its (net) minimum wins; otherwise the static minimum.
     const min = cycleMins?.get(d.id) ?? d.minimum ?? 0;
     if (min <= 0) continue;
     requiredMin += Math.min(min, d.currentBalance);
+    if (target && d.id === target.id) continue;
     const reserve = Math.min(min, d.currentBalance, Math.max(0, remaining));
     if (reserve <= 0) continue;
     bucket(d.id).min += reserve;
