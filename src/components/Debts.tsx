@@ -4,7 +4,7 @@ import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { currentMonthKey, monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
-import { logDebtPayment, setDebtCycle, setDebtMinimum, undoDebtPayment } from "../lib/repo";
+import { logDebtPayment, setDebtCycle, setDebtMinimum, undoDebtPayment, updateDebt } from "../lib/repo";
 import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
 import { cutoffForDueDay } from "../lib/allocate";
 import { currentCycleKey, cycleDates, daysUntil, paidInCycle } from "../lib/cycles";
@@ -29,6 +29,7 @@ export default function Debts() {
   const [stmtDebt, setStmtDebt] = useState<Debt | null>(null);
   const [minEditId, setMinEditId] = useState<string | null>(null);
   const [minValue, setMinValue] = useState("");
+  const [showCleared, setShowCleared] = useState(false);
   const today = new Date();
 
   async function saveMin(id: string) {
@@ -39,6 +40,7 @@ export default function Debts() {
   }
 
   const active = [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
+  const cleared = [...debts].filter((d) => !d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const totals = debtTotals(debts);
   const freeMonth = projectDebtFreeMonth(debts, MONTHLY_PAYDOWN, currentMonthKey());
 
@@ -169,14 +171,50 @@ export default function Debts() {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(d.channel)}`}>
                   {label(d.channel)}
                 </span>
-                <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-emerald-700">
-                  Log payment
-                </button>
+                <span className="flex items-center gap-3">
+                  {d.currentBalance <= 0 && (
+                    <button onClick={() => void updateDebt(d.id, { active: false })} className="text-xs font-semibold text-stone-500">
+                      Archive
+                    </button>
+                  )}
+                  <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-emerald-700">
+                    Log payment
+                  </button>
+                </span>
               </div>
             </li>
           );
         })}
       </ul>
+      {cleared.length > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setShowCleared((v) => !v)}
+            className="w-full bg-white rounded-2xl shadow px-4 py-3 flex items-center justify-between text-sm"
+          >
+            <span className="font-semibold text-stone-500">Cleared · {cleared.length}</span>
+            <span className="text-stone-400">{showCleared ? "▾" : "▸"}</span>
+          </button>
+          {showCleared && (
+            <ul className="mt-2 flex flex-col gap-2">
+              {cleared.map((d) => (
+                <li key={d.id} className="bg-white rounded-2xl shadow px-4 py-3 flex items-center justify-between gap-2">
+                  <span className="text-sm text-stone-500 flex items-center gap-2.5 min-w-0">
+                    <ChannelIcon channel={String(d.channel)} initial={d.name.charAt(0).toUpperCase()} chipClass={chip(d.channel)} />
+                    <span className="truncate">{d.name}</span>
+                  </span>
+                  <span className="flex items-center gap-3 shrink-0">
+                    <span className="text-sm tabular-nums text-stone-400">{peso(d.currentBalance)}</span>
+                    <button onClick={() => void updateDebt(d.id, { active: true })} className="text-xs font-semibold text-emerald-700">
+                      Unarchive
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       {stmtDebt?.statementDay != null && (
         <StatementDialog
           debtName={stmtDebt.name}

@@ -60,13 +60,14 @@ export function daysUntil(dateIso: string, today: Date): number {
  * gross variant used by full-cutoff views.
  */
 export function cycleMinimums(
-  debts: readonly { id: string; statementDay?: number; minimum?: number }[],
+  debts: readonly { id: string; statementDay?: number; minimum?: number; active?: boolean }[],
   cycles: readonly { id: string; debtId?: string; minimumDue: number }[],
   payments: readonly { debtId: string; date: string; amount: number }[],
   today: Date,
 ): Map<string, number> {
   const m = new Map<string, number>();
   for (const d of debts) {
+    if (d.active === false) continue; // archived debts reserve nothing
     if (!d.statementDay) continue;
     const key = currentCycleKey(d.statementDay, today);
     const cyc = cycles.find((c) => c.debtId === d.id && c.id === key);

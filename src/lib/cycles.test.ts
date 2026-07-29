@@ -89,4 +89,12 @@ describe("cycleMinimums", () => {
     const paidBefore = cycleMinimums(landers, [], [pay("landers", "2026-07-14T00:00:00.000Z", 2900)], today);
     expect(paidBefore.get("landers")).toBe(2900);
   });
+
+  it("skips archived (inactive) debts entirely", () => {
+    const m = cycleMinimums(
+      [{ id: "d1", statementDay: 15, active: false, minimum: 500 }],
+      cycles, [], today,
+    );
+    expect(m.has("d1")).toBe(false);
+  });
 });
