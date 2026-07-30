@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useCollection } from "../../hooks/useCollection";
-import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey, monthLabel } from "../../lib/clock";
 import { addMonths, peso } from "../../lib/format";
 import { categoriesCol, debtsCol, monthLines } from "../../lib/paths";
-import { activeLines } from "../../lib/selectors";
+import { activeLines, monthExpenses } from "../../lib/selectors";
 import { dailyTotals } from "../../lib/stats";
 import type { Category, Debt, Expense, MonthLine } from "../../lib/types";
-import ChannelIcon from "../ChannelIcon";
 import EditExpenseDialog from "../EditExpenseDialog";
+import ExpenseRow from "../ExpenseRow";
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -21,9 +20,10 @@ function compact(n: number): string {
   return String(Math.round(n));
 }
 
-/** Month-grid (Mon-start) of Quick Add spending; tap a day to see + edit its expenses. */
+/** Month-grid (Mon-start) of Quick Add spending. The whole month is listed
+ *  below the grid; tapping a day narrows the list to that day, tapping it again
+ *  restores the month. Any row opens the edit dialog. */
 export default function SpendingCalendar({ expenses }: { expenses: Expense[] }) {
-  const { chip, label } = useAccounts();
   const [monthKey, setMonthKey] = useState(currentMonthKey());
   const [openDay, setOpenDay] = useState<number | null>(null);
   const [editing, setEditing] = useState<Expense | null>(null);
@@ -39,9 +39,16 @@ export default function SpendingCalendar({ expenses }: { expenses: Expense[] }) 
   const daysInMonth = new Date(y, m, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-  const dayExpenses = openDay === null ? [] : expenses
-    .filter((e) => e.date.slice(0, 7) === monthKey && Number(e.date.slice(8, 10)) === openDay)
-    .sort((a, b) => b.date.localeCompare(a.date));
+  // The day list is derived from the month list, so the filter-and-sort happens
+  // once and both views stay in the same order.
+  const month = monthExpenses(expenses, monthKey);
+  const dayItems = openDay === null
+    ? []
+    : month.items.filter((e) => Number(e.date.slice(8, 10)) === openDay);
+  const shown = openDay === null ? month.items : dayItems;
+  const shownTotal = openDay === null
+    ? month.total
+    : dayItems.reduce((s, e) => s + e.amount, 0);
 
   function goToMonth(delta: -1 | 1) {
     setMonthKey((k) => addMonths(k, delta));
@@ -80,25 +87,22 @@ export default function SpendingCalendar({ expenses }: { expenses: Expense[] }) 
           );
         })}
       </div>
-      {openDay !== null && (
-        <ul className="mt-3 flex flex-col gap-1.5">
-          {dayExpenses.map((e) => (
-            <li key={e.id} className="bg-stone-50 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
-              <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
-                <span className="flex items-center gap-2.5 min-w-0">
-                  <ChannelIcon channel={String(e.channel)} initial={e.category.charAt(0).toUpperCase()} chipClass={chip(e.channel)} />
-                  <span className="text-sm truncate min-w-0">
-                    <span className="block truncate">{e.category}{e.note ? ` · ${e.note}` : ""}</span>
-                    <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>
-                  </span>
-                </span>
-                <span className="text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
-              </button>
-            </li>
-          ))}
-          {dayExpenses.length === 0 && <li className="text-xs text-stone-400 px-1">No expenses that day.</li>}
-        </ul>
-      )}
+      <div className="mt-3 flex items-baseline justify-between text-[11px]">
+        <span className="font-semibold">
+          {openDay === null ? `All of ${monthLabel(monthKey)}` : `${monthLabel(monthKey)} · ${openDay}`}
+        </span>
+        <span className="text-stone-400 tabular-nums">{shown.length} · {peso(shownTotal)}</span>
+      </div>
+      <ul className="mt-1.5 flex flex-col gap-1.5">
+        {shown.map((e) => (
+          <ExpenseRow key={e.id} expense={e} onClick={() => setEditing(e)} showDate={openDay === null} />
+        ))}
+        {shown.length === 0 && (
+          <li className="text-xs text-stone-400 px-1">
+            {openDay === null ? `No expenses in ${monthLabel(monthKey)}.` : "No expenses that day."}
+          </li>
+        )}
+      </ul>
       {editing && (
         <EditExpenseDialog
           expense={editing}

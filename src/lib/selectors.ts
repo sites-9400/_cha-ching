@@ -1,6 +1,6 @@
 import { addMonths } from "./format";
 import { cutoffForDueDay } from "./allocate";
-import type { Debt, EventItem, Income, MonthLine, TemplateLine } from "./types";
+import type { Debt, EventItem, Expense, Income, MonthLine, TemplateLine } from "./types";
 
 export interface CutoffSummary {
   income: number;
@@ -53,6 +53,19 @@ export function focusCutoff(lines: readonly MonthLine[], day: number): 1 | 2 | n
  *  month view and from every money calculation. Pure. */
 export const activeLines = <T extends { skipped?: boolean }>(lines: readonly T[]): T[] =>
   lines.filter((l) => !l.skipped);
+
+/** Expenses logged in `monthKey` ("YYYY-MM"), newest first, with their total.
+ *  The total ships alongside the list so a header can show both without
+ *  re-walking the array. Pure. */
+export function monthExpenses(
+  expenses: readonly Expense[],
+  monthKey: string,
+): { items: Expense[]; total: number } {
+  const items = expenses
+    .filter((e) => e.date.slice(0, 7) === monthKey)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  return { items, total: items.reduce((s, e) => s + e.amount, 0) };
+}
 
 /** Sum of this month's Quick Add expenses drawn from envelope line `lineId`. */
 export function envelopeSpent(

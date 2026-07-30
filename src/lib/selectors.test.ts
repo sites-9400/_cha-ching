@@ -9,10 +9,11 @@ import {
   groupSpent,
   generateMonthLines,
   isCutoffClosed,
+  monthExpenses,
   projectDebtFreeMonth,
   unplannedForCutoff,
 } from "./selectors";
-import type { Debt, EventItem, Income, MonthLine, TemplateLine } from "./types";
+import type { Debt, EventItem, Expense, Income, MonthLine, TemplateLine } from "./types";
 
 const mk = (
   name: string,
@@ -362,5 +363,45 @@ describe("cutoffSummary with income routed to savings", () => {
   it("leaves a normal income untouched by the received parameter", () => {
     const s = cutoffSummary([], [incomes[0]], 1, { sal: true });
     expect(s).toMatchObject({ income: 25000, planned: 0, ticked: 0, surplus: 25000 });
+  });
+});
+
+describe("monthExpenses", () => {
+  const e = (id: string, amount: number, date: string): Expense =>
+    ({ id, amount, date, category: "Food", channel: "GCASH", note: "" });
+
+  const july = [
+    e("a", 100, "2026-07-05T10:00:00"),
+    e("b", 250, "2026-07-29T10:00:00"),
+    e("c", 40, "2026-07-17T10:00:00"),
+  ];
+
+  it("returns only expenses in the given month", () => {
+    const { items } = monthExpenses([...july, e("x", 999, "2026-08-01T10:00:00")], "2026-07");
+    expect(items.map((i) => i.id).sort()).toEqual(["a", "b", "c"]);
+  });
+
+  it("excludes adjacent months and the same month in another year", () => {
+    const { items, total } = monthExpenses([
+      ...july,
+      e("prev", 500, "2026-06-30T10:00:00"),
+      e("next", 500, "2026-08-01T10:00:00"),
+      e("lastYear", 500, "2025-07-15T10:00:00"),
+    ], "2026-07");
+    expect(items).toHaveLength(3);
+    expect(total).toBe(390);
+  });
+
+  it("sorts newest first", () => {
+    expect(monthExpenses(july, "2026-07").items.map((i) => i.id)).toEqual(["b", "c", "a"]);
+  });
+
+  it("totals the filtered items, not the whole input", () => {
+    const { total } = monthExpenses([...july, e("x", 10000, "2026-01-01T10:00:00")], "2026-07");
+    expect(total).toBe(390);
+  });
+
+  it("returns an empty result for a month with no expenses", () => {
+    expect(monthExpenses(july, "2026-09")).toEqual({ items: [], total: 0 });
   });
 });
