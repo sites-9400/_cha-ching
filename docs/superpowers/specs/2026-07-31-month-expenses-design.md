@@ -4,28 +4,37 @@
 **Owner:** Eve (gamaliel)
 **Status:** Approved in-session
 
+> Supersedes the first draft of this file, which placed the list in
+> `ThisMonth.tsx`. It belongs in the Spending calendar card on Stats, which
+> already owns a month and already renders an expense list.
+
 ## Problem
 
 There is no way to browse logged expenses. Every existing surface either caps
-the list or demands a query first:
+the list or demands an interaction first:
 
 | Site | Behaviour | Why it doesn't cover browsing |
 |---|---|---|
 | `QuickAdd.tsx:55` | `.slice(0, 8)` on the recent list | Hard cap at 8. This is the one the user hit. |
 | `ExpenseSearch.tsx:28` | `q === "" ? [] : …` | Renders nothing until you type. Caps at 50. |
+| `SpendingCalendar.tsx:83` | `openDay !== null && …` | Renders nothing until you tap a day, then shows that day only |
 | `CategoryBars.tsx:26` | per-category, current month | Aggregate, not a browsable list |
-| `SpendingCalendar.tsx:43` | per-day, current month | Aggregate, not a browsable list |
 
-The data is not the constraint — `ThisMonth.tsx:32` already subscribes the full
-`expenses` collection, and `ExpenseSearch` notes the same. The gap is purely a
-missing view.
+The data is not the constraint — `Dashboard.tsx:27` already subscribes the full
+`expenses` collection and passes it to every child. The gap is that no surface
+lists a whole month.
 
 ## Design
 
-A collapsible **Expenses** section at the bottom of the month view, listing
-every expense logged in the viewed month, newest first, with no cap. Month
-selection is already handled by the existing ‹ › nav in `HeaderBand`, so
-browsing back through history needs no new navigation.
+`SpendingCalendar` already owns a `monthKey` with ‹ › navigation (`:27`,
+`:46-49`, `:54-58`) and already renders an expense list. The change is to what
+it renders when no day is selected:
+
+**`openDay === null` currently renders nothing. It renders the whole month
+instead.** Selecting a day narrows to that day, exactly as today. Deselecting
+returns to the month.
+
+No new component, no new navigation, no change to `ThisMonth`.
 
 ### Pure selector
 
@@ -41,113 +50,120 @@ export function monthExpenses(
 ```
 
 Filters on `e.date.slice(0, 7) === monthKey`, sorts by
-`b.date.localeCompare(a.date)` (the same comparator `QuickAdd.tsx:55` and
-`ExpenseSearch.tsx:35` already use), and sums `amount`. Returning the total
-alongside the list keeps the header cheap — the caller never re-walks the array.
+`b.date.localeCompare(a.date)` — the comparator `QuickAdd.tsx:55`,
+`ExpenseSearch.tsx:35` and `SpendingCalendar.tsx:44` already share — and sums
+`amount`. Returning the total alongside the list keeps the header cheap.
 
 ### Extracted row component
 
-`ExpenseSearch.tsx:48-62` holds the expense-row markup — `ChannelIcon`, the
-`MM-DD · category · note` line, the account label, and the peso amount. The new
-section needs it identically. Extract it verbatim to
-`src/components/ExpenseRow.tsx`:
+The expense-row markup exists in **two** places today —
+`ExpenseSearch.tsx:48-62` and `SpendingCalendar.tsx:86-97` — and this work would
+otherwise reuse it a third time. They differ in exactly one way: the search row
+prefixes `MM-DD`, the day row does not, because the day is already known.
+
+Extract to `src/components/ExpenseRow.tsx`:
 
 ```ts
-export default function ExpenseRow({ expense, onClick }: {
+export default function ExpenseRow({ expense, onClick, showDate = false }: {
   expense: Expense;
   onClick: () => void;
+  showDate?: boolean;
 })
 ```
 
 It calls `useAccounts()` internally for `chip` and `label` rather than taking
-them as props, so both call sites shrink. `ExpenseSearch` is refactored to use
-it in the same change — the point of extracting is that one row definition
-exists, not two that drift.
+them as props. `ExpenseSearch` (`showDate`) and `SpendingCalendar`'s day list
+(no `showDate`) are both refactored onto it in the same change — the point of
+extracting is that one row definition exists, not three.
 
-### Section component
+### SpendingCalendar changes
 
-New `src/components/MonthExpenses.tsx`, props `{ expenses, monthKey }`.
+Replace the `dayExpenses` derivation (`:42-44`) with:
 
-It subscribes what `EditExpenseDialog` needs itself — categories, that month's
-lines via `activeLines`, and active debts sorted by `payoffOrder` — mirroring
-`ExpenseSearch.tsx:21-25`. One deliberate difference: `ExpenseSearch` reads
-`monthLines(currentMonthKey())`, but this component reads `monthLines(monthKey)`
-so editing an expense in a past month resolves envelope lines against *that*
-month rather than today's.
-
-Behaviour:
-
-- **Header always rendered**: `Expenses · {count} · {peso(total)}`. Useful while
-  collapsed, and free because the selector already computed both.
-- **Collapsed by default**, toggled by tapping the header. The month view is
-  already long, and closed cutoffs collapse by default too
-  (`ThisMonth.tsx:51-58`), so this matches the established behaviour.
-- **No cap** when expanded. Every expense for the month renders. This is the
-  fix.
-- **Tap a row** → the existing `EditExpenseDialog`, unchanged.
-- **Empty month** → `No expenses logged for {monthLabel(monthKey)}.`
-
-Collapse state is component-local `useState`. It is deliberately not persisted
-to `localStorage` — see Out of scope.
-
-### Placement
-
-In `ThisMonth.tsx`, after the two `CutoffSection` blocks (`:142-170`) and before
-the dialog block (`:172`):
-
-```tsx
-<MonthExpenses expenses={expenses} monthKey={viewedKey} />
+```ts
+const month = monthExpenses(expenses, monthKey);
+const dayItems = openDay === null
+  ? []
+  : month.items.filter((e) => Number(e.date.slice(8, 10)) === openDay);
+const shown = openDay === null ? month.items : dayItems;
+const shownTotal = openDay === null
+  ? month.total
+  : dayItems.reduce((s, e) => s + e.amount, 0);
 ```
 
-Rendered **outside** the `{editable && …}` guard at `:116`. Past months are the
-main thing worth browsing, and that guard would hide the section on exactly
-those. Viewing and editing an expense is not a month-line mutation, so the
-editable gate does not apply.
+Deriving the day list from `month.items` removes the component's duplicate
+month-filter-and-sort — it inherits both from the selector.
+
+Replace the `openDay !== null &&` gate (`:83`) with an always-rendered block:
+
+- **Header**, `text-[11px]` row: left is `All of {monthLabel(monthKey)}` when no
+  day is selected, or `{monthLabel(monthKey)} · {openDay}` when one is; right is
+  `{shown.length} · {peso(shownTotal)}`.
+- **List**: `shown.map(...)` through `ExpenseRow`, with `showDate` set only when
+  `openDay === null`. **Uncapped** — every expense in the month renders.
+- **Empty**: `No expenses in {monthLabel(monthKey)}.` when the month is empty,
+  or the existing `No expenses that day.` when a day is selected.
+
+Tapping a row opens the existing `EditExpenseDialog`, unchanged.
+
+### Decisions recorded
+
+- **Uncapped, always shown.** Chosen over a ~15-item cap with "show all" and
+  over a fixed-height scroll box. The Stats page gets longer on a heavy month;
+  that is accepted.
+- **The day view keeps its label in the shared header** rather than gaining a
+  separate one. The mockup showed `July 27`; the spec uses
+  `{monthLabel(monthKey)} · {openDay}` → `July 2026 · 27`, to avoid introducing
+  a day-formatting helper for one string.
 
 ## Error handling
 
-- **Projected months** have no saved expenses, so the selector returns an empty
-  list and the empty state renders. No special-casing.
+- **Month with no expenses** → empty state; the selector returns
+  `{ items: [], total: 0 }`.
+- **Changing month** already calls `setOpenDay(null)` (`:48`), so the list falls
+  back to the full month on navigation. No extra handling.
 - **An expense whose envelope line no longer exists** (deleted line, restarted
   month): already handled by `EditExpenseDialog` and `PaidFromPicker`, which
-  fall back to Unplanned for an unresolvable source. Unchanged by this work.
-- **An expense whose `date` is malformed** would fail the `slice(0, 7)` equality
-  and be omitted rather than crash. Dates are written by `localIso()` and the
-  date input, so this is a defensive property, not an expected path.
-- **Deleting an expense from the dialog** while the section is open: the
-  `useCollection` subscription is live, so the row disappears and the header
-  count and total recompute on the next render.
+  fall back to Unplanned. Unchanged by this work.
+- **A malformed `date`** fails the `slice(0, 7)` equality and is omitted rather
+  than crashing. Dates are written by `localIso()` and the date input, so this
+  is a defensive property, not an expected path.
+- **Editing or deleting from the dialog** while the list is open: the
+  `useCollection` subscription is live, so the row and the header count and
+  total recompute on the next render.
 
 ## Testing
 
 New tests in `src/lib/selectors.test.ts` for `monthExpenses`:
 
 1. Returns only expenses whose `date` falls in the given month
-2. Excludes the adjacent month (`2026-06`, `2026-08`) and the same month in
+2. Excludes the adjacent months (`2026-06`, `2026-08`) and the same month in
    another year (`2025-07`) — boundary correctness
 3. Sorts newest first
 4. `total` equals the sum of the filtered items, not of all input
 5. An empty month returns `{ items: [], total: 0 }`
 
-`ExpenseRow` and `MonthExpenses` are presentational and covered by
-`npm run typecheck` plus `npm run build`; the repo has no DOM test environment
+`ExpenseRow` and the `SpendingCalendar` changes are presentational and covered
+by `npm run typecheck` and `npm run build`; the repo has no DOM test environment
 (all 204 existing tests are pure `src/lib/` functions), so no component test is
 written rather than a hollow one.
 
 Manual walkthrough before merge:
 
-- Current month: expand, confirm every logged expense appears with no cap, and
-  the header count and total match the Stats month total
-- Navigate back a month: confirm the section shows *that* month's expenses
-- Tap a row, edit the amount, confirm the row and the header total update
-- A month with no expenses: confirm the empty state
-- Confirm `ExpenseSearch` still renders identically after the row extraction
+- Stats → Spending calendar with no day selected: every July expense listed,
+  header count and total matching the month
+- Tap a day: list narrows to that day, date prefix disappears, header switches
+- Tap the same day again: full month returns
+- ‹ › to June: list shows June, no day selected
+- Tap a row, change the amount, confirm the row and header total update
+- A month with no expenses: empty state
+- `ExpenseSearch` still renders identically after the row extraction
 
 ## Out of scope
 
-- Persisting the collapsed/expanded state across sessions.
-- Filtering or sorting within the section (by category, account, amount).
-- An all-time history view spanning months — the ‹ › nav covers this.
+- Filtering or sorting within the list (by category, account, amount).
+- Collapsing the list or persisting a collapsed state.
+- Any change to `ThisMonth`.
 - Raising or removing `QuickAdd`'s `.slice(0, 8)`. That list is a compact
   "did that save?" affordance on the entry screen and stays as it is.
 - Raising `ExpenseSearch`'s `MAX_RESULTS = 50`; it already reports
