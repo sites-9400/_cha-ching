@@ -3,14 +3,20 @@
 Canonical list of known-open work and owner actions. Update in place; a
 fresh session should trust this file over conversation history. Specs for
 everything shipped live in `docs/superpowers/specs/` (dated); git history is
-the change log. Last updated: 2026-07-29 (post-audit remediation, 13 green
-deploys, suite at 204 tests).
+the change log. Last updated: 2026-07-31 (TabBar bottom-reserve fix +
+browsable month expenses, 15 green deploys, suite at 209 tests).
 
 ## Eve's offline actions (blocked on her)
 
 - [ ] **First offsite backup:** `SEED_PIN=<pin> npm run backup` → writes a
   full JSON dump to `Dropbox/Personal Workspace/finances/cha-ching-backups/`.
   Repeat ~monthly (no scheduler wired up on purpose — PIN required).
+- [ ] **Decide on `scripts/add-template-line.mjs`** (untracked, 2026-07-31):
+  adds ONE template line without touching anything else, refuses to
+  overwrite an existing id, computes `order` as last-in-its-cutoff. Written
+  when the "+ Add line" button was unreachable; the line was added in-app
+  instead once that was fixed. Keep it for future headless line adds, or
+  delete it.
 - [ ] **Firebase console (~5 min):** verify live Firestore rules match
   `firestore.rules` (CI deploys rules with `continue-on-error` — they can
   drift silently); disable new sign-ups in Authentication; enable email
@@ -52,6 +58,16 @@ deploys, suite at 204 tests).
   importable; no per-row category override or merchant→category memory.
 - `deleteDebt` batches every payment ever logged in one batch — chunk it if
   a debt ever accumulates ~500 payment docs (decades away at current rate).
+- `ToastHost.tsx` uses `fixed bottom-20` (80px), which is shorter than the
+  TabBar's real height (72px content + `env(safe-area-inset-bottom)`, ~106px
+  on a device with a home indicator). Its `z-[60]` means toasts render *over*
+  the nav rather than vanishing, so this is cosmetic — found 2026-07-31 while
+  fixing the shell's bottom reserve, deliberately left alone. If fixed, use
+  the same `calc(… + env(safe-area-inset-bottom))` form AppShell now uses
+  rather than another hand-tuned magic number.
+- Stats can get long on a heavy month: the spending calendar lists every
+  expense in the viewed month uncapped (chosen deliberately 2026-07-31 over
+  a ~15-item cap and over a fixed-height scroll box).
 
 ## Conventions worth knowing (see also project memory)
 
