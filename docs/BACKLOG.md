@@ -17,10 +17,22 @@ browsable month expenses, 15 green deploys, suite at 209 tests).
   when the "+ Add line" button was unreachable; the line was added in-app
   instead once that was fixed. Keep it for future headless line adds, or
   delete it.
-- [ ] **Firebase console (~5 min):** verify live Firestore rules match
-  `firestore.rules` (CI deploys rules with `continue-on-error` — they can
-  drift silently); disable new sign-ups in Authentication; enable email
-  enumeration protection.
+- [ ] **Firebase console (~5 min):** disable new sign-ups in Authentication;
+  enable email enumeration protection. (Live Firestore rules VERIFIED identical
+  to `firestore.rules` on 2026-08-08 — no drift.)
+
+- [x] **Realtime Database open-rules exposure — RESOLVED 2026-08-08.** The
+  Firebase email ("Realtime Database client access expires in 3 days") was NOT
+  about Firestore. The project has an auto-created default RTDB instance
+  (`cha-ching-c3470-default-rtdb`, asia-southeast1) that the app never uses
+  (no `firebase/database` import, no `databaseURL` in config) and that held no
+  data (shallow read = `null`). Its rules were test-mode
+  (`.read`/`.write`: `now < 1786464000000` = open to the internet until
+  2026-08-12). Locked to deny-all (`.read`/`.write`: false) via the RTDB REST
+  API; verified live + confirmed unauthenticated read/write now return 401.
+  Recorded in `database.rules.json` + `firebase.json` so it stays locked.
+  OPTIONAL follow-up (needs Eve's OK, irreversible): delete the unused RTDB
+  instance in the console to remove the product entirely.
 
 ## Deliberately deferred (decision recorded)
 
