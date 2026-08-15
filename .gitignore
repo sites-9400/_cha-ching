@@ -12,3 +12,5 @@ users-export.json
 
 # Subagent-driven-development scratch (briefs, reports, ledgers)
 .superpowers
+
+.DS_Store
