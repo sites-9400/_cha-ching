@@ -50,9 +50,14 @@ export default function ThisMonth() {
   // snap it shut. null = not yet initialized (render falls back to live state).
   const [collapsed, setCollapsed] = useState<Record<1 | 2, boolean> | null>(null);
   useEffect(() => {
-    if (!ready) return;
+    // While a month's data is still loading, drop the snapshot so the render falls
+    // back to live closed-state — otherwise the previous month's snapshot (e.g. a
+    // closed August cutoff 1) leaks onto the new month before its lines arrive.
+    if (!ready) { setCollapsed(null); return; }
     // Only a fully-ticked (closed) cutoff starts collapsed; the open one stays expanded,
     // regardless of today's date. (Date-based auto-collapse hid cutoff 1 on days outside 13–24.)
+    // `ready` gates on the viewed month's own data (useCollection now clears on path
+    // change), so `lines` here belongs to viewedKey.
     setCollapsed({ 1: isCutoffClosed(lines, 1), 2: isCutoffClosed(lines, 2) });
     // Re-init on month change only — `lines` deliberately not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps

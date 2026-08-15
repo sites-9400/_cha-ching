@@ -7,6 +7,10 @@ import { showToast } from "../lib/toast";
 export function useCollection<T>(path: string): T[] {
   const [items, setItems] = useState<T[]>([]);
   useEffect(() => {
+    // Clear stale data from the previous path while the new one loads (mirrors
+    // useDoc). Without this, a month-keyed collection keeps the old month's rows
+    // until Firestore responds, so `ready` can go true against the wrong month.
+    setItems([]);
     const un = onSnapshot(
       query(collection(db, path)),
       (snap) => setItems(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as T)),
