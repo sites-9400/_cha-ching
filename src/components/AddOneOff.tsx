@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { useCollection } from "../hooks/useCollection";
+import { debtsCol } from "../lib/paths";
 import { addMonthIncome, addMonthLine } from "../lib/repo";
 import { isCutoffClosed } from "../lib/selectors";
 import { showToast } from "../lib/toast";
-import type { Channel, MonthLine } from "../lib/types";
+import type { Channel, Debt, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 
 export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: string; lines: MonthLine[]; onClose: () => void }) {
   const { names: CHANNELS } = useAccounts();
+  const debts = useCollection<Debt>(debtsCol());
   const [kind, setKind] = useState<"expense" | "income">("expense");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -14,13 +17,17 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
   const [cutoff, setCutoff] = useState<1 | 2>(2);
   const [day, setDay] = useState("28");
   const [toSavings, setToSavings] = useState(false);
+  const [debtId, setDebtId] = useState("");
   const amt = Number(amount);
   const valid = name.trim() !== "" && amt > 0;
 
   function save() {
     if (!valid) return;
     const write = kind === "expense"
-      ? addMonthLine(monthKey, { name: name.trim(), amount: amt, channel, cutoff, order: 900, oneOff: true, status: "" })
+      ? addMonthLine(monthKey, {
+          name: name.trim(), amount: amt, channel, cutoff, order: 900, oneOff: true, status: "",
+          ...(debtId ? { debtId } : {}),
+        })
       : addMonthIncome(monthKey, { name: name.trim(), amount: amt, day: Number(day) || 1, cutoff, toSavings });
     void write.catch((err) => {
       console.error(err);
@@ -52,11 +59,23 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
           </select>
         </label>
         {kind === "expense" ? (
-          <label className="flex items-center justify-between text-sm">Channel
-            <select value={channel} onChange={(e) => setChannel(e.target.value as Channel)} className="text-sm border-b border-stone-300 outline-none">
-              {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </label>
+          <>
+            <label className="flex items-center justify-between text-sm">Channel
+              <select value={channel} onChange={(e) => setChannel(e.target.value as Channel)} className="text-sm border-b border-stone-300 outline-none">
+                {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+            <label className="flex items-center justify-between text-sm gap-2">
+              <span className="shrink-0">Pays debt</span>
+              <select value={debtId} onChange={(e) => setDebtId(e.target.value)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
+                <option value="">— none —</option>
+                {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </label>
+            <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
+          </>
         ) : (
           <>
             <label className="flex items-center justify-between text-sm">Day (1–31)

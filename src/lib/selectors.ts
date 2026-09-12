@@ -206,6 +206,7 @@ export function generateMonthLines(
       order: 1000 + i,
       status: "",
       oneOff: true,
+      ...(e.debtId ? { debtId: e.debtId } : {}),
     }));
   return [...base, ...oneOffs];
 }

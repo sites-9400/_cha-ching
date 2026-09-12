@@ -2,15 +2,17 @@ import { useState } from "react";
 import { useCollection } from "../../hooks/useCollection";
 import { useAccounts } from "../AccountsProvider";
 import { peso } from "../../lib/format";
-import { eventsCol } from "../../lib/paths";
+import { debtsCol, eventsCol } from "../../lib/paths";
 import { addEvent, updateEvent, deleteEvent } from "../../lib/repo";
-import type { Channel, EventItem } from "../../lib/types";
+import type { Channel, Debt, EventItem } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
 
 const BLANK: Omit<EventItem, "id"> = { name: "", amount: 0, month: "" };
 
 export default function EventsEditor() {
   const events = useCollection<EventItem>(eventsCol());
+  const debts = useCollection<Debt>(debtsCol());
+  const debtName = (id?: string) => (id ? debts.find((d) => d.id === id)?.name : undefined);
   const sorted = [...events].sort((a, b) => a.month.localeCompare(b.month));
   const [editing, setEditing] = useState<EventItem | Omit<EventItem, "id"> | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -25,7 +27,10 @@ export default function EventsEditor() {
         {sorted.map((e) => (
           <li key={e.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
             <button onClick={() => setEditing(e)} className="flex-1 flex items-center justify-between min-w-0">
-              <span className="truncate text-sm">{e.month} · C{e.cutoff ?? 2} · {e.name}</span>
+              <span className="truncate text-sm">
+                {e.month} · C{e.cutoff ?? 2} · {e.name}
+                {debtName(e.debtId) && <span className="text-stone-400"> · pays {debtName(e.debtId)}</span>}
+              </span>
               <span className="text-sm tabular-nums">{peso(e.amount)}</span>
             </button>
             <button onClick={() => setConfirmId(e.id)} className="text-red-500 text-xs px-1">✕</button>
@@ -44,14 +49,22 @@ export default function EventsEditor() {
 
 function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: () => void }) {
   const { names: CHANNELS } = useAccounts();
+  const debts = useCollection<Debt>(debtsCol());
   const [f, setF] = useState(ev);
   const id = "id" in ev ? ev.id : null;
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });
   const validMonth = /^\d{4}-\d{2}$/.test(f.month);
+  const hadDebtId = "id" in ev && !!ev.debtId;
 
   async function save() {
     if (!f.name.trim() || !validMonth) return;
-    if (id) await updateEvent(id, f); else await addEvent(f);
+    if (id) {
+      // Clearing a previously-set link must remove the field (deleteField):
+      // not send undefined (Firestore rejects literal undefined).
+      await updateEvent(id, { ...f, debtId: f.debtId ?? (hadDebtId ? null : undefined) });
+    } else {
+      await addEvent(f);
+    }
     onDone();
   }
 
@@ -78,6 +91,16 @@ function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: (
         </select>
       </label>
       <input placeholder="Note (optional)" value={f.note ?? ""} onChange={(e) => set("note", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none pb-1" />
+      <label className="flex items-center justify-between text-sm gap-2">
+        <span className="shrink-0">Pays debt</span>
+        <select value={f.debtId ?? ""} onChange={(e) => set("debtId", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
+          <option value="">— none —</option>
+          {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      </label>
+      <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
       <div className="flex gap-2 mt-2">
         <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim() || !validMonth} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>

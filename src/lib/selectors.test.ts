@@ -117,6 +117,21 @@ describe("generateMonthLines", () => {
     expect(lines.find((l) => l.name === "Payday bonus spend")).toMatchObject({ cutoff: 1 });
     expect(lines.find((l) => l.name === "Rent-week trip")).toMatchObject({ cutoff: 2 });
   });
+  it("carries an event's debtId onto the generated line", () => {
+    const evs: EventItem[] = [
+      { id: "d1", name: "Extra debt payment", amount: 5000, month: "2026-08", debtId: "revi" },
+    ];
+    const lines = generateMonthLines([], evs, "2026-08");
+    expect(lines.find((l) => l.name === "Extra debt payment")).toMatchObject({ debtId: "revi" });
+  });
+  it("omits the debtId key entirely when the event has none (Firestore rejects literal undefined)", () => {
+    const evs: EventItem[] = [
+      { id: "d2", name: "No debt link", amount: 1000, month: "2026-08" },
+    ];
+    const lines = generateMonthLines([], evs, "2026-08");
+    const line = lines.find((l) => l.name === "No debt link")!;
+    expect("debtId" in line).toBe(false);
+  });
 });
 
 describe("addMonths", () => {

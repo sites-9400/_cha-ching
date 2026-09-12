@@ -281,10 +281,20 @@ export async function deleteFund(id: string): Promise<void> {
 }
 
 export async function addEvent(e: Omit<EventItem, "id">): Promise<void> {
-  await setDoc(doc(collection(db, eventsCol())), e);
+  await setDoc(doc(collection(db, eventsCol())), stripUndefined(e));
 }
-export async function updateEvent(id: string, patch: Partial<EventItem>): Promise<void> {
-  await updateDoc(doc(db, eventsCol(), id), patch);
+/** Patch a planned one-off event. `debtId: null` removes the field via
+ *  deleteField() (Firestore rejects literal undefined), so clearing the
+ *  "Pays debt" picker actually unlinks it rather than leaving it untouched. */
+export async function updateEvent(
+  id: string,
+  patch: Partial<Omit<EventItem, "debtId">> & { debtId?: string | null },
+): Promise<void> {
+  const { debtId, ...rest } = patch;
+  const data: UpdateData<EventItem> = stripUndefined(rest);
+  if (debtId === null) data.debtId = deleteField();
+  else if (debtId !== undefined) data.debtId = debtId;
+  await updateDoc(doc(db, eventsCol(), id), data);
 }
 export async function deleteEvent(id: string): Promise<void> {
   await deleteDoc(doc(db, eventsCol(), id));
@@ -382,12 +392,21 @@ export async function unskipLine(monthKey: string, id: string): Promise<void> {
   await updateDoc(doc(db, monthLines(monthKey), id), { skipped: false, overridden: false });
 }
 
-/** Inline-edit a month line (name/amount/channel) for this month only; marks it
- *  overridden so a later template sync won't clobber the change. */
+/** Inline-edit a month line (name/amount/channel/pays-debt) for this month only;
+ *  marks it overridden so a later template sync won't clobber the change.
+ *  `debtId: null` removes the field via deleteField() (Firestore rejects literal
+ *  undefined), so clearing the "Pays debt" picker actually unlinks it rather than
+ *  leaving it untouched. */
 export async function updateMonthLine(
-  monthKey: string, id: string, patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "debtId" | "isEnvelope" | "budgetGroup">>,
+  monthKey: string, id: string,
+  patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "isEnvelope" | "budgetGroup">>
+    & { debtId?: string | null },
 ): Promise<void> {
-  await updateDoc(doc(db, monthLines(monthKey), id), { ...patch, overridden: true });
+  const { debtId, ...rest } = patch;
+  const data: UpdateData<MonthLine> & { overridden: boolean } = { ...rest, overridden: true };
+  if (debtId === null) data.debtId = deleteField();
+  else if (debtId !== undefined) data.debtId = debtId;
+  await updateDoc(doc(db, monthLines(monthKey), id), data);
 }
 /** Add a one-off income to a month's incomes subcollection. */
 export async function addMonthIncome(monthKey: string, income: Omit<Income, "id">): Promise<void> {

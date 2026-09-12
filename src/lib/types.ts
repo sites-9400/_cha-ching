@@ -82,6 +82,7 @@ export interface EventItem {
   cutoff?: 1 | 2; // which cutoff the one-off lands in; defaults to 2
   channel?: Channel;
   note?: string;
+  debtId?: string; // ticking the generated line PAID logs a payment to this debt
 }
 
 export interface SinkingFund {
