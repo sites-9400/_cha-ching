@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { cutoffSummary, isCutoffClosed } from "../lib/selectors";
+import { paymentsForLine } from "../lib/debtSplits";
 import { cycleMinimums } from "../lib/cycles";
 import { LINE_SORTS, parseLineSortKey, type LineSortKey } from "../lib/lineSort";
 import { useCollection } from "../hooks/useCollection";
@@ -190,7 +191,7 @@ export default function ThisMonth() {
           onSecondary={async () => {
             // Reverse a logged debt payment before the line disappears, so the
             // debt's balance and its payment history stay consistent.
-            if (confirmLine.status !== "" && confirmLine.debtId) {
+            if (confirmLine.status !== "" && paymentsForLine(confirmLine).length > 0) {
               await toggleLinePaid(viewedKey, confirmLine);
             }
             await deleteTemplateLine(confirmLine.id);

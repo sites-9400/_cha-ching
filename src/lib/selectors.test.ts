@@ -132,6 +132,27 @@ describe("generateMonthLines", () => {
     const line = lines.find((l) => l.name === "No debt link")!;
     expect("debtId" in line).toBe(false);
   });
+  it("carries an event's debtSplits onto the generated line", () => {
+    const evs: EventItem[] = [
+      {
+        id: "s1", name: "EastWest installments", amount: 10693.25, month: "2026-08",
+        debtSplits: [{ debtId: "ew-inst-bizfuse-919", amount: 918.92 }, { debtId: "ew-inst-instacash-1453", amount: 1453.33 }],
+      },
+    ];
+    const lines = generateMonthLines([], evs, "2026-08");
+    expect(lines.find((l) => l.name === "EastWest installments")).toMatchObject({
+      debtSplits: [{ debtId: "ew-inst-bizfuse-919", amount: 918.92 }, { debtId: "ew-inst-instacash-1453", amount: 1453.33 }],
+    });
+  });
+  it("omits the debtSplits key entirely when the event has none or an empty array", () => {
+    const evs: EventItem[] = [
+      { id: "s2", name: "No splits", amount: 500, month: "2026-08" },
+      { id: "s3", name: "Empty splits", amount: 500, month: "2026-08", debtSplits: [] },
+    ];
+    const lines = generateMonthLines([], evs, "2026-08");
+    expect("debtSplits" in lines.find((l) => l.name === "No splits")!).toBe(false);
+    expect("debtSplits" in lines.find((l) => l.name === "Empty splits")!).toBe(false);
+  });
 });
 
 describe("addMonths", () => {

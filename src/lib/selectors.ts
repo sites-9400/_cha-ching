@@ -207,6 +207,7 @@ export function generateMonthLines(
       status: "",
       oneOff: true,
       ...(e.debtId ? { debtId: e.debtId } : {}),
+      ...(e.debtSplits?.length ? { debtSplits: e.debtSplits } : {}),
     }));
   return [...base, ...oneOffs];
 }

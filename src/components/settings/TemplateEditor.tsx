@@ -8,6 +8,7 @@ import { addTemplateLine, updateTemplateLine, deleteTemplateLine, syncMonthFromT
 import { activeLines, isCutoffClosed } from "../../lib/selectors";
 import type { Channel, Debt, MonthLine, TemplateLine } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import DebtSplitsEditor from "../DebtSplitsEditor";
 
 const BLANK: Omit<TemplateLine, "id"> = { name: "", amount: 0, channel: "CIMB", cutoff: 1, order: 99 };
 
@@ -134,6 +135,9 @@ function Form({ line, onDone, onCancel }: {
   const [f, setF] = useState(line);
   const id = "id" in line ? line.id : null;
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });
+  const hadDebtId = "id" in line && !!line.debtId;
+  const hadDebtSplits = "id" in line && !!line.debtSplits?.length;
+  const splitting = !!f.debtSplits && f.debtSplits.length > 0;
 
   async function save() {
     if (!f.name.trim()) return;
@@ -142,7 +146,17 @@ function Form({ line, onDone, onCancel }: {
     const withGroup = { ...f, budgetGroup: group, ...(group ? { isEnvelope: true } : {}) };
     // Firestore rejects undefined values (cleared "Pays debt" leaves debtId: undefined) — strip them.
     const clean = Object.fromEntries(Object.entries(withGroup).filter(([, v]) => v !== undefined)) as typeof f;
-    if (id) await updateTemplateLine(id, clean); else await addTemplateLine(clean);
+    if (id) {
+      // Clearing a previously-set link must remove the field (deleteField):
+      // not send undefined (Firestore rejects literal undefined).
+      await updateTemplateLine(id, {
+        ...clean,
+        debtId: splitting ? null : (f.debtId ?? (hadDebtId ? null : undefined)),
+        debtSplits: splitting ? f.debtSplits : (hadDebtSplits ? null : undefined),
+      });
+    } else {
+      await addTemplateLine(clean);
+    }
     await onDone(clean);
   }
 
@@ -166,16 +180,10 @@ function Form({ line, onDone, onCancel }: {
       <label className="flex items-center justify-between text-sm">Order
         <input type="number" value={f.order} onChange={(e) => set("order", Number(e.target.value))} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm gap-2">
-        <span className="shrink-0">Pays debt</span>
-        <select value={f.debtId ?? ""} onChange={(e) => set("debtId", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
-          <option value="">— none —</option>
-          {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
-          ))}
-        </select>
-      </label>
-      <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
+      <DebtSplitsEditor
+        debts={debts} amount={f.amount} debtId={f.debtId} debtSplits={f.debtSplits}
+        onChange={(v) => setF({ ...f, debtId: v.debtId, debtSplits: v.debtSplits })}
+      />
       <label className="flex items-center justify-between text-sm">Budget
         <input type="checkbox" checked={!!f.isEnvelope} onChange={(e) => set("isEnvelope", e.target.checked)} />
       </label>

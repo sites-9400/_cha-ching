@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { debtsCol } from "../lib/paths";
 import { updateMonthLine } from "../lib/repo";
-import type { Channel, Debt, MonthLine } from "../lib/types";
+import type { Channel, Debt, DebtSplit, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
+import DebtSplitsEditor from "./DebtSplitsEditor";
 
 /** Inline-edit a single month line (name / amount / channel / pays-debt) for this month only. */
 export default function EditLineDialog(
@@ -17,7 +18,10 @@ export default function EditLineDialog(
   const [isEnvelope, setIsEnvelope] = useState(!!line.isEnvelope);
   const [budgetGroup, setBudgetGroup] = useState(line.budgetGroup ?? "");
   const [debtId, setDebtId] = useState(line.debtId ?? "");
+  const [debtSplits, setDebtSplits] = useState<DebtSplit[] | undefined>(line.debtSplits);
   const ticked = line.status !== "";
+  const hadDebtId = !!line.debtId;
+  const hadDebtSplits = !!line.debtSplits?.length;
   const amt = Number(amount);
   const valid = name.trim() !== "" && amt >= 0;
 
@@ -26,11 +30,14 @@ export default function EditLineDialog(
     // A budget group implies the line is a budget line — no separate toggle needed.
     const group = budgetGroup.trim();
     // Clearing a previously-set link must remove the field (deleteField):
-    // not send undefined (Firestore rejects literal undefined).
+    // not send undefined (Firestore rejects literal undefined). While ticked,
+    // the picker is locked, so neither field is sent, exactly as before.
+    const splitting = !!debtSplits && debtSplits.length > 0;
     await updateMonthLine(monthKey, line.id, {
       name: name.trim(), amount: amt, channel,
       isEnvelope: isEnvelope || group !== "", budgetGroup: group,
-      debtId: ticked ? undefined : (debtId || (line.debtId ? null : undefined)),
+      debtId: ticked ? undefined : (splitting ? null : (debtId || (hadDebtId ? null : undefined))),
+      debtSplits: ticked ? undefined : (splitting ? debtSplits : (hadDebtSplits ? null : undefined)),
     });
     onClose();
   }
@@ -60,20 +67,12 @@ export default function EditLineDialog(
             className="w-32 text-right border-b border-stone-300 outline-none"
           />
         </label>
-        <label className="flex items-center justify-between text-sm gap-2">
-          <span className="shrink-0">Pays debt</span>
-          {/* A ticked line has already logged its payment under the current debt;
-              re-linking it would orphan that payment, so require an untick first. */}
-          <select value={debtId} disabled={ticked} onChange={(e) => setDebtId(e.target.value)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right disabled:opacity-40">
-            <option value="">— none —</option>
-            {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </label>
-        <p className="text-[11px] text-stone-400 -mt-1">
-          {ticked ? "Untick the line first to change which debt it pays." : "Ticking this line PAID logs a payment to that debt."}
-        </p>
+        {/* A ticked line has already logged its payment(s) under the current
+            debt(s); re-linking it would orphan them, so require an untick first. */}
+        <DebtSplitsEditor
+          debts={debts} amount={amt} debtId={debtId} debtSplits={debtSplits} disabled={ticked}
+          onChange={(v) => { setDebtId(v.debtId ?? ""); setDebtSplits(v.debtSplits); }}
+        />
         <p className="text-[11px] text-stone-400">Changes apply to {monthKey} only — the template stays as-is.</p>
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>

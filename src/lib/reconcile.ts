@@ -58,6 +58,7 @@ export function reconcileLines(
       order: t.order, oneOff: false,
       status: existing?.status ?? "",
       ...(t.debtId ? { debtId: t.debtId } : {}),
+      ...(t.debtSplits?.length ? { debtSplits: t.debtSplits } : {}),
       ...(t.isEnvelope ? { isEnvelope: true } : {}),
       ...(t.budgetGroup ? { budgetGroup: t.budgetGroup } : {}),
       ...(existing?.paidDate ? { paidDate: existing.paidDate } : {}),

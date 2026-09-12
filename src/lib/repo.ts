@@ -12,10 +12,11 @@ import {
 } from "./paths";
 import { BACKUP_KEEP, backupsToPrune, type MonthBackup } from "./backups";
 import { reconcileLines } from "./reconcile";
+import { linkedDebtIds, paymentsForLine } from "./debtSplits";
 import { activeLines, generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
-  Account, Category, Debt, EventItem, ExpenseInput, Income, LineStatus, Meta, MonthLine, SavingsMove,
-  SinkingFund, Subscription, TemplateLine,
+  Account, Category, Debt, DebtSplit, EventItem, ExpenseInput, Income, LineStatus, Meta, MonthLine,
+  SavingsMove, SinkingFund, Subscription, TemplateLine,
 } from "./types";
 
 export type { ExpenseInput } from "./types";
@@ -34,34 +35,41 @@ export async function setLineStatus(
 }
 
 /**
- * Toggle a line's PAID status. If the line is linked to a debt (`debtId`), also log
- * a debt payment for its amount when marking PAID, and reverse that payment when
- * unticking — so ticking a BNPL/loan line actually pays the debt down. The payment
- * carries `lineId` so untick finds and reverses exactly it.
+ * Toggle a line's PAID status. If the line is linked to one or more debts
+ * (`debtSplits`, or a single `debtId` when there are no splits), also log the
+ * matching debt payment(s) when marking PAID, and reverse them when unticking,
+ * so ticking a BNPL/loan line actually pays the debt(s) down. `debtSplits`
+ * takes precedence over `debtId` (see `paymentsForLine`); a line paying four
+ * debts logs four payment docs, one per debt. Each payment carries `lineId`
+ * so untick finds and reverses exactly the ones this line created.
  */
 export async function toggleLinePaid(monthKey: string, line: MonthLine): Promise<void> {
   const goingPaid = line.status === "";
-  if (!line.debtId) {
+  const payments = paymentsForLine(line);
+  if (payments.length === 0) {
     await setLineStatus(monthKey, line.id, goingPaid ? "PAID" : "");
     return;
   }
   const lineRef = doc(db, monthLines(monthKey), line.id);
-  const debtRef = doc(db, debtsCol(), line.debtId);
   const batch = writeBatch(db);
 
   if (goingPaid) {
-    batch.set(doc(collection(db, debtPayments(line.debtId))), {
-      amount: line.amount, date: localIso(),
-      monthKey, cutoff: line.cutoff, lineId: line.id,
-    });
-    batch.update(debtRef, { currentBalance: increment(-line.amount) });
+    for (const p of payments) {
+      batch.set(doc(collection(db, debtPayments(p.debtId))), {
+        amount: p.amount, date: localIso(),
+        monthKey, cutoff: line.cutoff, lineId: line.id,
+      });
+      batch.update(doc(db, debtsCol(), p.debtId), { currentBalance: increment(-p.amount) });
+    }
     batch.update(lineRef, { status: "PAID", paidDate: localIso() });
   } else {
-    const snap = await getDocs(collection(db, debtPayments(line.debtId)));
-    for (const d of snap.docs) {
-      if (d.data().lineId === line.id) {
-        batch.delete(d.ref);
-        batch.update(debtRef, { currentBalance: increment(d.data().amount as number) });
+    for (const debtId of linkedDebtIds(line)) {
+      const snap = await getDocs(collection(db, debtPayments(debtId)));
+      for (const d of snap.docs) {
+        if (d.data().lineId === line.id) {
+          batch.delete(d.ref);
+          batch.update(doc(db, debtsCol(), debtId), { currentBalance: increment(d.data().amount as number) });
+        }
       }
     }
     batch.update(lineRef, { status: "", paidDate: "" });
@@ -240,8 +248,22 @@ export async function deleteDebt(id: string): Promise<void> {
 export async function addTemplateLine(l: Omit<TemplateLine, "id">): Promise<void> {
   await setDoc(doc(collection(db, templateLines())), l);
 }
-export async function updateTemplateLine(id: string, patch: Partial<TemplateLine>): Promise<void> {
-  await updateDoc(doc(db, templateLines(), id), patch);
+/** Patch a template line. `debtId: null`/`debtSplits: null` removes the field via
+ *  deleteField() (Firestore rejects literal undefined), so clearing the "Pays
+ *  debt" picker (single or split) actually unlinks it rather than leaving the
+ *  old value in place. */
+export async function updateTemplateLine(
+  id: string,
+  patch: Partial<Omit<TemplateLine, "debtId" | "debtSplits">>
+    & { debtId?: string | null; debtSplits?: DebtSplit[] | null },
+): Promise<void> {
+  const { debtId, debtSplits, ...rest } = patch;
+  const data: UpdateData<TemplateLine> = stripUndefined(rest);
+  if (debtId === null) data.debtId = deleteField();
+  else if (debtId !== undefined) data.debtId = debtId;
+  if (debtSplits === null) data.debtSplits = deleteField();
+  else if (debtSplits !== undefined) data.debtSplits = debtSplits;
+  await updateDoc(doc(db, templateLines(), id), data);
 }
 export async function deleteTemplateLine(id: string): Promise<void> {
   await deleteDoc(doc(db, templateLines(), id));
@@ -283,17 +305,21 @@ export async function deleteFund(id: string): Promise<void> {
 export async function addEvent(e: Omit<EventItem, "id">): Promise<void> {
   await setDoc(doc(collection(db, eventsCol())), stripUndefined(e));
 }
-/** Patch a planned one-off event. `debtId: null` removes the field via
- *  deleteField() (Firestore rejects literal undefined), so clearing the
- *  "Pays debt" picker actually unlinks it rather than leaving it untouched. */
+/** Patch a planned one-off event. `debtId: null`/`debtSplits: null` removes the
+ *  field via deleteField() (Firestore rejects literal undefined), so clearing the
+ *  "Pays debt" picker (single or split) actually unlinks it rather than leaving
+ *  it untouched. */
 export async function updateEvent(
   id: string,
-  patch: Partial<Omit<EventItem, "debtId">> & { debtId?: string | null },
+  patch: Partial<Omit<EventItem, "debtId" | "debtSplits">>
+    & { debtId?: string | null; debtSplits?: DebtSplit[] | null },
 ): Promise<void> {
-  const { debtId, ...rest } = patch;
+  const { debtId, debtSplits, ...rest } = patch;
   const data: UpdateData<EventItem> = stripUndefined(rest);
   if (debtId === null) data.debtId = deleteField();
   else if (debtId !== undefined) data.debtId = debtId;
+  if (debtSplits === null) data.debtSplits = deleteField();
+  else if (debtSplits !== undefined) data.debtSplits = debtSplits;
   await updateDoc(doc(db, eventsCol(), id), data);
 }
 export async function deleteEvent(id: string): Promise<void> {
@@ -394,18 +420,20 @@ export async function unskipLine(monthKey: string, id: string): Promise<void> {
 
 /** Inline-edit a month line (name/amount/channel/pays-debt) for this month only;
  *  marks it overridden so a later template sync won't clobber the change.
- *  `debtId: null` removes the field via deleteField() (Firestore rejects literal
- *  undefined), so clearing the "Pays debt" picker actually unlinks it rather than
- *  leaving it untouched. */
+ *  `debtId: null`/`debtSplits: null` removes the field via deleteField()
+ *  (Firestore rejects literal undefined), so clearing the "Pays debt" picker
+ *  (single or split) actually unlinks it rather than leaving it untouched. */
 export async function updateMonthLine(
   monthKey: string, id: string,
   patch: Partial<Pick<MonthLine, "name" | "amount" | "channel" | "isEnvelope" | "budgetGroup">>
-    & { debtId?: string | null },
+    & { debtId?: string | null; debtSplits?: DebtSplit[] | null },
 ): Promise<void> {
-  const { debtId, ...rest } = patch;
+  const { debtId, debtSplits, ...rest } = patch;
   const data: UpdateData<MonthLine> & { overridden: boolean } = { ...rest, overridden: true };
   if (debtId === null) data.debtId = deleteField();
   else if (debtId !== undefined) data.debtId = debtId;
+  if (debtSplits === null) data.debtSplits = deleteField();
+  else if (debtSplits !== undefined) data.debtSplits = debtSplits;
   await updateDoc(doc(db, monthLines(monthKey), id), data);
 }
 /** Add a one-off income to a month's incomes subcollection. */

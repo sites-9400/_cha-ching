@@ -6,6 +6,7 @@ import { debtsCol, eventsCol } from "../../lib/paths";
 import { addEvent, updateEvent, deleteEvent } from "../../lib/repo";
 import type { Channel, Debt, EventItem } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import DebtSplitsEditor from "../DebtSplitsEditor";
 
 const BLANK: Omit<EventItem, "id"> = { name: "", amount: 0, month: "" };
 
@@ -29,7 +30,9 @@ export default function EventsEditor() {
             <button onClick={() => setEditing(e)} className="flex-1 flex items-center justify-between min-w-0">
               <span className="truncate text-sm">
                 {e.month} · C{e.cutoff ?? 2} · {e.name}
-                {debtName(e.debtId) && <span className="text-stone-400"> · pays {debtName(e.debtId)}</span>}
+                {e.debtSplits && e.debtSplits.length > 0
+                  ? <span className="text-stone-400"> · pays {e.debtSplits.length} debts</span>
+                  : debtName(e.debtId) && <span className="text-stone-400"> · pays {debtName(e.debtId)}</span>}
               </span>
               <span className="text-sm tabular-nums">{peso(e.amount)}</span>
             </button>
@@ -55,13 +58,19 @@ function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: (
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF({ ...f, [k]: v });
   const validMonth = /^\d{4}-\d{2}$/.test(f.month);
   const hadDebtId = "id" in ev && !!ev.debtId;
+  const hadDebtSplits = "id" in ev && !!ev.debtSplits?.length;
+  const splitting = !!f.debtSplits && f.debtSplits.length > 0;
 
   async function save() {
     if (!f.name.trim() || !validMonth) return;
     if (id) {
       // Clearing a previously-set link must remove the field (deleteField):
       // not send undefined (Firestore rejects literal undefined).
-      await updateEvent(id, { ...f, debtId: f.debtId ?? (hadDebtId ? null : undefined) });
+      await updateEvent(id, {
+        ...f,
+        debtId: splitting ? null : (f.debtId ?? (hadDebtId ? null : undefined)),
+        debtSplits: splitting ? f.debtSplits : (hadDebtSplits ? null : undefined),
+      });
     } else {
       await addEvent(f);
     }
@@ -91,16 +100,10 @@ function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: (
         </select>
       </label>
       <input placeholder="Note (optional)" value={f.note ?? ""} onChange={(e) => set("note", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none pb-1" />
-      <label className="flex items-center justify-between text-sm gap-2">
-        <span className="shrink-0">Pays debt</span>
-        <select value={f.debtId ?? ""} onChange={(e) => set("debtId", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
-          <option value="">— none —</option>
-          {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
-          ))}
-        </select>
-      </label>
-      <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
+      <DebtSplitsEditor
+        debts={debts} amount={f.amount} debtId={f.debtId} debtSplits={f.debtSplits}
+        onChange={(v) => setF({ ...f, debtId: v.debtId, debtSplits: v.debtSplits })}
+      />
       <div className="flex gap-2 mt-2">
         <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim() || !validMonth} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>

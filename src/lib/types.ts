@@ -18,6 +18,9 @@ export interface Account {
   color?: string; // palette key (custom accounts only); built-ins use their fixed chip
 }
 
+/** One debt's share of a line's payment, used when a single line pays several debts. */
+export interface DebtSplit { debtId: string; amount: number }
+
 export interface TemplateLine {
   id: string;
   name: string;
@@ -26,6 +29,9 @@ export interface TemplateLine {
   cutoff: 1 | 2;
   order: number;
   debtId?: string;
+  // When present and non-empty, debtSplits takes precedence over debtId: ticking the
+  // line logs one payment per split instead of a single payment to debtId.
+  debtSplits?: DebtSplit[];
   isEnvelope?: boolean; // Quick Add spending can draw from this line instead of free cash
   budgetGroup?: string; // envelope lines sharing a group name form ONE combined budget ("" ≡ none)
 }
@@ -83,6 +89,9 @@ export interface EventItem {
   channel?: Channel;
   note?: string;
   debtId?: string; // ticking the generated line PAID logs a payment to this debt
+  // When present and non-empty, debtSplits takes precedence over debtId: ticking the
+  // generated line logs one payment per split instead of a single payment to debtId.
+  debtSplits?: DebtSplit[];
 }
 
 export interface SinkingFund {
