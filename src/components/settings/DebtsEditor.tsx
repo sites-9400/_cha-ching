@@ -106,7 +106,7 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
           {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
-      <label className="flex items-center justify-between text-sm">0% BNPL
+      <label className="flex items-center justify-between text-sm">Installment plan
         <input type="checkbox" checked={f.isBNPL} onChange={(e) => set("isBNPL", e.target.checked)} />
       </label>
       <label className="flex items-center justify-between text-sm">Active

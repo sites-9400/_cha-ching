@@ -104,7 +104,6 @@ export default function Debts() {
                   <ChannelIcon channel={String(d.channel)} initial={d.name.charAt(0).toUpperCase()} chipClass={chip(d.channel)} />
                   <span className="truncate flex items-center gap-2">
                     {d.name}
-                    {d.isBNPL && <span className="text-[10px] text-emerald-600">0% BNPL</span>}
                     {inst && <span className="text-[10px] font-semibold text-stone-500 tabular-nums">{inst.paid}/{inst.total} paid</span>}
                   </span>
                 </span>
