@@ -5,7 +5,7 @@ import { currentMonthKey, monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
 import { debtsCol } from "../lib/paths";
 import { logDebtPayment, setDebtCycle, setDebtMinimum, undoDebtPayment, updateDebt } from "../lib/repo";
-import { debtTotals, projectDebtFreeMonth } from "../lib/selectors";
+import { debtTotals, installmentProgress, projectDebtFreeMonth } from "../lib/selectors";
 import { averagePaydown } from "../lib/stats";
 import { cutoffForDueDay } from "../lib/allocate";
 import { currentCycleKey, cycleDates, daysUntil, paidInCycle } from "../lib/cycles";
@@ -88,7 +88,10 @@ export default function Debts() {
       <ul className="flex flex-col gap-3">
         {active.map((d) => {
           const paid = d.startingBalance - d.currentBalance;
-          const pct = d.startingBalance > 0 ? Math.round((paid / d.startingBalance) * 100) : 0;
+          const inst = installmentProgress(d);
+          const pct = inst
+            ? Math.round((inst.paid / inst.total) * 100)
+            : d.startingBalance > 0 ? Math.round((paid / d.startingBalance) * 100) : 0;
           const cycleKey = d.statementDay ? currentCycleKey(d.statementDay, today) : null;
           const cycle = cycleKey ? cycles.find((c) => c.debtId === d.id && c.id === cycleKey) : undefined;
           const cycleDue = cycleKey && d.dueDay ? cycleDates(d.statementDay!, d.dueDay, cycleKey) : null;
@@ -102,6 +105,7 @@ export default function Debts() {
                   <span className="truncate flex items-center gap-2">
                     {d.name}
                     {d.isBNPL && <span className="text-[10px] text-emerald-600">0% BNPL</span>}
+                    {inst && <span className="text-[10px] font-semibold text-stone-500 tabular-nums">{inst.paid}/{inst.total} paid</span>}
                   </span>
                 </span>
                 <span className="text-sm font-bold tabular-nums shrink-0">{peso(d.currentBalance)}</span>

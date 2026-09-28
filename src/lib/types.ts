@@ -67,6 +67,8 @@ export interface Debt {
   channel: Channel;
   isBNPL: boolean;
   active: boolean;
+  installments?: number; // installment plans: total number of payments (e.g. 12)
+  amortization?: number; // installment plans: amount per payment; paid count = installments − balance/amortization
 }
 
 /** One credit-card statement cycle, stored at debts/{id}/cycles/{YYYY-MM}

@@ -170,6 +170,13 @@ export interface DebtTotals {
   blitz: number; // interest-bearing (non-BNPL) debt only
 }
 
+/** Installment progress (e.g. 1 of 12 paid) from the balance left; null when the plan has no schedule. */
+export function installmentProgress(d: Debt): { paid: number; total: number } | null {
+  if (!d.installments || !d.amortization || d.amortization <= 0) return null;
+  const left = Math.min(d.installments, Math.max(0, Math.round(d.currentBalance / d.amortization)));
+  return { paid: d.installments - left, total: d.installments };
+}
+
 export function debtTotals(debts: Debt[]): DebtTotals {
   const active = debts.filter((d) => d.active);
   const total = active.reduce((s, d) => s + d.currentBalance, 0);
