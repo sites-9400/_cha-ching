@@ -20,6 +20,10 @@ import { useAccounts } from "./AccountsProvider";
 import HeaderBand from "./HeaderBand";
 
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; fallback only, used when no payment history exists yet
+// Bruno Mars tickets: 6 on one installment, 1 mine + 5 repaid by Jude (1) and Alysson (4).
+// My share counts in Installments; the friends' share shows on its own.
+const BRUNO_ID = "ew-inst-bruno-14650";
+const BRUNO_MY_SHARE = 1 / 6;
 
 export default function Debts() {
   const { chip, label } = useAccounts();
@@ -48,7 +52,10 @@ export default function Debts() {
 
   const active = [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
   const cleared = [...debts].filter((d) => !d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
-  const totals = debtTotals(debts);
+  const { total: allTotal, blitz: interestBearing } = debtTotals(debts);
+  const brunoBal = debts.find((d) => d.id === BRUNO_ID && d.active)?.currentBalance ?? 0;
+  const friendsBruno = brunoBal * (1 - BRUNO_MY_SHARE);
+  const installments = allTotal - interestBearing - friendsBruno;
   const trackedIds = new Set(debts.filter((d) => d.active && !d.isBNPL).map((d) => d.id));
   const monthlyPaydown = averagePaydown(payments, trackedIds, thisMonth, 3, MONTHLY_PAYDOWN);
   const freeMonth = projectDebtFreeMonth(debts, monthlyPaydown, thisMonth);
@@ -56,10 +63,21 @@ export default function Debts() {
   return (
     <>
       <HeaderBand
-        title="TOTAL DEBT"
-        value={peso(totals.total)}
-        sub={`interest-bearing clear by ${monthLabel(freeMonth)} · ~${peso(Math.round(monthlyPaydown))}/mo`}
-      />
+        title="INTEREST-BEARING DEBT"
+        value={peso(interestBearing)}
+        sub={`clear by ${monthLabel(freeMonth)} · ~${peso(Math.round(monthlyPaydown))}/mo`}
+      >
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-white/10 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-100/70">Installments</p>
+            <p className="text-base font-bold tabular-nums text-white">{peso(installments)}</p>
+          </div>
+          <div className="rounded-xl bg-white/10 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-100/70">Bruno Mars · friends</p>
+            <p className="text-base font-bold tabular-nums text-white">{peso(friendsBruno)}</p>
+          </div>
+        </div>
+      </HeaderBand>
       <main className="p-4">
       <DueSoonStrip />
       <ul className="flex flex-col gap-3">

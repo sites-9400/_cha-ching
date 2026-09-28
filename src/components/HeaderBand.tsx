@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
  *  of AppShell's max-w-md), content constrained back to max-w-md. Covers the
  *  safe-area inset itself so color reaches the very top of the screen. */
 export default function HeaderBand(
-  { title, value, sub, left, right }:
-  { title: string; value?: string; sub?: string; left?: ReactNode; right?: ReactNode },
+  { title, value, sub, left, right, children }:
+  { title: string; value?: string; sub?: string; left?: ReactNode; right?: ReactNode; children?: ReactNode },
 ) {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-gradient-to-b from-[#0E5A54] to-[#0A413D] rounded-b-3xl pt-[env(safe-area-inset-top)]">
@@ -21,6 +21,7 @@ export default function HeaderBand(
             <p className="text-2xl font-bold text-white">{title}</p>
           )}
           {sub && <p className="mt-1 text-xs text-white/60 truncate">{sub}</p>}
+          {children}
         </div>
         <div className="w-9 shrink-0 flex justify-end">{right}</div>
       </div>
