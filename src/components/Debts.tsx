@@ -24,6 +24,8 @@ const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; fallback only, used wh
 // My share counts in Installments; the friends' share shows on its own.
 const BRUNO_ID = "ew-inst-bruno-14650";
 const BRUNO_MY_SHARE = 1 / 6;
+// The EastWest laptop plan is Ezekiel's laptop, not mine: shown on its own too.
+const LAPTOP_ID = "ew-laptop";
 
 export default function Debts() {
   const { chip, label } = useAccounts();
@@ -55,7 +57,8 @@ export default function Debts() {
   const { total: allTotal, blitz: interestBearing } = debtTotals(debts);
   const brunoBal = debts.find((d) => d.id === BRUNO_ID && d.active)?.currentBalance ?? 0;
   const friendsBruno = brunoBal * (1 - BRUNO_MY_SHARE);
-  const installments = allTotal - interestBearing - friendsBruno;
+  const laptop = debts.find((d) => d.id === LAPTOP_ID && d.active)?.currentBalance ?? 0;
+  const installments = allTotal - interestBearing - friendsBruno - laptop;
   const trackedIds = new Set(debts.filter((d) => d.active && !d.isBNPL).map((d) => d.id));
   const monthlyPaydown = averagePaydown(payments, trackedIds, thisMonth, 3, MONTHLY_PAYDOWN);
   const freeMonth = projectDebtFreeMonth(debts, monthlyPaydown, thisMonth);
@@ -67,15 +70,17 @@ export default function Debts() {
         value={peso(interestBearing)}
         sub={`clear by ${monthLabel(freeMonth)} · ~${peso(Math.round(monthlyPaydown))}/mo`}
       >
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-white/10 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-100/70">Installments</p>
-            <p className="text-base font-bold tabular-nums text-white">{peso(installments)}</p>
-          </div>
-          <div className="rounded-xl bg-white/10 px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-100/70">Bruno Mars · friends</p>
-            <p className="text-base font-bold tabular-nums text-white">{peso(friendsBruno)}</p>
-          </div>
+        <div className="mt-3 rounded-xl bg-white/10 px-3 py-1.5 divide-y divide-white/10">
+          {([
+            ["My installments", installments],
+            ["Bruno Mars · friends", friendsBruno],
+            ["Ezekiel's laptop", laptop],
+          ] as const).map(([name, amt]) => (
+            <div key={name} className="flex items-center justify-between py-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-100/70">{name}</span>
+              <span className="text-sm font-bold tabular-nums text-white">{peso(amt)}</span>
+            </div>
+          ))}
         </div>
       </HeaderBand>
       <main className="p-4">
