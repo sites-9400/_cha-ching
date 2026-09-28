@@ -5,7 +5,7 @@ import {
   eventsCol, monthDoc, monthIncomes, monthLines, templateIncomes, templateLines,
 } from "../lib/paths";
 import { startMonth } from "../lib/repo";
-import { activeLines, generateMonthLines } from "../lib/selectors";
+import { activeLines, generateMonthLines, isCutoffClosed } from "../lib/selectors";
 import type { EventItem, Income, MonthLine, TemplateLine } from "../lib/types";
 import { useCollection } from "../hooks/useCollection";
 import { useDoc } from "../hooks/useDoc";
@@ -92,6 +92,15 @@ export default function MonthProvider({ children }: { children: React.ReactNode 
   const ready = isProjected
     ? template.length > 0
     : !loadingMeta && exists && savedLines.length > 0;
+
+  // Once the current month is fully closed (both cutoffs ticked), open on the
+  // next month instead. Once per session, so going back to the closed month sticks.
+  const advancedRef = useRef(false);
+  useEffect(() => {
+    if (advancedRef.current || !ready || viewedKey !== currentKey) return;
+    advancedRef.current = true;
+    if (isCutoffClosed(lines, 1) && isCutoffClosed(lines, 2)) setViewedKey(addMonths(currentKey, 1));
+  }, [ready, viewedKey, currentKey, lines]);
 
   const value: MonthCtx = {
     viewedKey, currentKey, mode, editable, lines, skippedLines, incomes, ready,
