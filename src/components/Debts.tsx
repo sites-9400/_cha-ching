@@ -27,6 +27,33 @@ const BRUNO_MY_SHARE = 1 / 6;
 // The EastWest laptop plan is Ezekiel's laptop, not mine: shown on its own too.
 const LAPTOP_ID = "ew-laptop";
 
+/** Parse + validate a typed balance. Returns null for empty/NaN/negative. Rounded to 2dp. */
+export function parseBalanceInput(raw: string): number | null {
+  if (raw.trim() === "") return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.round(n * 100) / 100;
+}
+
+/** Save an inline balance edit. Returns true when the edit should close (false on invalid input or a failed write). Changes ONLY currentBalance. */
+export async function saveBalanceEdit(
+  id: string,
+  raw: string,
+  update: (id: string, patch: Partial<Debt>) => Promise<void>,
+  onError: () => void,
+): Promise<boolean> {
+  const value = parseBalanceInput(raw);
+  if (value == null) return false;
+  try {
+    await update(id, { currentBalance: value });
+  } catch (err) {
+    console.error(err);
+    onError();
+    return false; // keep the editor open so the typed value isn't lost
+  }
+  return true;
+}
+
 export default function Debts() {
   const { chip, label } = useAccounts();
   const debts = useCollection<Debt>(debtsCol());
@@ -37,6 +64,8 @@ export default function Debts() {
   const [stmtDebt, setStmtDebt] = useState<Debt | null>(null);
   const [minEditId, setMinEditId] = useState<string | null>(null);
   const [minValue, setMinValue] = useState("");
+  const [balEditId, setBalEditId] = useState<string | null>(null);
+  const [balValue, setBalValue] = useState("");
   const [showCleared, setShowCleared] = useState(false);
   const today = new Date();
 
@@ -50,6 +79,16 @@ export default function Debts() {
     }
     setMinEditId(null);
     setMinValue("");
+  }
+
+  async function saveBal(id: string) {
+    const closed = await saveBalanceEdit(id, balValue, updateDebt, () =>
+      showToast("Balance didn't save — check connection"),
+    );
+    if (closed) {
+      setBalEditId(null);
+      setBalValue("");
+    }
   }
 
   const active = [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
@@ -107,7 +146,38 @@ export default function Debts() {
                     {inst && <span className="text-[10px] font-semibold text-stone-500 tabular-nums">{inst.paid}/{inst.total} paid</span>}
                   </span>
                 </span>
-                <span className="text-sm font-bold tabular-nums shrink-0">{peso(d.currentBalance)}</span>
+                {balEditId === d.id ? (
+                  <span className="flex items-center gap-1 shrink-0 text-sm">
+                    <span className="text-stone-400">₱</span>
+                    <input
+                      type="number" inputMode="decimal" autoFocus
+                      aria-label={`Balance for ${d.name}`}
+                      value={balValue} onChange={(e) => setBalValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") void saveBal(d.id);
+                        else if (e.key === "Escape") { setBalEditId(null); setBalValue(""); }
+                      }}
+                      className="w-20 border border-stone-300 rounded px-1 outline-none tabular-nums"
+                    />
+                    <button
+                      aria-label="Save balance" onClick={() => void saveBal(d.id)}
+                      className="font-bold text-emerald-600 px-1"
+                    >✓</button>
+                    <button
+                      aria-label="Cancel balance edit" onClick={() => { setBalEditId(null); setBalValue(""); }}
+                      className="font-bold text-stone-500 px-1"
+                    >✕</button>
+                  </span>
+                ) : (
+                  <button
+                    aria-label={`Edit balance for ${d.name}`}
+                    onClick={() => { setBalEditId(d.id); setBalValue(String(d.currentBalance)); }}
+                    className="text-sm font-bold tabular-nums shrink-0"
+                  >
+                    {peso(d.currentBalance)}
+                    <span className="ml-1 text-[11px] text-stone-400">✎</span>
+                  </button>
+                )}
               </div>
               <div className="h-2 rounded-full bg-stone-100 my-2 overflow-hidden">
                 <div className={`h-full ${d.isBNPL ? "bg-emerald-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
