@@ -51,7 +51,7 @@ browsable month expenses, 15 green deploys, suite at 209 tests).
   send plan ("send only the shortfall"). `meta.incomeChannel` is one global
   account; `fundingByChannel` nets it but is not amount-aware.
 
-- **Statement entry doesn't update the card balance (found 2026-10-06, offered to Eve, not built).** `StatementDialog` → `setDebtCycle` only writes the cycle doc, so `creditLimit − currentBalance` (Debts "available") ignores the statement. Eve expected available credit to drop by the statement amount. Workaround used: set `rcbc-gold` currentBalance by hand from the bank app's available figure (₱32,641 = 50,000 − 17,359). Design question before building: the bank's "used" includes unbilled installments, so statement balance alone under-counts.
+- **Statement entry doesn't update the card balance (found 2026-10-06, offered to Eve, not built).** `StatementDialog` → `setDebtCycle` only writes the cycle doc, so `creditLimit − currentBalance` (Debts "available") ignores the statement. Eve expected available credit to drop by the statement amount. Workaround: tap the balance on the Debts card to edit it inline (shipped 2026-10-06, 8a65f15); first fix set `rcbc-gold` currentBalance by hand from the bank app's available figure (₱32,641 = 50,000 − 17,359). Design question before building: the bank's "used" includes unbilled installments, so statement balance alone under-counts.
 
 ## Known rough edges (audit findings accepted as-is)
 
