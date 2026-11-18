@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { monthLabel } from "../lib/clock";
 import { peso } from "../lib/format";
-import { cutoffSummary, isCutoffClosed } from "../lib/selectors";
+import { cutoffSummary, focusCutoff, isCutoffClosed } from "../lib/selectors";
 import { paymentsForLine } from "../lib/debtSplits";
 import { cycleMinimums } from "../lib/cycles";
 import { LINE_SORTS, parseLineSortKey, type LineSortKey } from "../lib/lineSort";
@@ -15,6 +15,8 @@ import type { Debt, DebtCycle, EventItem, Expense, MonthLine, TemplateLine } fro
 import { useMonth } from "./MonthProvider";
 import HeaderBand from "./HeaderBand";
 import CutoffSection from "./CutoffSection";
+import WhereItGoes from "./WhereItGoes";
+import { ChevronLeft, ChevronRight, NAV_BTN } from "./HeaderBand";
 import type { PaymentRec } from "./DebtPlan";
 import DueSoonStrip from "./DueSoonStrip";
 import AddOneOff from "./AddOneOff";
@@ -75,15 +77,15 @@ export default function ThisMonth() {
     <button
       onClick={goPrev}
       aria-label="Previous month"
-      className="h-9 w-9 flex items-center justify-center rounded-full bg-white/20 text-white text-lg active:bg-white/30"
-    >‹</button>
+      className={NAV_BTN}
+    ><ChevronLeft /></button>
   );
   const navRight = (
     <button
       onClick={goNext}
       aria-label="Next month"
-      className="h-9 w-9 flex items-center justify-center rounded-full bg-white/20 text-white text-lg active:bg-white/30"
-    >›</button>
+      className={NAV_BTN}
+    ><ChevronRight /></button>
   );
 
   if (!ready) {
@@ -91,60 +93,36 @@ export default function ThisMonth() {
       <main className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <div className="flex items-center justify-center gap-2 mb-4">
           {navLeft}
-          <h1 className="text-xl font-bold leading-tight min-w-[9rem] text-center">{monthLabel(viewedKey)}</h1>
+          <h1 className="font-display font-semibold text-[18px] leading-6 min-w-[9rem] text-center text-ink">{monthLabel(viewedKey)}</h1>
           {navRight}
         </div>
-        <div className="p-6 text-center text-stone-500">Setting up {monthLabel(viewedKey)}…</div>
+        <div className="p-6 text-center text-ink-2">Setting up {monthLabel(viewedKey)}…</div>
       </main>
     );
   }
 
-  const totalSurplus = cutoffSummary(lines, incomes, 1, received).surplus + cutoffSummary(lines, incomes, 2, received).surplus;
+  const focus = focusCutoff(lines, new Date().getDate()) ?? 2;
+  const focusSummary = cutoffSummary(lines, incomes, focus, received);
 
   return (
     <>
       <HeaderBand
-        title="TOTAL SURPLUS"
-        value={peso(totalSurplus)}
-        sub={`${monthLabel(viewedKey)}${mode !== "current" ? ` · ${modeLabel}` : ""}`}
+        title={"Going out, " + (focus === 1 ? "1st" : "2nd") + " cutoff"}
+        value={peso(focusSummary.planned)}
+        sub={<><span className="font-semibold text-ink">Came in {peso(focusSummary.income)}</span>{` · Left ${peso(focusSummary.surplus)}`}</>}
+        label={`${monthLabel(viewedKey)}${mode !== "current" ? ` · ${modeLabel}` : ""}`}
         left={navLeft}
         right={navRight}
       />
       <main className="p-4">
-      {mode === "current" && <DueSoonStrip />}
+      <WhereItGoes lines={lines} cutoff={focus} />
 
       {projected && (
         <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
           Projected from your template + this month's events. Nothing here is saved.
-          <button onClick={start} className="block mt-2 font-semibold text-emerald-700">Start {monthLabel(viewedKey)} →</button>
+          <button onClick={start} className="block mt-2 font-semibold text-ink">Start {monthLabel(viewedKey)} →</button>
         </div>
       )}
-
-      {editable && (
-        <div className="mb-3">
-          <div className="flex gap-3 text-sm">
-            <button onClick={() => setAdding(true)} className="font-semibold text-emerald-700">+ Add one-off</button>
-            {mode === "current" && (
-              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-semibold text-stone-500">Sync from template</button>
-            )}
-            <button onClick={() => setConfirmRestart(true)} className="font-semibold text-red-600">Restart month</button>
-          </div>
-          <p className="text-[11px] text-stone-400 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-1.5 mb-3">
-        <span className="text-[11px] text-stone-400">Sort</span>
-        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
-          {LINE_SORTS.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setLineSort(s.key)}
-              className={`px-2.5 py-0.5 rounded-full ${lineSort === s.key ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
-            >{s.label}</button>
-          ))}
-        </div>
-      </div>
 
       {([1, 2] as const).map((cutoff) => (
         <CutoffSection
@@ -172,12 +150,53 @@ export default function ThisMonth() {
           busyIncome={busyIncome}
           setBusyIncome={setBusyIncome}
           setEditingLine={setEditingLine}
-          setConfirmLine={setConfirmLine}
         />
       ))}
 
+      {mode === "current" && <DueSoonStrip />}
+
+      <section aria-label="Month tools" className="mt-2 mb-4 pt-4 border-t border-rule">
+        <h2 className="font-display font-bold text-[16px] leading-5 text-ink mb-2">Month tools</h2>
+      {editable && (
+        <div className="mb-3">
+          <div className="flex gap-4 text-[14px]">
+            <button onClick={() => setAdding(true)} className="font-semibold text-ink">+ Add one-off</button>
+            {mode === "current" && (
+              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-medium text-ink-2">Sync from template</button>
+            )}
+            <button onClick={() => setConfirmRestart(true)} className="font-semibold text-marker-red">Restart month</button>
+          </div>
+          <p className="text-[12px] leading-4 text-ink-2 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-1.5 mb-3">
+        <span className="text-[12px] text-ink-2">Sort</span>
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+          {LINE_SORTS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setLineSort(s.key)}
+              className={`px-2.5 py-0.5 rounded-full ${lineSort === s.key ? "bg-ink text-manila" : "text-ink-2"}`}
+            >{s.label}</button>
+          ))}
+        </div>
+      </div>
+      </section>
+
       {adding && <AddOneOff monthKey={viewedKey} lines={lines} onClose={() => setAdding(false)} />}
-      {editingLine && <EditLineDialog monthKey={viewedKey} line={editingLine} onClose={() => setEditingLine(null)} />}
+      {editingLine && (
+        <EditLineDialog
+          monthKey={viewedKey}
+          line={editingLine}
+          onClose={() => setEditingLine(null)}
+          onRemove={editable && !isCutoffClosed(lines, editingLine.cutoff)
+            ? (editingLine.oneOff
+                ? () => void deleteMonthLine(viewedKey, editingLine.id)
+                : () => setConfirmLine(editingLine))
+            : undefined}
+        />
+      )}
       {confirmLine && (
         <ConfirmDialog
           title={`Remove ${confirmLine.name}?`}
@@ -214,7 +233,7 @@ export default function ThisMonth() {
               await restartMonth(viewedKey);
             } catch (err) {
               console.error(err);
-              showToast("Restart failed — nothing was changed");
+              showToast("Restart failed. Nothing was changed");
             }
             setConfirmRestart(false);
           }}

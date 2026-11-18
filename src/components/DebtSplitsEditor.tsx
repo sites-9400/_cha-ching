@@ -1,6 +1,7 @@
 import { peso } from "../lib/format";
 import { splitsRemainder } from "../lib/debtSplits";
 import type { Debt, DebtSplit } from "../lib/types";
+import { CloseIcon } from "./icons";
 
 const activeSorted = (debts: Debt[]) => [...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
 
@@ -57,7 +58,7 @@ export default function DebtSplitsEditor({
           {disabled ? "Untick the line first to change which debt it pays." : "Ticking this line PAID logs a payment to that debt."}
         </p>
         {!disabled && (
-          <button type="button" onClick={startSplitting} className="text-xs font-semibold text-emerald-700 self-start">
+          <button type="button" onClick={startSplitting} className="text-xs font-semibold text-ink underline underline-offset-2 self-start">
             Split across debts
           </button>
         )}
@@ -86,13 +87,13 @@ export default function DebtSplitsEditor({
               className="w-20 text-right border-b border-stone-300 outline-none tabular-nums disabled:opacity-40"
             />
             {!disabled && (
-              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} className="text-red-500 text-xs px-1">✕</button>
+              <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== i))} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
             )}
           </div>
         ))}
       </div>
       {!disabled && (
-        <button type="button" onClick={() => setRows([...rows, { debtId: "", amount: 0 }])} className="text-xs font-semibold text-emerald-700 self-start">
+        <button type="button" onClick={() => setRows([...rows, { debtId: "", amount: 0 }])} className="text-xs font-semibold text-ink underline underline-offset-2 self-start">
           + add debt
         </button>
       )}
@@ -103,7 +104,7 @@ export default function DebtSplitsEditor({
         {disabled ? "Untick the line first to change which debt it pays." : "Ticking this line PAID logs one payment per debt above."}
       </p>
       {!disabled && (
-        <button type="button" onClick={stopSplitting} className="text-xs font-semibold text-emerald-700 self-start">
+        <button type="button" onClick={stopSplitting} className="text-xs font-semibold text-ink underline underline-offset-2 self-start">
           Use one debt instead
         </button>
       )}

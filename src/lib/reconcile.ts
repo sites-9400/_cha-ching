@@ -1,4 +1,4 @@
-import type { MonthLine, TemplateLine } from "./types";
+import type { LineGroup, MonthLine, TemplateLine } from "./types";
 
 /**
  * Diff the template against a month's lines. Template-derived lines (oneOff:false)
@@ -10,10 +10,10 @@ import type { MonthLine, TemplateLine } from "./types";
  * (name, cutoff) so the tick MIGRATES to the new id instead of being wiped — the
  * old-id doc is then deleted. Cutoffs in `closedCutoffs` are frozen — no
  * upserts into them, no moves out of them, no deletes within them; only budget
- * metadata (isEnvelope/budgetGroup) still flows onto existing lines there via
+ * metadata (isEnvelope/budgetGroup/group) still flows onto existing lines there via
  * `patches`, since it changes no amounts or ticks. Pure.
  */
-export interface LinePatch { id: string; isEnvelope: boolean; budgetGroup: string }
+export interface LinePatch { id: string; isEnvelope: boolean; budgetGroup: string; group: LineGroup | null }
 
 export function reconcileLines(
   template: TemplateLine[],
@@ -34,8 +34,12 @@ export function reconcileLines(
       if (direct) {
         consumed.add(direct.id);
         const wantEnv = !!t.isEnvelope, wantGroup = t.budgetGroup ?? "";
-        if (!direct.overridden && (!!direct.isEnvelope !== wantEnv || (direct.budgetGroup ?? "") !== wantGroup)) {
-          patches.push({ id: direct.id, isEnvelope: wantEnv, budgetGroup: wantGroup });
+        const wantLineGroup = t.group ?? null;
+        if (!direct.overridden && (
+          !!direct.isEnvelope !== wantEnv || (direct.budgetGroup ?? "") !== wantGroup
+          || (direct.group ?? null) !== wantLineGroup
+        )) {
+          patches.push({ id: direct.id, isEnvelope: wantEnv, budgetGroup: wantGroup, group: wantLineGroup });
         }
       }
       continue;
@@ -61,6 +65,7 @@ export function reconcileLines(
       ...(t.debtSplits?.length ? { debtSplits: t.debtSplits } : {}),
       ...(t.isEnvelope ? { isEnvelope: true } : {}),
       ...(t.budgetGroup ? { budgetGroup: t.budgetGroup } : {}),
+      ...(t.group ? { group: t.group } : {}),
       ...(existing?.paidDate ? { paidDate: existing.paidDate } : {}),
     });
   }

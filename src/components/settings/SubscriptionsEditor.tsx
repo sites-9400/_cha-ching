@@ -6,6 +6,7 @@ import { subscriptionsCol } from "../../lib/paths";
 import { addSubscription, updateSubscription, deleteSubscription } from "../../lib/repo";
 import type { Channel, Subscription } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import { CloseIcon } from "../icons";
 
 const BLANK: Omit<Subscription, "id"> = { name: "", amount: 0 };
 
@@ -16,7 +17,7 @@ export default function SubscriptionsEditor() {
   const subs = useCollection<Subscription>(subscriptionsCol());
   const sorted = [...subs].sort((a, b) => b.amount - a.amount);
   const total = subs.reduce((sum, s) => sum + s.amount, 0);
-  const { chip, label } = useAccounts();
+  const { label } = useAccounts();
   const [editing, setEditing] = useState<Subscription | Omit<Subscription, "id"> | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -34,15 +35,15 @@ export default function SubscriptionsEditor() {
             <button onClick={() => setEditing(s)} className="flex-1 flex items-center gap-2 min-w-0">
               <span className="truncate text-sm flex-1 text-left">{s.name}</span>
               {s.channel && (
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${chip(s.channel)}`}>{label(s.channel)}</span>
+                <span className="text-[11px] leading-4 font-semibold px-1.5 py-0.5 rounded-full shrink-0 border border-rule text-ink-2">{label(s.channel)}</span>
               )}
               <span className="text-sm tabular-nums shrink-0">{peso(s.amount)}</span>
             </button>
-            <button onClick={() => setConfirmId(s.id)} className="text-red-500 text-xs px-1">✕</button>
+            <button onClick={() => setConfirmId(s.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add subscription</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add subscription</button>
       {confirmId && (
         <ConfirmDialog title="Delete subscription?" message="It will no longer appear in this registry."
           onConfirm={async () => { await deleteSubscription(confirmId); setConfirmId(null); }}

@@ -32,7 +32,7 @@ export default function ExpenseRow(
             <span className="block text-[10px] text-stone-400">{label(expense.channel)}</span>
           </span>
         </span>
-        <span className="text-sm font-semibold tabular-nums shrink-0">{peso(expense.amount)}</span>
+        <span className="font-display text-sm font-semibold tabular-nums shrink-0">{peso(expense.amount)}</span>
       </button>
     </li>
   );

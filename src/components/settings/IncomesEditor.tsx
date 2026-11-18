@@ -5,6 +5,7 @@ import { templateIncomes } from "../../lib/paths";
 import { addTemplateIncome, updateTemplateIncome, deleteTemplateIncome } from "../../lib/repo";
 import type { Income } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import { CloseIcon } from "../icons";
 
 const BLANK: Omit<Income, "id"> = { name: "", amount: 0, day: 13, cutoff: 1 };
 
@@ -26,11 +27,11 @@ export default function IncomesEditor() {
               <span className="truncate text-sm">C{i.cutoff} · day {i.day} · {i.name}</span>
               <span className="text-sm tabular-nums">{peso(i.amount)}</span>
             </button>
-            <button onClick={() => setConfirmId(i.id)} className="text-red-500 text-xs px-1">✕</button>
+            <button onClick={() => setConfirmId(i.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add income</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add income</button>
       {confirmId && (
         <ConfirmDialog title="Delete income source?" message="Removed from future months."
           onConfirm={async () => { await deleteTemplateIncome(confirmId); setConfirmId(null); }}

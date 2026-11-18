@@ -6,6 +6,7 @@ import { monthBackups } from "../../lib/paths";
 import { restoreMonthBackup } from "../../lib/repo";
 import type { MonthBackup } from "../../lib/backups";
 import ConfirmDialog from "../ConfirmDialog";
+import { ChevronLeftIcon, ChevronRightIcon } from "../icons";
 
 /** Safety snapshots taken before any month rewrite; restore replaces the
  *  month's lines/incomes/ticks with the snapshot (after snapshotting current). */
@@ -24,9 +25,9 @@ export default function BackupsEditor() {
         replaces the month's lines, one-offs, and ticks with the snapshot.
       </p>
       <div className="flex items-center justify-center gap-2 mb-3">
-        <button onClick={() => setMonthKey((k) => addMonths(k, -1))} className="h-8 w-8 rounded-full bg-white shadow text-emerald-700">‹</button>
+        <button onClick={() => setMonthKey((k) => addMonths(k, -1))} aria-label="Previous month" className="h-8 w-8 rounded-full bg-manila border border-rule flex items-center justify-center text-ink"><ChevronLeftIcon /></button>
         <span className="text-sm font-semibold min-w-[8rem] text-center">{monthLabel(monthKey)}</span>
-        <button onClick={() => setMonthKey((k) => addMonths(k, 1))} className="h-8 w-8 rounded-full bg-white shadow text-emerald-700">›</button>
+        <button onClick={() => setMonthKey((k) => addMonths(k, 1))} aria-label="Next month" className="h-8 w-8 rounded-full bg-manila border border-rule flex items-center justify-center text-ink"><ChevronRightIcon /></button>
       </div>
       <ul className="flex flex-col gap-2">
         {sorted.map((b) => {
@@ -42,7 +43,7 @@ export default function BackupsEditor() {
               <button
                 onClick={() => setConfirmId(b.id)}
                 disabled={busy}
-                className="text-xs font-semibold text-emerald-700 shrink-0 disabled:opacity-40"
+                className="text-xs font-semibold text-ink underline underline-offset-2 shrink-0 disabled:opacity-40"
               >Restore</button>
             </li>
           );

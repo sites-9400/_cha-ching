@@ -35,7 +35,7 @@ export default function ToastHost() {
         <div
           key={t.id}
           onClick={() => dismiss(t.id)}
-          className="pointer-events-auto bg-stone-800 text-white text-sm rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-3"
+          className="pointer-events-auto bg-stone-800 text-white text-sm rounded-xl px-4 py-2.5 shadow-fab flex items-center gap-3"
         >
           <span>{t.text}</span>
           {t.action && (

@@ -7,6 +7,7 @@ import { addEvent, updateEvent, deleteEvent } from "../../lib/repo";
 import type { Channel, Debt, EventItem } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
 import DebtSplitsEditor from "../DebtSplitsEditor";
+import { CloseIcon } from "../icons";
 
 const BLANK: Omit<EventItem, "id"> = { name: "", amount: 0, month: "" };
 
@@ -36,11 +37,11 @@ export default function EventsEditor() {
               </span>
               <span className="text-sm tabular-nums">{peso(e.amount)}</span>
             </button>
-            <button onClick={() => setConfirmId(e.id)} className="text-red-500 text-xs px-1">✕</button>
+            <button onClick={() => setConfirmId(e.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add event</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add event</button>
       {confirmId && (
         <ConfirmDialog title="Delete event?" message="It will no longer be suggested."
           onConfirm={async () => { await deleteEvent(confirmId); setConfirmId(null); }}

@@ -15,7 +15,7 @@ export default function TabBar({
   active, onChange,
 }: { active: TabId; onChange: (t: TabId) => void }) {
   return (
-    <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-stone-200 flex justify-around pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 inset-x-0 bg-manila border-t border-rule flex justify-around pb-[env(safe-area-inset-bottom)]">
       {TABS.map(({ id, label, Icon }) =>
         id === "add" ? (
           <button
@@ -25,7 +25,7 @@ export default function TabBar({
             aria-current={active === id ? "page" : undefined}
             className="flex-1 flex flex-col items-center justify-start py-2"
           >
-            <span className="h-14 w-14 -translate-y-3 rounded-full bg-emerald-600 text-white shadow-lg flex items-center justify-center">
+            <span className="h-14 w-14 -translate-y-3 rounded-full bg-ink text-kraft shadow-fab flex items-center justify-center">
               <Icon className="w-7 h-7" />
             </span>
           </button>
@@ -33,11 +33,12 @@ export default function TabBar({
           <button
             key={id}
             onClick={() => onChange(id)}
-            className={`flex-1 flex flex-col items-center gap-1 py-2 text-[11px] ${
-              active === id ? "text-emerald-700 font-semibold" : "text-stone-500"
+            className={`relative flex-1 flex flex-col items-center gap-1 py-2 text-[11px] leading-3 ${
+              active === id ? "text-ink font-semibold" : "text-ink-2 font-medium"
             }`}
             aria-current={active === id ? "page" : undefined}
           >
+            {active === id && <span className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-10 bg-kraft" aria-hidden="true" />}
             <Icon className="w-6 h-6" />
             {label}
           </button>

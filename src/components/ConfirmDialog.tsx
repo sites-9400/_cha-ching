@@ -13,7 +13,7 @@ export default function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onCancel}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-xs p-5" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold text-base mb-1">{title}</h3>
         <p className="text-sm text-stone-500 mb-4">{message}</p>
         <div className="flex gap-2">

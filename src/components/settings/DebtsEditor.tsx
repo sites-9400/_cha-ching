@@ -7,6 +7,7 @@ import { addDebt, updateDebt, deleteDebt } from "../../lib/repo";
 import { adjacentSwap } from "../../lib/reorder";
 import type { Channel, Debt } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import { ChevronDownIcon, ChevronUpIcon, CloseIcon } from "../icons";
 
 const BLANK: Omit<Debt, "id"> = {
   name: "", startingBalance: 0, currentBalance: 0, payoffOrder: 99,
@@ -34,18 +35,18 @@ export default function DebtsEditor() {
         {sorted.map((d, i) => (
           <li key={d.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
             <span className="flex flex-col">
-              <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-stone-400 disabled:opacity-20 leading-none">▲</button>
-              <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-stone-400 disabled:opacity-20 leading-none">▼</button>
+              <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move up"><ChevronUpIcon className="h-3.5 w-3.5" /></button>
+              <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move down"><ChevronDownIcon className="h-3.5 w-3.5" /></button>
             </span>
             <button onClick={() => setEditing(d)} className="flex-1 flex items-center justify-between min-w-0">
               <span className="truncate text-sm font-medium">{d.name}{d.isBNPL ? " · BNPL" : ""}{d.active ? "" : " · archived"}</span>
               <span className="text-sm tabular-nums">{peso(d.currentBalance)}</span>
             </button>
-            <button onClick={() => setConfirmId(d.id)} className="text-red-500 text-xs px-1">✕</button>
+            <button onClick={() => setConfirmId(d.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add debt</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add debt</button>
       {confirmId && (
         <ConfirmDialog
           title="Delete debt?"

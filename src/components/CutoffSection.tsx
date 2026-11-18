@@ -2,12 +2,34 @@ import { peso } from "../lib/format";
 import { cutoffSummary, envelopeSpent, groupSpent, isCutoffClosed, unplannedForCutoff } from "../lib/selectors";
 import { projectMonthPlan } from "../lib/project";
 import { lineComparators, type LineSortKey } from "../lib/lineSort";
-import { deleteMonthIncome, deleteMonthLine, setIncomeReceived, unskipLine } from "../lib/repo";
+import { deleteMonthIncome, setIncomeReceived, unskipLine } from "../lib/repo";
 import type { Debt, EventItem, Expense, Income, MonthLine, TemplateLine } from "../lib/types";
 import type { MonthMode } from "./MonthProvider";
 import LineRow from "./LineRow";
 import DebtPlan, { type PaymentRec } from "./DebtPlan";
 import SendPlan from "./SendPlan";
+import { XIcon } from "./LineRow";
+
+function ClosedPill() {
+  return <span className="font-sans text-[11px] leading-4 font-semibold px-2 py-0.5 rounded-full border border-ink-2 text-ink-2">Closed</span>;
+}
+
+/** Due-day window each cutoff covers, per cutoffForDueDay: days 13-24 are the 1st cutoff, the rest the 2nd. */
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const cutoffRange = (c: 1 | 2, monthKey: string) => {
+  const m = Number(monthKey.slice(5, 7)) - 1;
+  const cur = MON[m] ?? "";
+  const next = MON[(m + 1) % 12] ?? "";
+  return c === 1 ? `${cur} 13 to 24` : `${cur} 25 to ${next} 12`;
+};
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={open ? "M6 9l6 6 6-6" : "M9 6l6 6-6 6"} />
+    </svg>
+  );
+}
 
 /** One cutoff's income list, line rows, debt/send plans, and summary — the
  *  body of ThisMonth's per-cutoff map, extracted verbatim. */
@@ -15,7 +37,7 @@ export default function CutoffSection(
   {
     cutoff, lines, skippedLines, incomes, expenses, debts, payments, cycleMins, cycleMinsGross, received,
     viewedKey, currentKey, mode, editable, projected, template, events, lineSort,
-    collapsed, toggleCutoff, busyIncome, setBusyIncome, setEditingLine, setConfirmLine,
+    collapsed, toggleCutoff, busyIncome, setBusyIncome, setEditingLine,
   }: {
     cutoff: 1 | 2;
     lines: MonthLine[];
@@ -40,7 +62,6 @@ export default function CutoffSection(
     busyIncome: string | null;
     setBusyIncome: (id: string | null) => void;
     setEditingLine: (l: MonthLine) => void;
-    setConfirmLine: (l: MonthLine) => void;
   },
 ) {
   const s = cutoffSummary(lines, incomes, cutoff, received);
@@ -60,17 +81,18 @@ export default function CutoffSection(
       <section className="mb-6">
         <button
           onClick={() => toggleCutoff(cutoff)}
-          className="w-full bg-white rounded-2xl shadow px-4 py-3 flex items-center justify-between"
+          className="w-full bg-manila rounded-xl border border-rule shadow-card px-4 py-3 flex items-center justify-between"
         >
-          <span className="font-semibold flex items-center gap-2 text-sm">
-            {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
-            {closed && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ CLOSED</span>
-            )}
+          <span className="flex flex-col items-start text-left">
+            <span className="font-display font-bold text-[22px] leading-7 text-ink flex items-center gap-2 whitespace-nowrap">
+              {cutoff === 1 ? "1st cutoff" : "2nd cutoff"}
+              {closed && <ClosedPill />}
+            </span>
+            <span className="font-sans text-[13px] leading-5 font-medium text-ink-2 whitespace-nowrap">{cutoffRange(cutoff, viewedKey)}</span>
           </span>
-          <span className="text-sm text-stone-400 flex items-center gap-2">
-            <span className="tabular-nums text-emerald-700 font-semibold">{peso(s.surplus)}</span>
-            ▸
+          <span className="flex items-center gap-2 text-ink-2">
+            <span className="font-display font-bold text-[22px] leading-7 text-ink">{peso(s.surplus)}</span>
+            <Chevron open={false} />
           </span>
         </button>
       </section>
@@ -78,37 +100,24 @@ export default function CutoffSection(
   }
 
   return (
-    <section className="mb-6 bg-white rounded-2xl shadow p-4">
-      <h2 className="font-semibold mb-1 flex items-center gap-2">
+    <section className="mb-6 bg-manila rounded-xl border border-rule shadow-card p-4">
+      <h2 className="font-display font-bold text-[22px] leading-7 text-ink mb-2">
         <button onClick={() => toggleCutoff(cutoff)} className="flex items-center gap-2">
-          {cutoff === 1 ? "1ST CUTOFF" : "2ND CUT-OFF"}
-          {editable && closed && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✓ CLOSED</span>
-          )}
-          <span className="text-stone-300 text-xs">▾</span>
+          {cutoff === 1 ? "1st cutoff" : "2nd cutoff"}
+          <span className="font-sans text-[13px] leading-5 font-medium text-ink-2">· {cutoffRange(cutoff, viewedKey)}</span>
+          {editable && closed && <ClosedPill />}
+          <span className="text-ink-2"><Chevron open /></span>
         </button>
       </h2>
       {editable && (
-        <div className="h-2 rounded-full bg-stone-100 mb-3 overflow-hidden">
-          <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
+        <div className="mb-3">
+          <div className="h-2 rounded-full bg-rule overflow-hidden">
+            <div className="h-full bg-ink" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="mt-1 text-[12px] leading-4 text-ink-2 tabular-nums">{peso(s.ticked)} of {peso(s.planned)} paid</p>
         </div>
       )}
-      {cutIncomes.length > 0 && (
-        <ul className="mb-2 flex flex-col gap-1">
-          {cutIncomes.map((i) => (
-            <IncomeRow
-              key={i.id}
-              income={i}
-              viewedKey={viewedKey}
-              editable={editable}
-              busyIncome={busyIncome}
-              setBusyIncome={setBusyIncome}
-              received={received[i.id] === true}
-            />
-          ))}
-        </ul>
-      )}
-      <ul className="divide-y divide-stone-100">
+      <ul className="divide-y divide-rule">
         {cutLines.map((l) => (
           <LineRow
             key={l.id}
@@ -127,25 +136,37 @@ export default function CutoffSection(
                     .reduce((s, x) => s + x.amount, 0)
                 : (l.status !== "" ? l.amount : 0)
               : undefined}
-            onDelete={editable && !closed
-              ? (l.oneOff
-                  ? () => void deleteMonthLine(viewedKey, l.id)
-                  : () => setConfirmLine(l))
-              : undefined}
             onEdit={editable ? () => setEditingLine(l) : undefined}
           />
         ))}
       </ul>
 
+      {cutIncomes.length > 0 && (
+        <><h3 className="mt-4 mb-1 font-display font-bold text-[16px] leading-5 text-ink">Came in</h3>
+        <ul className="divide-y divide-rule">
+          {cutIncomes.map((i) => (
+            <IncomeRow
+              key={i.id}
+              income={i}
+              viewedKey={viewedKey}
+              editable={editable}
+              busyIncome={busyIncome}
+              setBusyIncome={setBusyIncome}
+              received={received[i.id] === true}
+            />
+          ))}
+        </ul></>
+      )}
+
       {cutSkipped.length > 0 && (
         <ul className="mt-2 flex flex-col gap-1">
           {cutSkipped.map((l) => (
-            <li key={l.id} className="flex items-center justify-between gap-2 text-xs text-stone-400">
+            <li key={l.id} className="flex items-center justify-between gap-2 text-xs text-ink-2">
               <span className="truncate">{l.name} · skipped this month</span>
               {editable && (
                 <button
                   onClick={() => void unskipLine(viewedKey, l.id)}
-                  className="shrink-0 font-semibold text-emerald-700"
+                  className="shrink-0 font-semibold text-ink"
                 >undo</button>
               )}
             </li>
@@ -160,23 +181,23 @@ export default function CutoffSection(
         </>
       )}
       {projected && projAlloc && (
-        <div className="mt-3 border-t border-stone-100 pt-3">
-          <p className="text-xs font-semibold text-stone-500 mb-2">PROJECTED PLAN · free cash {peso(cutoff === 1 ? proj!.free.c1 : proj!.free.c2)}</p>
+        <div className="mt-3 border-t border-rule pt-3">
+          <p className="font-display font-bold text-[16px] leading-5 text-ink mb-2">Projected plan · free cash {peso(cutoff === 1 ? proj!.free.c1 : proj!.free.c2)}</p>
           <ul className="flex flex-col gap-1 text-sm">
             {projAlloc.lines.map((l) => (
               <li key={l.debtId} className="flex justify-between">
-                <span className="text-stone-600">{l.name} <span className="text-[10px] text-stone-400">{l.kind}</span></span>
-                <span className="tabular-nums font-semibold">{peso(l.amount)}</span>
+                <span className="text-ink-2">{l.name} <span className="text-[11px] text-ink-2">{l.kind}</span></span>
+                <span className="font-display text-[17px] tabular-nums font-bold">{peso(l.amount)}</span>
               </li>
             ))}
-            {projAlloc.lines.length === 0 && <li className="text-xs text-stone-400">No free cash this cutoff.</li>}
+            {projAlloc.lines.length === 0 && <li className="text-xs text-ink-2">No free cash this cutoff.</li>}
           </ul>
         </div>
       )}
 
-      <p className="mt-3 text-sm flex justify-between font-semibold">
-        <span>Income {peso(s.income)}</span>
-        <span className="text-emerald-700">Surplus {peso(s.surplus)}</span>
+      <p className="mt-3 pt-3 border-t border-rule flex justify-between items-baseline font-display font-bold text-[22px] leading-7">
+        <span className="text-marker-blue">In {peso(s.income)}</span>
+        <span className="text-ink">Surplus {peso(s.surplus)}</span>
       </p>
     </section>
   );
@@ -189,13 +210,23 @@ function IncomeRow(
     setBusyIncome: (id: string | null) => void; received: boolean },
 ) {
   return (
-    <li className="flex items-center justify-between gap-2 text-sm">
-      <span className="truncate text-emerald-800">
-        ↓ {i.name}
-        {i.toSavings && <span className="ml-1 text-[10px] text-cyan-700">→ savings</span>}
-      </span>
-      <span className="flex items-center gap-2 shrink-0">
-        <span className="tabular-nums text-emerald-800">{peso(i.amount)}</span>
+    <li className="flex items-start gap-3 py-3">
+      <div className="flex-1 min-w-0">
+        <p className="text-[16px] leading-6 font-medium text-ink">{i.name}</p>
+        <p className="text-[12px] leading-4 text-ink-2">
+          <span className="whitespace-nowrap">Day {i.day}</span>
+          {i.toSavings && <span className="whitespace-nowrap"> · to savings</span>}
+          {i.oneOff && <span className="whitespace-nowrap"> · one-off</span>}
+          {editable && i.oneOff && (
+            <>
+              {" · "}
+              <button onClick={() => void deleteMonthIncome(viewedKey, i)} aria-label={`Remove ${i.name}`} className="inline-flex items-center gap-0.5 font-semibold text-marker-red align-middle"><XIcon />Remove</button>
+            </>
+          )}
+        </p>
+      </div>
+      <div className="w-[7.5rem] shrink-0 flex flex-col items-end gap-1">
+        <span className="font-display font-bold text-[17px] leading-6 tabular-nums text-marker-blue">{peso(i.amount)}</span>
         {editable && (
           <button
             onClick={() => {
@@ -203,11 +234,10 @@ function IncomeRow(
               setBusyIncome(i.id);
               void setIncomeReceived(viewedKey, i, !on).finally(() => setBusyIncome(null));
             }}
-            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${on ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-400"}`}
-          >{on ? "RECEIVED" : "receive"}</button>
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${on ? "bg-marker-blue text-manila" : "border border-rule text-ink-2"}`}
+          >{on ? "Received" : "Receive"}</button>
         )}
-        {editable && i.oneOff && <button onClick={() => void deleteMonthIncome(viewedKey, i)} className="text-stone-300 text-xs">✕</button>}
-      </span>
+      </div>
     </li>
   );
 }

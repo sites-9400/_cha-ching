@@ -1,7 +1,7 @@
 export type ThemePref = "system" | "light" | "dark";
 
 const STORAGE_KEY = "theme";
-const THEME_COLOR = { light: "#0E5A54", dark: "#0c0a09" } as const;
+const THEME_COLOR = { light: "#C99A5B", dark: "#6B4F2A" } as const;
 
 /** Parse a stored preference; anything unrecognized falls back to "system". Pure. */
 export function readThemePref(raw: string | null): ThemePref {

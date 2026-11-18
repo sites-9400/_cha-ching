@@ -3,12 +3,15 @@ import { useCollection } from "../../hooks/useCollection";
 import { useAccounts } from "../AccountsProvider";
 import { currentMonthKey } from "../../lib/clock";
 import { peso } from "../../lib/format";
+import { resolveGroup } from "../../lib/lineGroups";
 import { debtsCol, monthLines, templateLines } from "../../lib/paths";
 import { addTemplateLine, updateTemplateLine, deleteTemplateLine, syncMonthFromTemplate } from "../../lib/repo";
 import { activeLines, isCutoffClosed } from "../../lib/selectors";
 import type { Channel, Debt, MonthLine, TemplateLine } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
 import DebtSplitsEditor from "../DebtSplitsEditor";
+import GroupChips from "../GroupChips";
+import { CloseIcon } from "../icons";
 
 const BLANK: Omit<TemplateLine, "id"> = { name: "", amount: 0, channel: "CIMB", cutoff: 1, order: 99 };
 
@@ -31,7 +34,7 @@ export default function TemplateEditor() {
   const lines = useCollection<TemplateLine>(templateLines());
   const allMonthLines = useCollection<MonthLine>(monthLines(monthKey));
   const monthLineList = activeLines(allMonthLines);
-  const { chip, label } = useAccounts();
+  const { label } = useAccounts();
   const [sort, setSort] = useState<SortKey>("cutoff");
   const sorted = [...lines].sort(compareBy[sort]);
   const [editing, setEditing] = useState<TemplateLine | Omit<TemplateLine, "id"> | null>(null);
@@ -66,7 +69,7 @@ export default function TemplateEditor() {
       {notice && (
         <p className="mb-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 flex justify-between gap-2">
           <span>{notice}</span>
-          <button onClick={() => setNotice(null)} className="font-semibold shrink-0">✕</button>
+          <button onClick={() => setNotice(null)} aria-label="Dismiss" className="shrink-0"><CloseIcon /></button>
         </p>
       )}
       <div className="flex items-center gap-1.5 mb-3">
@@ -95,16 +98,16 @@ export default function TemplateEditor() {
                 <button onClick={() => setEditing(l)} className="flex-1 flex items-center gap-2 min-w-0">
                   <span className="text-[10px] text-stone-400 shrink-0">C{l.cutoff}</span>
                   <span className="truncate text-sm flex-1 text-left">{l.name}</span>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${chip(l.channel)}`}>{label(l.channel)}</span>
+                  <span className="text-[11px] leading-4 font-semibold px-1.5 py-0.5 rounded-full shrink-0 border border-rule text-ink-2">{label(l.channel)}</span>
                   <span className="text-sm tabular-nums shrink-0">{peso(l.amount)}</span>
                 </button>
-                <button onClick={() => setConfirmId(l.id)} className="text-red-500 text-xs px-1">✕</button>
+                <button onClick={() => setConfirmId(l.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
               </li>
             </Fragment>
           );
         })}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add line</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add line</button>
       {confirmId && (
         <ConfirmDialog
           title="Delete template line?"
@@ -197,6 +200,16 @@ function Form({ line, onDone, onCancel }: {
         />
       </label>
       <p className="text-[11px] text-stone-400 -mt-1">Lines with the same group name share ONE combined pool. Setting a group makes this a budget line automatically.</p>
+      <div className="flex flex-col gap-1">
+        <span className="text-sm">Group</span>
+        <GroupChips
+          value={resolveGroup(f)} disabled={!!f.debtId || !!f.debtSplits?.length}
+          onChange={(g) => set("group", g)}
+        />
+        {(!!f.debtId || !!f.debtSplits?.length) && (
+          <p className="text-[11px] text-stone-400">Card and loan payments always count as Cards &amp; debts.</p>
+        )}
+      </div>
       <div className="flex gap-2 mt-2">
         <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>

@@ -18,6 +18,8 @@ import StatementDialog from "./StatementDialog";
 import type { PaymentRec } from "./DebtPlan";
 import { useAccounts } from "./AccountsProvider";
 import HeaderBand from "./HeaderBand";
+import { XIcon } from "./LineRow";
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon, PencilIcon } from "./icons";
 
 const MONTHLY_PAYDOWN = 90164; // plan's free cash/month; fallback only, used when no payment history exists yet
 // Bruno Mars tickets: 6 on one installment, 1 mine + 5 repaid by Jude (1) and Alysson (4).
@@ -105,19 +107,19 @@ export default function Debts() {
   return (
     <>
       <HeaderBand
-        title="INTEREST-BEARING DEBT"
+        title="Interest-bearing debt"
         value={peso(interestBearing)}
         sub={`clear by ${monthLabel(freeMonth)} · ~${peso(Math.round(monthlyPaydown))}/mo`}
       >
-        <div className="mt-3 rounded-xl bg-white/10 px-3 py-1.5 divide-y divide-white/10">
+        <div className="mt-3 rounded-xl border border-ink/20 px-3 py-1.5 divide-y divide-ink/15">
           {([
             ["My installments", installments],
             ["Bruno Mars · friends", friendsBruno],
             ["Ezekiel's laptop", laptop],
           ] as const).map(([name, amt]) => (
             <div key={name} className="flex items-center justify-between py-1">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-100/70">{name}</span>
-              <span className="text-sm font-bold tabular-nums text-white">{peso(amt)}</span>
+              <span className="text-[13px] font-medium text-ink/80">{name}</span>
+              <span className="font-display text-[17px] font-bold tabular-nums text-ink">{peso(amt)}</span>
             </div>
           ))}
         </div>
@@ -137,9 +139,9 @@ export default function Debts() {
           const cyclePaid = cycleKey ? paidInCycle(payments, d.id, d.statementDay!, cycleKey) : 0;
           const dueIn = cycleDue ? daysUntil(cycleDue.dueDate, today) : null;
           return (
-            <li key={d.id} className="bg-white rounded-2xl shadow p-4">
+            <li key={d.id} className="bg-manila rounded-xl border border-rule shadow-card p-4">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-sm flex items-center gap-2.5 min-w-0">
+                <span className="font-display font-bold text-[20px] leading-6 text-ink flex items-center gap-2.5 min-w-0">
                   <ChannelIcon channel={String(d.channel)} initial={d.name.charAt(0).toUpperCase()} chipClass={chip(d.channel)} />
                   <span className="truncate flex items-center gap-2">
                     {d.name}
@@ -161,30 +163,33 @@ export default function Debts() {
                     />
                     <button
                       aria-label="Save balance" onClick={() => void saveBal(d.id)}
-                      className="font-bold text-emerald-600 px-1"
-                    >✓</button>
+                      className="text-ink px-1"
+                    ><CheckIcon /></button>
                     <button
                       aria-label="Cancel balance edit" onClick={() => { setBalEditId(null); setBalValue(""); }}
                       className="font-bold text-stone-500 px-1"
-                    >✕</button>
+                    ><XIcon /></button>
                   </span>
                 ) : (
                   <button
                     aria-label={`Edit balance for ${d.name}`}
                     onClick={() => { setBalEditId(d.id); setBalValue(String(d.currentBalance)); }}
-                    className="text-sm font-bold tabular-nums shrink-0"
+                    className="font-display text-[17px] font-bold tabular-nums shrink-0"
                   >
                     {peso(d.currentBalance)}
-                    <span className="ml-1 text-[11px] text-stone-400">✎</span>
+                    <PencilIcon className="ml-1.5 inline h-3.5 w-3.5 text-stone-500 align-baseline" />
                   </button>
                 )}
               </div>
-              <div className="h-2 rounded-full bg-stone-100 my-2 overflow-hidden">
-                <div className={`h-full ${d.isBNPL ? "bg-emerald-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
+              <div className="h-2 rounded-full bg-rule my-2 overflow-hidden">
+                <div
+                  className={`h-full ${d.creditLimit != null && d.creditLimit > 0 && d.currentBalance / d.creditLimit >= 0.9 ? "bg-marker-red" : "bg-ink"}`}
+                  style={{ width: `${pct}%` }}
+                />
               </div>
               {d.creditLimit != null && d.creditLimit > 0 && (
                 <p className="text-[11px] text-stone-500 mb-1">
-                  <span className="font-semibold text-emerald-700 tabular-nums">{peso(Math.max(0, d.creditLimit - d.currentBalance))}</span>
+                  <span className="font-display font-semibold text-ink tabular-nums">{peso(Math.max(0, d.creditLimit - d.currentBalance))}</span>
                   {" "}available of {peso(d.creditLimit)} limit
                 </p>
               )}
@@ -203,9 +208,9 @@ export default function Debts() {
                       <span className="text-[11px] text-stone-500 tabular-nums">
                         {peso(Math.min(cyclePaid, cycle.minimumDue))} of {peso(cycle.minimumDue)} min paid · stmt {peso(cycle.statementBalance)}
                       </span>
-                      <span className="mt-0.5 block h-1 rounded-full bg-stone-100 overflow-hidden">
+                      <span className="mt-0.5 block h-1 rounded-full bg-rule overflow-hidden">
                         <span
-                          className="block h-full bg-emerald-500"
+                          className="block h-full bg-ink"
                           style={{ width: `${cycle.minimumDue > 0 ? Math.min(100, Math.round((cyclePaid / cycle.minimumDue) * 100)) : 100}%` }}
                         />
                       </span>
@@ -213,7 +218,7 @@ export default function Debts() {
                   ) : (
                     <button
                       onClick={() => setStmtDebt(d)}
-                      className="mt-1 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1"
+                      className="mt-1 text-xs font-semibold text-ink border border-ink rounded-full px-3 py-1"
                     >Enter statement</button>
                   )}
                 </div>
@@ -231,7 +236,7 @@ export default function Debts() {
                     </div>
                     <button
                       onClick={() => saveMin(d.id)}
-                      className="text-xs font-semibold text-white bg-emerald-600 rounded-lg px-3 py-1.5"
+                      className="text-xs font-semibold text-manila bg-ink rounded-lg px-3 py-1.5"
                     >
                       Save
                     </button>
@@ -248,12 +253,12 @@ export default function Debts() {
                     className="inline-flex items-center gap-1.5 text-xs text-stone-600 bg-stone-100 rounded-full pl-3 pr-2 py-1"
                   >
                     Min {peso(d.minimum)}
-                    <span className="text-emerald-700 font-semibold">Edit</span>
+                    <span className="text-ink font-semibold underline underline-offset-2">Edit</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => { setMinEditId(d.id); setMinValue(""); }}
-                    className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1"
+                    className="text-xs font-semibold text-ink border border-ink rounded-full px-3 py-1"
                   >
                     + Set minimum
                   </button>
@@ -273,16 +278,16 @@ export default function Debts() {
                   </div>
                 ))}
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(d.channel)}`}>
+                <span className="text-[12px] leading-4 font-semibold px-2 py-0.5 rounded-full border border-rule text-ink-2">
                   {label(d.channel)}
                 </span>
                 <span className="flex items-center gap-3">
                   {d.currentBalance <= 0 && (
-                    <button onClick={() => void updateDebt(d.id, { active: false })} className="text-xs font-semibold text-stone-500">
+                    <button onClick={() => void updateDebt(d.id, { active: false })} className="text-xs font-semibold text-ink underline underline-offset-2">
                       Archive
                     </button>
                   )}
-                  <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-emerald-700">
+                  <button onClick={() => setPayDebt(d)} className="text-xs font-semibold text-ink underline underline-offset-2">
                     Log payment
                   </button>
                 </span>
@@ -295,22 +300,22 @@ export default function Debts() {
         <div className="mt-4">
           <button
             onClick={() => setShowCleared((v) => !v)}
-            className="w-full bg-white rounded-2xl shadow px-4 py-3 flex items-center justify-between text-sm"
+            className="w-full bg-manila rounded-xl border border-rule shadow-card px-4 py-3 flex items-center justify-between text-sm"
           >
             <span className="font-semibold text-stone-500">Cleared · {cleared.length}</span>
-            <span className="text-stone-400">{showCleared ? "▾" : "▸"}</span>
+            <span className="text-stone-500">{showCleared ? <ChevronDownIcon /> : <ChevronRightIcon />}</span>
           </button>
           {showCleared && (
             <ul className="mt-2 flex flex-col gap-2">
               {cleared.map((d) => (
-                <li key={d.id} className="bg-white rounded-2xl shadow px-4 py-3 flex items-center justify-between gap-2">
+                <li key={d.id} className="bg-manila rounded-xl border border-rule shadow-card px-4 py-3 flex items-center justify-between gap-2">
                   <span className="text-sm text-stone-500 flex items-center gap-2.5 min-w-0">
                     <ChannelIcon channel={String(d.channel)} initial={d.name.charAt(0).toUpperCase()} chipClass={chip(d.channel)} />
                     <span className="truncate">{d.name}</span>
                   </span>
                   <span className="flex items-center gap-3 shrink-0">
-                    <span className="text-sm tabular-nums text-stone-400">{peso(d.currentBalance)}</span>
-                    <button onClick={() => void updateDebt(d.id, { active: true })} className="text-xs font-semibold text-emerald-700">
+                    <span className="font-display text-sm tabular-nums text-stone-400">{peso(d.currentBalance)}</span>
+                    <button onClick={() => void updateDebt(d.id, { active: true })} className="text-xs font-semibold text-ink underline underline-offset-2">
                       Unarchive
                     </button>
                   </span>

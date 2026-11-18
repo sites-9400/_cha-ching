@@ -13,6 +13,7 @@ import AccountsEditor from "./settings/AccountsEditor";
 import ChangePin from "./settings/ChangePin";
 import ExportData from "./settings/ExportData";
 import BackupsEditor from "./settings/BackupsEditor";
+import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
 
 type Section =
   | "debts" | "template" | "incomes" | "categories" | "funds" | "subscriptions" | "events"
@@ -50,7 +51,7 @@ export default function Settings() {
   if (section) {
     return (
       <main className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
-        <button onClick={() => setSection(null)} className="text-sm text-emerald-700 font-semibold mb-4">‹ Settings</button>
+        <button onClick={() => setSection(null)} className="text-sm text-ink font-semibold mb-4 inline-flex items-center gap-1"><ChevronLeftIcon className="h-4 w-4" /><span className="underline underline-offset-2">Settings</span></button>
         <Editor section={section} />
       </main>
     );
@@ -60,31 +61,31 @@ export default function Settings() {
     <>
       <HeaderBand title="Settings" />
       <main className="p-4">
-      <div className="bg-white rounded-2xl shadow px-4 py-3 mb-4 flex items-center justify-between">
+      <div className="bg-manila rounded-xl border border-rule shadow-card px-4 py-3 mb-4 flex items-center justify-between">
         <span className="text-sm">Appearance</span>
         <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
           {THEMES.map((t) => (
             <button
               key={t.id}
               onClick={() => pickTheme(t.id)}
-              className={`px-2.5 py-1 rounded-full ${theme === t.id ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
+              className={`px-2.5 py-1 rounded-full ${theme === t.id ? "bg-ink text-manila" : "text-ink-2"}`}
             >{t.label}</button>
           ))}
         </div>
       </div>
-      <ul className="bg-white rounded-2xl shadow divide-y divide-stone-100 mb-6">
+      <ul className="bg-manila rounded-xl border border-rule shadow-card divide-y divide-stone-100 mb-6">
         {ROWS.map((r) => (
           <li key={r.id}>
             <button onClick={() => setSection(r.id)} className="w-full flex items-center justify-between px-4 py-3 text-sm">
               {r.label}
-              <span className="text-stone-300">›</span>
+              <ChevronRightIcon className="h-4 w-4 text-stone-400" />
             </button>
           </li>
         ))}
       </ul>
       <button
         onClick={() => void lock()}
-        className="w-full py-3 rounded-2xl bg-white shadow text-sm font-semibold text-red-600"
+        className="w-full py-3 rounded-xl bg-manila border border-rule shadow-card text-sm font-semibold text-marker-red"
       >
         Sign out
       </button>

@@ -1,0 +1,437 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-18T09:01:01+00:00",
+  "title": "Design System: Cha-Ching",
+  "extensions": {
+    "colorMeta": {
+      "marker-ink": {
+        "role": "primary",
+        "displayName": "Marker Ink",
+        "tonalRamp": [
+          "#1A1714",
+          "#2A241F",
+          "#3F3730",
+          "#5A5048",
+          "#6E6153",
+          "#9A8A73",
+          "#CDBB9C",
+          "#F3EADA"
+        ],
+        "dark": "#F3EADA"
+      },
+      "kraft": {
+        "role": "secondary",
+        "displayName": "Corrugated Kraft",
+        "tonalRamp": [
+          "#32281A",
+          "#574328",
+          "#7F5F34",
+          "#A97B3C",
+          "#C59B63",
+          "#D3BC9C",
+          "#E5DACD",
+          "#F5F3EF"
+        ],
+        "dark": "#6B4F2A"
+      },
+      "kraft-deep": {
+        "role": "secondary",
+        "displayName": "Deep Kraft",
+        "tonalRamp": [
+          "#32281A",
+          "#574328",
+          "#7F5F34",
+          "#A87C42",
+          "#C59B63",
+          "#D3BC9C",
+          "#E5DACD",
+          "#F5F3EF"
+        ],
+        "dark": "#4A3720"
+      },
+      "marker-red": {
+        "role": "tertiary",
+        "displayName": "Price-Markdown Red",
+        "tonalRamp": [
+          "#391613",
+          "#65211B",
+          "#95271E",
+          "#C92A1C",
+          "#E25246",
+          "#E3938C",
+          "#ECC9C6",
+          "#F7EEED"
+        ],
+        "dark": "#FF6B5E"
+      },
+      "marker-blue": {
+        "role": "tertiary",
+        "displayName": "Money-In Blue",
+        "tonalRamp": [
+          "#12336A",
+          "#163F80",
+          "#1A4FA0",
+          "#1F5FBF",
+          "#4C7DD6",
+          "#7FA2E3",
+          "#B3C8F0",
+          "#EEF3FC"
+        ],
+        "dark": "#8FB0F0"
+      },
+      "paid-green": {
+        "role": "tertiary",
+        "displayName": "Paid Green",
+        "tonalRamp": [
+          "#1C3124",
+          "#2B553C",
+          "#377B53",
+          "#42A46A",
+          "#68C08C",
+          "#9FD0B3",
+          "#CEE3D7",
+          "#EFF5F2"
+        ],
+        "dark": "#3E9A64"
+      },
+      "board": {
+        "role": "neutral",
+        "displayName": "Board",
+        "tonalRamp": [
+          "#1A1714",
+          "#2A241F",
+          "#3F3730",
+          "#5A5048",
+          "#6E6153",
+          "#9A8A73",
+          "#CDBB9C",
+          "#E3D5BC"
+        ],
+        "dark": "#15120F"
+      },
+      "manila": {
+        "role": "neutral",
+        "displayName": "Manila",
+        "tonalRamp": [
+          "#1A1714",
+          "#2A241F",
+          "#3F3730",
+          "#5A5048",
+          "#6E6153",
+          "#9A8A73",
+          "#CDBB9C",
+          "#E3D5BC"
+        ],
+        "dark": "#211C17"
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "#1A1714",
+          "#2A241F",
+          "#3F3730",
+          "#5A5048",
+          "#6E6153",
+          "#9A8A73",
+          "#CDBB9C",
+          "#E3D5BC"
+        ],
+        "dark": "#CDBB9C"
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "tonalRamp": [
+          "#1A1714",
+          "#2A241F",
+          "#3F3730",
+          "#5A5048",
+          "#6E6153",
+          "#9A8A73",
+          "#CDBB9C",
+          "#E3D5BC"
+        ],
+        "dark": "#3A322A"
+      },
+      "tick-ring": {
+        "role": "neutral",
+        "displayName": "Tick Ring",
+        "tonalRamp": [
+          "#1A1714",
+          "#2A241F",
+          "#3F3730",
+          "#5A5048",
+          "#6E6153",
+          "#9A8A73",
+          "#CDBB9C",
+          "#E3D5BC"
+        ],
+        "dark": "#5A4E40"
+      }
+    },
+    "darkMode": {
+      "strategy": "class",
+      "selector": ".dark (html.dark)",
+      "note": "The same world at night: tokens remapped in src/index.css under .dark; no dark: variants in components.",
+      "colors": {
+        "ground": "#15120F",
+        "card": "#211C17",
+        "card-sub": "#2A241F",
+        "band": "#6B4F2A",
+        "band-rule": "#4A3720",
+        "text": "#F3EADA",
+        "text-2": "#CDBB9C",
+        "rule": "#3A322A",
+        "ink-fill": "#F3EADA",
+        "ink-fill-text": "#15120F",
+        "marker-blue": "#8FB0F0",
+        "marker-red": "#FF6B5E",
+        "paid-green": "#3E9A64"
+      }
+    },
+    "contrast": [
+      {
+        "pair": "marker-blue on kraft",
+        "ratio": 2.4,
+        "verdict": "fails; money in on the band is bold marker ink"
+      },
+      {
+        "pair": "marker-blue on manila",
+        "ratio": 5.99
+      },
+      {
+        "pair": "marker-blue on board",
+        "ratio": 5.1
+      },
+      {
+        "pair": "marker-red on manila",
+        "ratio": 4.96
+      },
+      {
+        "pair": "marker-ink on kraft",
+        "ratio": 7.02
+      },
+      {
+        "pair": "ink-2 on manila",
+        "ratio": 7.72
+      }
+    ],
+    "typographyMeta": {
+      "display": {
+        "displayName": "Hero Figure",
+        "purpose": "The one figure in the kraft band; peso sign at 0.6em, top-aligned."
+      },
+      "headline": {
+        "displayName": "Screen Title",
+        "purpose": "Band title when there is no hero figure; PIN keys."
+      },
+      "title": {
+        "displayName": "Cutoff Title",
+        "purpose": "Cutoff names, closing In/Surplus line, collapsed totals."
+      },
+      "section": {
+        "displayName": "Card Heading",
+        "purpose": "Where it goes, debt-card names."
+      },
+      "figure": {
+        "displayName": "Line Figure",
+        "purpose": "Every line, group and income amount, right-aligned in a 7.5rem column."
+      },
+      "figure-struck": {
+        "displayName": "Struck Budget",
+        "purpose": "Budget under an overspent figure, 2px marker-red strike."
+      },
+      "body": {
+        "displayName": "Line Name",
+        "purpose": "Line and income names."
+      },
+      "body-strong": {
+        "displayName": "Group Label",
+        "purpose": "Roster group labels, band lead-in."
+      },
+      "caption": {
+        "displayName": "Helper",
+        "purpose": "Channel, day, left-of, paid-of lines in ink 2."
+      },
+      "label": {
+        "displayName": "Tab Label",
+        "purpose": "Tab labels and status pills."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 1px 2px rgb(26 23 20 / 0.06)",
+        "purpose": "Hairline under every manila card."
+      },
+      {
+        "name": "fab",
+        "value": "0 4px 12px rgb(26 23 20 / 0.25)",
+        "purpose": "The lifted ink Add button only."
+      },
+      {
+        "name": "dark-ring",
+        "value": "0 0 0 1px #3A322A",
+        "purpose": "Replaces every shadow in dark mode."
+      }
+    ],
+    "motion": [
+      {
+        "name": "chip-color",
+        "value": "150ms ease (transition-colors)",
+        "purpose": "Chip selection colour swap; the system is otherwise static."
+      },
+      {
+        "name": "long-press",
+        "value": "450ms",
+        "purpose": "Long-press on a line opens its editor; tap toggles paid."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "column",
+        "value": "448px",
+        "purpose": "Max content width; the band breaks out full-bleed."
+      },
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Dialogs switch from bottom sheet to centred."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Full-width ink action (Save on Quick Add).",
+      "html": "<button class=\"ds-btn-primary\">Save</button>",
+      "css": ".ds-btn-primary{width:100%;background:#1A1714;color:#FFFDF8;font-family:Barlow,system-ui,sans-serif;font-weight:600;font-size:16px;padding:14px 16px;border:none;border-radius:12px;cursor:pointer}.ds-btn-primary:active{background:#3F3730}.ds-btn-primary:focus-visible{outline:2px solid #1A1714;outline-offset:2px}.ds-btn-primary:disabled{background:#CDBB9C}"
+    },
+    {
+      "name": "Outline Pill Button",
+      "kind": "button",
+      "refersTo": "button-small",
+      "description": "Secondary inline action on a card (Enter statement).",
+      "html": "<button class=\"ds-btn-outline\">Enter statement</button>",
+      "css": ".ds-btn-outline{background:transparent;color:#1A1714;border:1px solid #1A1714;border-radius:9999px;padding:4px 12px;font-family:Barlow,system-ui,sans-serif;font-size:12px;font-weight:600;cursor:pointer}.ds-btn-outline:active{background:#E3D5BC}.ds-btn-outline:focus-visible{outline:2px solid #1A1714;outline-offset:2px}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Single-select pickers (category, account, paid from); selected turns ink.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-on\">Unplanned</button><button class=\"ds-chip\">Allowance</button><button class=\"ds-chip\"><svg viewBox=\"0 0 24 24\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\"><rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"2.5\"/><path d=\"M2.5 9.5h19M6 15h4\"/></svg>RCBC Visa Gold</button></div>",
+      "css": ".ds-chips{display:flex;flex-wrap:wrap;gap:8px;background:#FFFDF8;padding:12px}.ds-chip{display:inline-flex;align-items:center;gap:6px;font-family:Barlow,system-ui,sans-serif;font-size:12px;padding:6px 12px;border-radius:9999px;background:#FFFDF8;color:#5A5048;border:1px solid #E3D5BC;cursor:pointer;transition:background-color .15s,color .15s}.ds-chip:hover{border-color:#CDBB9C}.ds-chip:focus-visible{outline:2px solid #1A1714;outline-offset:2px}.ds-chip-on{background:#1A1714;color:#FFFDF8;border-color:#1A1714}"
+    },
+    {
+      "name": "Amount Field",
+      "kind": "input",
+      "refersTo": "figure",
+      "description": "Quick Add peso entry on an underline.",
+      "html": "<label class=\"ds-amt\"><span class=\"ds-amt-sign\">₱</span><input class=\"ds-amt-input\" inputmode=\"decimal\" placeholder=\"0\"></label>",
+      "css": ".ds-amt{display:flex;align-items:baseline;gap:4px;border-bottom:2px solid #E3D5BC;padding-bottom:4px;background:#FFFDF8;max-width:320px}.ds-amt:focus-within{border-color:#1A1714}.ds-amt-sign{font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:24px;color:#5A5048}.ds-amt-input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:30px;font-variant-numeric:tabular-nums;color:#1A1714;caret-color:#1A1714}"
+    },
+    {
+      "name": "Header Band",
+      "kind": "custom",
+      "refersTo": "header-band",
+      "description": "Kraft band with left-aligned hero figure; money in is bold ink here.",
+      "html": "<div class=\"ds-band\"><p class=\"ds-band-lead\">Going out, 2nd cutoff</p><p class=\"ds-band-hero\"><span class=\"ds-peso\">₱</span>123,197.89</p><p class=\"ds-band-sub\"><b>Came in ₱123,197.89</b> · Left ₱0.00</p></div>",
+      "css": ".ds-band{background:#C99A5B;border-bottom:1px solid #A87C42;color:#1A1714;padding:12px 16px 16px;font-family:Barlow,system-ui,sans-serif}.ds-band-lead{margin:8px 0 0;font-size:15px;line-height:20px;font-weight:500}.ds-band-hero{margin:0;font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:800;font-size:44px;line-height:1;font-variant-numeric:tabular-nums}.ds-peso{display:inline-block;vertical-align:top;font-size:.6em;line-height:1;margin:.08em .06em 0 0}.ds-band-sub{margin:6px 0 0;font-size:13px;line-height:18px;color:rgb(26 23 20/.8);font-variant-numeric:tabular-nums}.ds-band-sub b{font-weight:600;color:#1A1714}"
+    },
+    {
+      "name": "Where It Goes",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Ranked roster with ink bars drawn to exact peso scale.",
+      "html": "<section class=\"ds-card\"><h2 class=\"ds-h\">Where it goes</h2><ul class=\"ds-roster\"><li><div class=\"ds-r\"><span>Cards &amp; debts</span><b>₱45,360.31</b></div><div class=\"ds-track\"><div style=\"width:100%\"></div></div></li><li><div class=\"ds-r\"><span>To savings</span><b>₱23,876.58</b></div><div class=\"ds-track\"><div style=\"width:52.6%\"></div></div></li><li><div class=\"ds-r\"><span>Budgets</span><b>₱10,000.00</b></div><div class=\"ds-track\"><div style=\"width:22%\"></div></div></li></ul><p class=\"ds-cap\">Ranked by pesos · 24 lines</p></section>",
+      "css": ".ds-card{background:#FFFDF8;border:1px solid #E3D5BC;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgb(26 23 20/.06);font-family:Barlow,system-ui,sans-serif;color:#1A1714;max-width:400px}.ds-h{margin:0 0 12px;font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:20px;line-height:24px}.ds-roster{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.ds-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.ds-r span{font-weight:600;font-size:15px;line-height:20px}.ds-r b{font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:17px;line-height:20px;font-variant-numeric:tabular-nums}.ds-track{margin-top:4px;height:8px;border-radius:9999px;background:#E3D5BC;overflow:hidden}.ds-track div{height:100%;background:#1A1714}.ds-cap{margin:12px 0 0;font-size:12px;line-height:16px;color:#5A5048}"
+    },
+    {
+      "name": "Line Row",
+      "kind": "custom",
+      "refersTo": "figure",
+      "description": "Tick-to-pay line; the overspent variant shows the red price markdown.",
+      "html": "<ul class=\"ds-lines\"><li class=\"ds-line\"><button class=\"ds-tick\" aria-pressed=\"false\"></button><span class=\"ds-name\"><span>Converge</span><small>CIMB</small></span><span class=\"ds-amt-col\"><b>₱1,500.00</b></span></li><li class=\"ds-line\"><button class=\"ds-tick ds-tick-on\" aria-pressed=\"true\"><svg viewBox=\"0 0 24 24\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg></button><span class=\"ds-name\"><span>Groceries</span><small class=\"ds-over\">Over by ₱640.00</small></span><span class=\"ds-amt-col\"><b class=\"ds-red\">₱4,640.00</b><s>₱4,000.00</s></span></li></ul>",
+      "css": ".ds-lines{list-style:none;margin:0;padding:0 16px;background:#FFFDF8;font-family:Barlow,system-ui,sans-serif;color:#1A1714;max-width:400px}.ds-line{display:flex;align-items:flex-start;gap:8px;padding:10px 0}.ds-line+.ds-line{border-top:1px solid #E3D5BC}.ds-tick{margin-top:2px;width:20px;height:20px;flex-shrink:0;border-radius:9999px;border:2px solid #CDBB9C;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}.ds-tick:focus-visible{outline:2px solid #1A1714;outline-offset:2px}.ds-tick-on{background:#2F7D4F;border-color:#2F7D4F;color:#FFFDF8}.ds-name{flex:1;min-width:0;display:flex;flex-direction:column}.ds-name span{font-size:16px;line-height:20px;font-weight:500}.ds-name small{font-size:12px;line-height:16px;color:#5A5048}.ds-name small.ds-over{color:#D62718;font-weight:600}.ds-amt-col{width:7.5rem;flex-shrink:0;text-align:right;display:flex;flex-direction:column}.ds-amt-col b{font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:17px;line-height:20px;font-variant-numeric:tabular-nums}.ds-amt-col b.ds-red{color:#D62718}.ds-amt-col s{font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:600;font-size:13px;line-height:16px;color:#5A5048;text-decoration-thickness:2px;text-decoration-color:#D62718;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Five tabs, kraft tick on the active tab, lifted ink Add in the centre.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-on\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4.5\" width=\"18\" height=\"16\" rx=\"2.5\"/><path d=\"M3 9.5h18M8 2.5v4M16 2.5v4\"/></svg>This Month</button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\"><rect x=\"2.5\" y=\"5\" width=\"19\" height=\"14\" rx=\"2.5\"/><path d=\"M2.5 9.5h19M6 15h4\"/></svg>Debts</button><button class=\"ds-tab ds-add\" aria-label=\"Add\"><span><svg viewBox=\"0 0 24 24\" width=\"28\" height=\"28\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8.5v7M8.5 12h7\"/></svg></span></button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\"><path d=\"M4 20V10M10 20V4M16 20v-6M22 20H2\"/></svg>Stats</button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v2.5M12 19v2.5M4.2 7l2.2 1.3M17.6 15.7l2.2 1.3M4.2 17l2.2-1.3M17.6 8.3l2.2-1.3\"/></svg>Settings</button></nav>",
+      "css": ".ds-tabs{display:flex;justify-content:space-around;background:#FFFDF8;border-top:1px solid #E3D5BC;margin-top:20px;max-width:400px}.ds-tab{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;border:none;background:none;font-family:Barlow,system-ui,sans-serif;font-size:11px;line-height:12px;font-weight:500;color:#5A5048;cursor:pointer}.ds-tab:hover{color:#1A1714}.ds-tab:focus-visible{outline:2px solid #1A1714;outline-offset:2px}.ds-tab-on{color:#1A1714;font-weight:600}.ds-tab-on::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:40px;height:3px;background:#C99A5B}.ds-add{justify-content:flex-start}.ds-add span{width:56px;height:56px;transform:translateY(-12px);border-radius:9999px;background:#1A1714;color:#C99A5B;box-shadow:0 4px 12px rgb(26 23 20/.25);display:flex;align-items:center;justify-content:center}.ds-add:active span{background:#3F3730}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Palengke Price Board",
+    "overview": "Every peso is written big and plain, the way a market stall chalks its prices: a corrugated-kraft band across the top carries the one number that matters right now, and beneath it a warm board ground holds near-white manila cards where each line has its name on the left and its price, in heavy condensed marker, on the right. The world is flat and handmade in temperament but strict in arithmetic. Figures share one numeral face on a short size ladder, every figure is tabular, and amounts line up in a single right-hand column so centavos stack.\n\nLength is amount. Wherever pesos are compared, an ink bar is drawn to exact scale against the largest value on a pale rule track, and rosters are ranked biggest first. Colour is spent like a market vendor spends marker ink: black for everything, red only to mark a price down when a budget is overspent or a limit is nearly hit, blue only for money coming in. The system refuses the fintech header: no gradient band, no centred hero metric, no chip soup around the total.\n\nDark mode is the same world at night, not a second theme. The kraft band deepens to a dark kraft, the board goes to near-black brown, manila cards become dark card stock, ink figures turn to board cream, and the markers lighten to stay legible. Structure, type, and every rule below hold unchanged.",
+    "keyCharacteristics": [
+      "Kraft header band, board ground, manila cards, marker-ink figures.",
+      "Barlow Condensed 700 to 800 for every figure and heading; Barlow for running text.",
+      "Tabular figures everywhere; amounts right-aligned in one fixed-width column.",
+      "Ranked rosters with ink bars drawn to exact peso scale.",
+      "Red and blue are signals, never decoration.",
+      "Flat: 1px rules, one hairline card shadow, no gradients."
+    ],
+    "rules": [
+      {
+        "name": "The Marker Discipline Rule",
+        "body": "Red marks only over-budget, near-limit, destructive, and error states. Blue marks only money in, and only on manila or board: it fails contrast on kraft (2.4:1), so on the kraft band money in is set in bold marker ink (\"Came in\" at weight 600) and the rest of the line stays ink at reduced emphasis.",
+        "section": "colors"
+      },
+      {
+        "name": "The Kraft Band Rule",
+        "body": "Kraft belongs to the band and to the active-tab tick. Never fill a card, chip, or button with kraft.",
+        "section": "colors"
+      },
+      {
+        "name": "The Same World at Night Rule",
+        "body": "Dark mode remaps the same tokens (ground #15120F, cards #211C17, band #6B4F2A, text #F3EADA and #CDBB9C, rules #3A322A, blue #8FB0F0, red #FF6B5E, paid green #3E9A64). It adds no new colours and changes no layout. Ink fills invert to cream with dark text, so the Add button and amount bars become cream on dark.",
+        "section": "colors"
+      },
+      {
+        "name": "The Price-Tag Rule",
+        "body": "Every peso amount is Barlow Condensed at 700 or heavier with tabular figures, right-aligned in a fixed 7.5rem column so centavos stack down the card.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Ladder Rule",
+        "body": "Figures take only the sizes on the ladder (44, 28, 22, 20, 17, 13). Do not invent intermediate figure sizes.",
+        "section": "typography"
+      },
+      {
+        "name": "The Length-Is-Amount Rule",
+        "body": "Comparisons are horizontal ink bars (8px, 4px for per-line budget bars) on a rule-coloured track, each drawn to its exact share of the largest value, ranked biggest first. No pie charts, no rounded-off segments.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Board Rule",
+        "body": "No gradients anywhere, including the band. A new surface gets a rule border and the card hairline, never a heavier shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set every peso in Barlow Condensed 700+ with tabular figures, right-aligned in the 7.5rem amount column.",
+      "**Do** rank breakdowns biggest first and draw ink bars to exact proportion of the largest value.",
+      "**Do** keep the hero figure left-aligned in the kraft band, with the peso sign small and top-aligned.",
+      "**Do** show money in as bold ink on the kraft band and as marker blue on manila or board.",
+      "**Do** mark an overspend with the red figure over the struck budget, and nothing more.",
+      "**Do** carry dark mode by remapping tokens under the dark class, keeping the same structure."
+    ],
+    "donts": [
+      "**Don't** use gradients, including on the header band.",
+      "**Don't** centre the hero metric or surround it with chips.",
+      "**Don't** use marker red for anything that is not over-budget, near-limit, destructive, or an error.",
+      "**Don't** set marker blue on kraft; it fails contrast there.",
+      "**Don't** use marker blue as a focus or accent colour; focus is ink.",
+      "**Don't** fill cards, chips, or buttons with kraft.",
+      "**Don't** add uppercase, letter-spaced eyebrow labels above headings or figures.",
+      "**Don't** add figure sizes off the ladder, or proportional figures in any amount."
+    ]
+  }
+}

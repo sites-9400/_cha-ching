@@ -116,7 +116,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-sm max-h-[90vh] p-5 flex flex-col gap-3 overflow-y-auto"
+        className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-sm max-h-[90vh] p-5 flex flex-col gap-3 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -137,7 +137,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
           <div className="flex flex-col items-center gap-3 py-10">
             <p className="text-sm text-stone-500">Reading screenshot…</p>
             <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-600 transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
+              <div className="h-full bg-ink transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
           </div>
         )}
@@ -145,13 +145,13 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
         {phase === "review" && (
           <>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-1.5">Category</p>
+              <p className="text-[13px] font-semibold text-ink-2 mb-1.5">Category</p>
               <div className="flex flex-wrap gap-2">
                 {cats.map((c) => (
                   <button
                     key={c.id} onClick={() => setCategory(c.name)}
                     className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                      category === c.name ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                      category === c.name ? "bg-ink text-manila" : "bg-stone-100 text-stone-600"
                     }`}
                   >{c.name}</button>
                 ))}
@@ -159,7 +159,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
             </div>
 
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-1.5">Paid from</p>
+              <p className="text-[13px] font-semibold text-ink-2 mb-1.5">Paid from</p>
               <PaidFromPicker value={paidFrom} onPick={pickPaidFrom} groups={groups} envelopes={envelopes} debts={activeDebts} />
             </div>
 
@@ -199,7 +199,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
 
             <button
               onClick={addAll} disabled={includedCount === 0}
-              className="bg-emerald-600 disabled:bg-stone-300 text-white font-semibold rounded-xl py-3 text-sm mt-1"
+              className="bg-ink disabled:bg-stone-300 text-manila font-semibold rounded-xl py-3 text-sm mt-1"
             >Add {includedCount} expenses</button>
           </>
         )}

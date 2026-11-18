@@ -5,6 +5,7 @@ import { addCategory, updateCategory, deleteCategory, setCategoryBudget } from "
 import { adjacentSwap } from "../../lib/reorder";
 import type { Category } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import { ChevronDownIcon, ChevronUpIcon, CloseIcon } from "../icons";
 
 export default function CategoriesEditor() {
   const cats = useCollection<Category>(categoriesCol());
@@ -32,12 +33,12 @@ export default function CategoriesEditor() {
           <li key={c.id} className="bg-white rounded-xl shadow p-3 flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
               <span className="flex flex-col">
-                <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-stone-400 disabled:opacity-20 leading-none">▲</button>
-                <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-stone-400 disabled:opacity-20 leading-none">▼</button>
+                <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move up"><ChevronUpIcon className="h-3.5 w-3.5" /></button>
+                <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move down"><ChevronDownIcon className="h-3.5 w-3.5" /></button>
               </span>
               <input defaultValue={c.name} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.name) void updateCategory(c.id, { name: e.target.value.trim() }); }}
                 className="flex-1 text-sm outline-none border-b border-transparent focus:border-stone-300" />
-              <button onClick={() => setConfirmId(c.id)} className="text-red-500 text-xs px-1">✕</button>
+              <button onClick={() => setConfirmId(c.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
             </div>
             <label className="flex items-center justify-between text-xs text-stone-400 pl-5">
               Monthly budget
@@ -59,7 +60,7 @@ export default function CategoriesEditor() {
       </ul>
       <div className="mt-3 flex gap-2">
         <input placeholder="New category" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1 text-sm border-b border-stone-300 outline-none" />
-        <button onClick={() => void add()} disabled={!newName.trim()} className="text-sm font-semibold text-emerald-700 disabled:opacity-40">Add</button>
+        <button onClick={() => void add()} disabled={!newName.trim()} className="text-sm font-semibold text-ink underline underline-offset-2 disabled:opacity-40">Add</button>
       </div>
       {confirmId && (
         <ConfirmDialog title="Delete category?" message="Quick Add will no longer suggest it."

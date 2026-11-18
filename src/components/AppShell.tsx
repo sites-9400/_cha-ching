@@ -14,7 +14,7 @@ export default function AppShell() {
       {/* Bottom reserve must clear the fixed TabBar, whose height is set by the
           raised centre button (py-2 + h-14 = 72px) plus the device safe-area
           inset — a flat pb-16 left the last ~42px of every page under the nav. */}
-      <div className="min-h-screen bg-stone-100 text-stone-900 pb-[calc(6rem_+_env(safe-area-inset-bottom))] max-w-md mx-auto">
+      <div className="min-h-screen bg-board text-ink pb-[calc(6rem_+_env(safe-area-inset-bottom))] max-w-md mx-auto">
         {tab === "month" && <ThisMonth />}
         {tab === "debts" && <Debts />}
         {tab === "add" && <QuickAdd />}

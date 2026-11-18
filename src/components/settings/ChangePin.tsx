@@ -25,7 +25,7 @@ export default function ChangePin() {
     }
   }
 
-  const box = "w-full text-lg tracking-widest text-center tabular-nums border-b-2 border-stone-300 outline-none focus:border-emerald-500 py-1";
+  const box = "w-full text-lg tracking-widest text-center tabular-nums border-b-2 border-stone-300 outline-none focus:border-ink py-1";
 
   return (
     <div className="flex flex-col gap-4 max-w-xs">

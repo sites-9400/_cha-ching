@@ -34,12 +34,12 @@ export default function ExpenseSearch({ expenses }: { expenses: Expense[] }) {
   const shown = results.slice(0, MAX_RESULTS);
 
   return (
-    <section className="bg-white rounded-2xl shadow p-4">
+    <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-semibold text-sm mb-3">Search expenses</h2>
       <input
         placeholder="Search expenses — note, category, account…"
         value={query} onChange={(e) => setQuery(e.target.value)}
-        className="w-full text-sm border-b border-stone-200 pb-1 outline-none focus:border-emerald-500 mb-3"
+        className="w-full text-sm border-b border-stone-200 pb-1 outline-none focus:border-ink mb-3"
       />
       {q !== "" && (
         <ul className="flex flex-col gap-1.5">

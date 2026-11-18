@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { peso } from "../../lib/format";
+import { CloseIcon } from "../icons";
 
 /** Savings balance against the ₱ floor — a single value vs a threshold. */
 export default function SavingsMeter({
@@ -20,9 +21,9 @@ export default function SavingsMeter({
   }
 
   return (
-    <section className="bg-white rounded-2xl shadow p-4">
+    <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="font-semibold text-sm">Savings</h2>
+        <h2 className="font-display font-bold text-[20px] leading-6 text-ink">Savings</h2>
         {editing ? (
           <span className="flex items-center gap-1">
             <input
@@ -30,17 +31,17 @@ export default function SavingsMeter({
               onChange={(e) => setRaw(e.target.value)}
               className="w-28 text-right text-sm border-b border-stone-300 outline-none tabular-nums"
             />
-            <button onClick={() => void save()} className="text-xs font-semibold text-emerald-700 px-1">Save</button>
-            <button onClick={() => { setEditing(false); setRaw(String(balance)); }} className="text-xs text-stone-400">✕</button>
+            <button onClick={() => void save()} className="text-xs font-semibold text-ink underline underline-offset-2 px-1">Save</button>
+            <button onClick={() => { setEditing(false); setRaw(String(balance)); }} aria-label="Cancel edit" className="text-stone-500 px-1"><CloseIcon /></button>
           </span>
         ) : (
           <button onClick={() => { setEditing(true); setRaw(String(balance)); }} className="text-sm font-bold tabular-nums">
-            {peso(balance)} <span className="text-xs font-normal text-emerald-700">edit</span>
+            {peso(balance)} <span className="text-xs font-semibold text-ink underline underline-offset-2">edit</span>
           </button>
         )}
       </div>
       <div className="relative h-4 rounded-full bg-stone-100 overflow-hidden">
-        <div className={`h-full ${below ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${fillPct}%` }} />
+        <div className={`h-full ${below ? "bg-marker-red" : "bg-ink"}`} style={{ width: `${fillPct}%` }} />
         {/* floor threshold marker */}
         <div className="absolute top-0 bottom-0 w-0.5 bg-red-600" style={{ left: `${floorPct}%` }} />
       </div>
@@ -49,7 +50,7 @@ export default function SavingsMeter({
           ? `Below floor by ${peso(floor - balance)}`
           : `${peso(balance - floor)} above the ${peso(floor)} floor`}
       </p>
-      <button onClick={onAdd} className="mt-3 text-sm font-semibold text-emerald-700">+ Add to savings</button>
+      <button onClick={onAdd} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add to savings</button>
     </section>
   );
 }

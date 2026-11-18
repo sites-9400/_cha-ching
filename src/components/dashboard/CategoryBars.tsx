@@ -15,7 +15,7 @@ export default function CategoryBars(
   const budgetOf = new Map(categories.map((c) => [c.name, c.budget]));
 
   return (
-    <section className="bg-white rounded-2xl shadow p-4">
+    <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-semibold text-sm mb-3">Spending by category</h2>
       {totals.length === 0 ? (
         <p className="text-xs text-stone-400">No spending logged this month.</p>
@@ -29,7 +29,7 @@ export default function CategoryBars(
             const budget = budgetOf.get(t.category);
             const hasBudget = !!budget && budget > 0;
             const pct = hasBudget ? Math.min(100, (t.total / budget) * 100) : (t.total / max) * 100;
-            const barColor = hasBudget && t.total > budget ? "bg-red-500" : "bg-emerald-500";
+            const barColor = hasBudget && t.total > budget ? "bg-marker-red" : "bg-ink";
             const rightLabel = hasBudget ? `${peso(t.total)} of ${peso(budget)}` : peso(t.total);
             const prev = prevTotals.get(t.category);
             return (
@@ -57,7 +57,7 @@ export default function CategoryBars(
                         <span className="truncate">
                           {e.date.slice(5, 10)}{e.note ? ` · ${e.note}` : ""}
                         </span>
-                        <span className="tabular-nums shrink-0">{peso(e.amount)}</span>
+                        <span className="font-display tabular-nums shrink-0">{peso(e.amount)}</span>
                       </li>
                     ))}
                   </ul>

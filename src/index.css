@@ -1,52 +1,127 @@
 @import "tailwindcss";
 
-/* ── Dark mode: theme override layer ─────────────────────────────────────────
-   The app's light palette is applied via a consistent set of utilities, so
-   dark mode remaps those utilities under html.dark instead of adding dark:
-   variants to every component (see 2026-07-18-dark-mode-design.md). Account
-   chips and solid emerald/red action colors are intentionally left as-is. */
+/* ── The world: palengke price board ─────────────────────────────────────────
+   Kraft header band, board-colored ground, manila cards, ink figures, marker
+   red/blue for money signals. The stone and emerald scales are remapped so
+   screens that were not hand-restyled inherit the same world. */
+@theme {
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "Barlow", sans-serif;
+
+  --color-kraft: #C99A5B;
+  --color-kraft-deep: #A87C42;
+  --color-board: #F3EADA;
+  --color-manila: #FFFDF8;
+  --color-ink: #1A1714;
+  --color-ink-2: #5A5048;
+  --color-rule: #E3D5BC;
+  --color-marker-red: #D62718;
+  --color-marker-blue: #1F5FBF;
+  --color-ok: #2F7D4F;
+
+  --shadow-card: 0 1px 2px rgb(26 23 20 / 0.06);
+  --shadow-fab: 0 4px 12px rgb(26 23 20 / 0.25);
+
+  --color-stone-50: #FBF6EC;
+  --color-stone-100: #F3EADA;
+  --color-stone-200: #E3D5BC;
+  --color-stone-300: #CDBB9C;
+  --color-stone-400: #9A8A73;
+  --color-stone-500: #6E6153;
+  --color-stone-600: #5A5048;
+  --color-stone-700: #3F3730;
+  --color-stone-800: #2A241F;
+  --color-stone-900: #1A1714;
+
+  --color-emerald-50: #EEF3FC;
+  --color-emerald-100: #D9E4F8;
+  --color-emerald-200: #B3C8F0;
+  --color-emerald-300: #7FA2E3;
+  --color-emerald-400: #4C7DD6;
+  --color-emerald-500: #2F66CB;
+  --color-emerald-600: #1F5FBF;
+  --color-emerald-700: #1A4FA0;
+  --color-emerald-800: #163F80;
+  --color-emerald-900: #12336A;
+}
+
+html, body { background-color: var(--color-board); }
+body {
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+::selection { background-color: var(--color-kraft); color: var(--color-ink); }
+input, textarea, select { caret-color: var(--color-ink); accent-color: var(--color-ink); }
+:root { accent-color: var(--color-ink); }
+:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+
+/* ── Dark mode: the same world at night ──────────────────────────────────────
+   Utilities are remapped under html.dark instead of adding dark: variants to
+   every component. Ground #15120F, cards #211C17, band kraft-dark #6B4F2A,
+   text #F3EADA / #CDBB9C, rules #3A322A, blue #8FB0F0, red #FF6B5E. */
 .dark { color-scheme: dark; }
+.dark html, html.dark, .dark body { background-color: #15120F; color: #F3EADA; }
+.dark ::selection { background-color: #6B4F2A; color: #F3EADA; }
+.dark input, .dark textarea, .dark select { caret-color: #F3EADA; accent-color: #C99A5B; }
+.dark :focus-visible { outline-color: #F3EADA; }
 
 /* Surfaces */
-.dark .bg-white { background-color: #1c1917; }        /* cards, dialogs → stone-900 */
-.dark .bg-stone-50 { background-color: #292524; }
-.dark .bg-stone-100 { background-color: #0f0d0c; }    /* page bg, tracks, pills */
-.dark .bg-stone-700 { background-color: #57534e; }    /* selected "Unplanned" chip */
+.dark .bg-white, .dark .bg-manila { background-color: #211C17; }   /* cards, dialogs */
+.dark .bg-stone-50 { background-color: #2A241F; }
+.dark .bg-stone-100, .dark .bg-board { background-color: #15120F; } /* page bg, tracks, pills */
+.dark .bg-stone-700 { background-color: #4A4037; }
+.dark .bg-kraft { background-color: #6B4F2A; }
+.dark .bg-ink { background-color: #F3EADA; color: #15120F; }
+.dark .bg-rule { background-color: #3A322A; }
 
 /* Text */
-.dark .text-stone-900 { color: #f5f5f4; }
-.dark .text-stone-700 { color: #e7e5e4; }
-.dark .text-stone-600 { color: #d6d3d1; }
-.dark .text-stone-500 { color: #a8a29e; }
-.dark .text-stone-400 { color: #857f7a; }
-.dark .text-stone-300 { color: #57534e; }
-.dark .text-stone-200 { color: #44403c; }
+.dark .text-ink, .dark .text-stone-900 { color: #F3EADA; }
+.dark .text-stone-700 { color: #E3D5BC; }
+.dark .text-ink-2, .dark .text-stone-600 { color: #CDBB9C; }
+.dark .text-stone-500 { color: #B3A58E; }
+.dark .text-stone-400 { color: #8F8068; }
+.dark .text-stone-300 { color: #5A4E40; }
+.dark .text-stone-200 { color: #3A322A; }
+.dark .text-manila { color: #211C17; }
+/* Ink at partial opacity (kraft band copy) would vanish on the dark band */
+.dark .text-ink\/80, .dark .text-ink\/70, .dark .text-ink\/60 { color: #E3D5BC; }
 
 /* Borders / dividers */
-.dark .border-stone-100 { border-color: #292524; }
-.dark .border-stone-200 { border-color: #3a3532; }
-.dark .border-stone-300 { border-color: #4a4440; }
-.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]) { border-color: #292524; }
+.dark .border-rule, .dark .border-stone-200 { border-color: #3A322A; }
+.dark .border-stone-100 { border-color: #2A241F; }
+.dark .border-stone-300 { border-color: #4A4037; }
+.dark .border-kraft-deep { border-color: #4A3720; }
+.dark .border-ink\/30 { border-color: #8C7350; }
+.dark .border-ink\/20 { border-color: #7A6244; }
+.dark .divide-ink\/15 > :not([hidden]) ~ :not([hidden]) { border-color: #7A6244; }
+.dark .divide-stone-100 > :not([hidden]) ~ :not([hidden]) { border-color: #2A241F; }
+.dark .divide-rule > :not([hidden]) ~ :not([hidden]) { border-color: #3A322A; }
 
-/* Tinted banners / badges (keep hue, invert lightness) */
-.dark .bg-emerald-100 { background-color: #064e3b; }
-.dark .bg-emerald-50 { background-color: #052e2b; }
-.dark .text-emerald-800 { color: #6ee7b7; }
-.dark .text-emerald-700 { color: #34d399; }
-.dark .text-emerald-600 { color: #34d399; }
-.dark .bg-amber-50 { background-color: #451a03; }
-.dark .border-amber-200 { border-color: #78350f; }
-.dark .text-amber-800 { color: #fcd34d; }
-.dark .text-amber-700 { color: #fbbf24; }
-.dark .text-amber-600 { color: #fbbf24; }
-.dark .bg-red-50 { background-color: #450a0a; }
-.dark .border-red-200 { border-color: #7f1d1d; }
-.dark .text-red-800 { color: #fca5a5; }
-.dark .text-red-700 { color: #f87171; }
-.dark .text-red-600 { color: #f87171; }
+/* Money-in blue (replaces the old emerald tints) */
+.dark .bg-emerald-100 { background-color: #1C2C4A; }
+.dark .bg-emerald-50 { background-color: #17223A; }
+.dark .text-emerald-800 { color: #B3C8F0; }
+.dark .text-emerald-700 { color: #8FB0F0; }
+.dark .text-emerald-600, .dark .text-marker-blue { color: #8FB0F0; }
+.dark .text-ok { color: #6FC08F; }
+.dark .bg-ok { background-color: #3E9A64; }
+.dark .border-ok { border-color: #3E9A64; }
 
-/* Shadows read as glow on dark — flatten them */
-.dark .shadow, .dark .shadow-xl, .dark .shadow-lg { box-shadow: 0 0 0 1px #292524; }
+/* Amber / red */
+.dark .bg-amber-50 { background-color: #3A2A12; }
+.dark .border-amber-200 { border-color: #6B4F2A; }
+.dark .text-amber-800 { color: #F0CD8A; }
+.dark .text-amber-700 { color: #E6BC6A; }
+.dark .text-amber-600 { color: #E6BC6A; }
+.dark .bg-red-50 { background-color: #3D1713; }
+.dark .border-red-200 { border-color: #7A2A22; }
+.dark .text-red-800 { color: #FFB1A8; }
+.dark .text-red-700, .dark .text-red-600, .dark .text-marker-red { color: #FF6B5E; }
+.dark .decoration-marker-red { text-decoration-color: #FF6B5E; }
+
+/* Shadows read as glow on dark: flatten them */
+.dark .shadow, .dark .shadow-xl, .dark .shadow-lg, .dark .shadow-card { box-shadow: 0 0 0 1px #3A322A; }
 
 /* iOS Safari zooms the page when a focused input's font-size is < 16px.
    Force 16px on form controls only on iOS (the -webkit-touch-callout query

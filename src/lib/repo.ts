@@ -15,7 +15,7 @@ import { reconcileLines } from "./reconcile";
 import { linkedDebtIds, paymentsForLine } from "./debtSplits";
 import { activeLines, generateMonthLines, isCutoffClosed } from "./selectors";
 import type {
-  Account, Category, Debt, DebtSplit, EventItem, ExpenseInput, Income, LineStatus, Meta, MonthLine,
+  Account, Category, Debt, DebtSplit, EventItem, ExpenseInput, Income, LineGroup, LineStatus, Meta, MonthLine,
   SavingsMove, SinkingFund, Subscription, TemplateLine,
 } from "./types";
 
@@ -436,6 +436,16 @@ export async function updateMonthLine(
   else if (debtSplits !== undefined) data.debtSplits = debtSplits;
   await updateDoc(doc(db, monthLines(monthKey), id), data);
 }
+/** Set a line's spending group on the month line and, when a template line with
+ *  the same id exists, on the template line too. Deliberately does NOT mark the
+ *  month line overridden (a group is metadata, not an amount edit). */
+export async function setLineGroup(monthKey: string, id: string, group: LineGroup): Promise<void> {
+  const batch = writeBatch(db);
+  batch.update(doc(db, monthLines(monthKey), id), { group });
+  const tRef = doc(db, templateLines(), id);
+  if ((await getDoc(tRef)).exists()) batch.update(tRef, { group });
+  await batch.commit();
+}
 /** Add a one-off income to a month's incomes subcollection. */
 export async function addMonthIncome(monthKey: string, income: Omit<Income, "id">): Promise<void> {
   await setDoc(doc(collection(db, monthIncomes(monthKey))), income);
@@ -586,7 +596,10 @@ export async function syncMonthFromTemplate(monthKey: string): Promise<void> {
   for (const id of deletes) batch.delete(doc(db, monthLines(monthKey), id));
   // Budget metadata flowing into closed (frozen) cutoffs — update, never replace.
   for (const p of patches) {
-    batch.update(doc(db, monthLines(monthKey), p.id), { isEnvelope: p.isEnvelope, budgetGroup: p.budgetGroup });
+    batch.update(doc(db, monthLines(monthKey), p.id), {
+      isEnvelope: p.isEnvelope, budgetGroup: p.budgetGroup,
+      group: p.group ?? deleteField(),
+    });
   }
   await batch.commit();
 }

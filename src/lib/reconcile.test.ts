@@ -114,7 +114,7 @@ describe("reconcileLines with closed cutoffs", () => {
     );
     expect(upserts).toEqual([]);
     expect(deletes).toEqual([]);
-    expect(patches).toEqual([{ id: "allow", isEnvelope: true, budgetGroup: "Allowance" }]);
+    expect(patches).toEqual([{ id: "allow", isEnvelope: true, budgetGroup: "Allowance", group: null }]);
   });
   it("emits no patch when the closed line's metadata already matches", () => {
     const { patches } = reconcileLines(
@@ -131,6 +131,24 @@ describe("reconcileLines with closed cutoffs", () => {
       new Set([1]),
     );
     expect(patches).toEqual([]);
+  });
+  it("group propagates like budgetGroup: patch into a closed cutoff, upsert into an open one", () => {
+    const closed = reconcileLines(
+      [T({ id: "x", cutoff: 1, group: "home" })],
+      [M({ id: "x", cutoff: 1, status: "PAID" })],
+      new Set([1]),
+    );
+    expect(closed.upserts).toEqual([]);
+    expect(closed.patches).toEqual([{ id: "x", isEnvelope: false, budgetGroup: "", group: "home" }]);
+    const synced = reconcileLines(
+      [T({ id: "x", cutoff: 1, group: "home" })],
+      [M({ id: "x", cutoff: 1, status: "PAID", group: "home" })],
+      new Set([1]),
+    );
+    expect(synced.patches).toEqual([]);
+    const open = reconcileLines([T({ id: "x", cutoff: 1, group: "health" })], [M({ id: "x", cutoff: 1 })]);
+    expect(open.upserts[0]).toMatchObject({ id: "x", group: "health" });
+    expect(open.patches).toEqual([]);
   });
   it("open cutoffs get metadata via the normal upsert, not a patch", () => {
     const { upserts, patches } = reconcileLines(

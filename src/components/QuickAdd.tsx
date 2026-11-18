@@ -11,13 +11,15 @@ import type { Category, Channel, Debt, Expense, MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 import ChannelIcon from "./ChannelIcon";
 import HeaderBand from "./HeaderBand";
+import { XIcon } from "./LineRow";
+import { CameraIcon, CreditCardIcon } from "./icons";
 import DueSoonStrip from "./DueSoonStrip";
 import EditExpenseDialog from "./EditExpenseDialog";
 import ImportExpenses from "./ImportExpenses";
 import PaidFromPicker from "./PaidFromPicker";
 
 export default function QuickAdd() {
-  const { names: CHANNELS, chip, label } = useAccounts();
+  const { names: CHANNELS, chip, label } = useAccounts(); // chip(): only the recent-row ChannelIcon uses it
   const categories = useCollection<Category>(categoriesCol());
   const expenses = useCollection<Expense>(expensesCol());
   const allLines = useCollection<MonthLine>(monthLines(currentMonthKey()));
@@ -84,23 +86,23 @@ export default function QuickAdd() {
   }
 
   const Label = ({ children }: { children: React.ReactNode }) => (
-    <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 mb-1.5">{children}</p>
+    <p className="text-[13px] font-semibold text-ink-2 mb-1.5">{children}</p>
   );
 
   return (
     <>
-      <HeaderBand title="SPENT THIS MONTH" value={peso(spentThisMonth)} />
+      <HeaderBand title="Logged expenses this month" value={peso(spentThisMonth)} />
       <main className="p-4">
       <DueSoonStrip />
-      <div className="bg-white rounded-2xl shadow p-5 flex flex-col gap-5">
+      <div className="bg-manila rounded-xl border border-rule shadow-card p-5 flex flex-col gap-5">
         <div>
           <Label>Amount</Label>
-          <div className="flex items-baseline gap-1 border-b-2 border-stone-200 focus-within:border-emerald-500 pb-1">
-            <span className="text-2xl font-bold text-stone-400">₱</span>
+          <div className="flex items-baseline gap-1 border-b-2 border-stone-200 focus-within:border-ink pb-1">
+            <span className="font-display text-2xl font-bold text-ink-2">₱</span>
             <input
               type="number" inputMode="decimal" placeholder="0"
               value={amount} onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 min-w-0 text-3xl font-bold tabular-nums outline-none bg-transparent"
+              className="flex-1 min-w-0 font-display text-3xl font-bold tabular-nums outline-none bg-transparent"
             />
           </div>
         </div>
@@ -112,7 +114,7 @@ export default function QuickAdd() {
               <button
                 key={c.id} onClick={() => setCategory(c.name)}
                 className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                  category === c.name ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                  category === c.name ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
                 }`}
               >{c.name}</button>
             ))}
@@ -125,8 +127,8 @@ export default function QuickAdd() {
             {CHANNELS.map((c) => (
               <button
                 key={String(c)} onClick={() => setChannel(c)}
-                className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                  channel === c ? chip(c) : "bg-stone-100 text-stone-400"
+                className={`text-[12px] font-semibold px-2.5 py-1 rounded-full ${
+                  channel === c ? "bg-ink text-manila border border-ink" : "bg-board text-stone-600 border border-rule"
                 }`}
               >{c}</button>
             ))}
@@ -142,7 +144,7 @@ export default function QuickAdd() {
           <Label>Note</Label>
           <input
             placeholder="optional" value={note} onChange={(e) => setNote(e.target.value)}
-            className="w-full text-base border-b border-stone-200 pb-1 outline-none focus:border-emerald-500"
+            className="w-full text-base border-b border-stone-200 pb-1 outline-none focus:border-ink"
           />
         </div>
 
@@ -152,14 +154,14 @@ export default function QuickAdd() {
             <button
               onClick={() => setWhen("")}
               className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
-                when === "" ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                when === "" ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
               }`}
             >Today</button>
             <button
               onClick={() => setWhen(localIso(new Date(Date.now() - 86400000)).slice(0, 10))}
               className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
                 when !== "" && when === localIso(new Date(Date.now() - 86400000)).slice(0, 10)
-                  ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-600"
+                  ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
               }`}
             >Yesterday</button>
             <input
@@ -167,24 +169,24 @@ export default function QuickAdd() {
               value={when}
               max={localIso().slice(0, 10)}
               onChange={(e) => setWhen(e.target.value)}
-              className="text-xs bg-stone-100 text-stone-600 rounded-full px-3 py-1.5 outline-none"
+              className="text-xs bg-board text-stone-600 border border-rule rounded-full px-3 py-1.5 outline-none"
             />
           </div>
         </div>
 
         <button
           onClick={save} disabled={!canSave}
-          className="bg-emerald-600 disabled:bg-stone-300 text-white font-semibold rounded-xl py-3.5 text-base"
+          className="bg-ink disabled:bg-stone-300 text-manila font-semibold rounded-xl py-3.5 text-base"
         >Save{value > 0 ? ` ${peso(value)}` : ""}</button>
       </div>
 
       <div className="flex items-center justify-between mt-6 mb-2">
         <h2 className="font-semibold text-sm text-stone-600">Recent</h2>
-        <button onClick={() => setImporting(true)} className="text-xs font-semibold text-emerald-700">📷 Import</button>
+        <button onClick={() => setImporting(true)} className="text-xs font-semibold text-ink underline underline-offset-2 inline-flex items-center gap-1.5"><CameraIcon className="h-4 w-4" />Import</button>
       </div>
       <ul className="flex flex-col gap-1.5">
         {recent.map((e) => (
-          <li key={e.id} className="bg-white rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
+          <li key={e.id} className="bg-manila border border-rule rounded-xl px-3 py-2.5 flex items-center justify-between gap-2.5">
             <button onClick={() => setEditing(e)} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
               <span className="flex items-center gap-2.5 min-w-0">
                 <ChannelIcon channel={String(e.channel)} initial={e.category.charAt(0).toUpperCase()} chipClass={chip(e.channel)} />
@@ -192,21 +194,21 @@ export default function QuickAdd() {
                   <span className="block truncate">
                     {e.category}
                     {e.envelopeLineId && (
-                      <span className="text-emerald-700"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
+                      <span className="text-ink-2"> · {lines.find((l) => l.id === e.envelopeLineId)?.name ?? "envelope"}</span>
                     )}
-                    {e.fundedBySavings && <span className="text-cyan-700"> · Savings</span>}
-                    {e.budgetGroup && <span className="text-emerald-700"> · {e.budgetGroup}</span>}
+                    {e.fundedBySavings && <span className="text-ink-2"> · Savings</span>}
+                    {e.budgetGroup && <span className="text-ink-2"> · {e.budgetGroup}</span>}
                     {e.paidWithDebtId && (
-                      <span className="text-violet-700"> · 💳 {debts.find((d) => d.id === e.paidWithDebtId)?.name ?? "card"}</span>
+                      <span className="text-ink-2"> · <CreditCardIcon className="inline h-3.5 w-3.5 align-text-bottom" /> {debts.find((d) => d.id === e.paidWithDebtId)?.name ?? "card"}</span>
                     )}
                     {e.note ? ` · ${e.note}` : ""}
                   </span>
                   <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>
                 </span>
               </span>
-              <span className="text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
+              <span className="font-display text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
             </button>
-            <button onClick={() => removeExpense(e)} className="text-stone-300 text-xs shrink-0">✕</button>
+            <button onClick={() => removeExpense(e)} aria-label="Remove expense" className="h-11 w-8 flex items-center justify-center text-ink-2 shrink-0"><XIcon /></button>
           </li>
         ))}
         {recent.length === 0 && <li className="text-sm text-stone-400 px-3">No expenses logged yet.</li>}

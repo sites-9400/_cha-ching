@@ -21,6 +21,9 @@ export interface Account {
 /** One debt's share of a line's payment, used when a single line pays several debts. */
 export interface DebtSplit { debtId: string; amount: number }
 
+/** User-assignable spending category for a planned line (drives "Where it goes"). */
+export type LineGroup = "home" | "family" | "allowance" | "cards" | "subscriptions" | "health" | "giving" | "school" | "travel" | "savings" | "other";
+
 export interface TemplateLine {
   id: string;
   name: string;
@@ -34,6 +37,7 @@ export interface TemplateLine {
   debtSplits?: DebtSplit[];
   isEnvelope?: boolean; // Quick Add spending can draw from this line instead of free cash
   budgetGroup?: string; // envelope lines sharing a group name form ONE combined budget ("" ≡ none)
+  group?: LineGroup; // spending category; see lineGroups.ts resolveGroup for precedence
 }
 
 export interface MonthLine extends TemplateLine {

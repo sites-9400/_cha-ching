@@ -49,7 +49,7 @@ export default function AccountsEditor() {
           );
         })}
       </ul>
-      <button onClick={() => setEditing("new")} className="mt-3 text-sm font-semibold text-emerald-700">+ Add account</button>
+      <button onClick={() => setEditing("new")} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add account</button>
     </div>
   );
 }

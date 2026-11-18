@@ -15,7 +15,7 @@ export default function StatementDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onCancel}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold">{debtName} · {cycleKey} statement</h3>
         <label className="flex items-center justify-between text-sm">Statement balance
           <input
@@ -35,7 +35,7 @@ export default function StatementDialog({
           <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
           <button
             onClick={() => void onConfirm(b, m)} disabled={!valid}
-            className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40"
+            className="flex-1 py-2 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40"
           >Save</button>
         </div>
       </div>

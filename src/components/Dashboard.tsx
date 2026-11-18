@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <HeaderBand title="SAVINGS" value={peso(meta?.savingsBalance ?? 0)} />
+      <HeaderBand title="Savings balance" value={peso(meta?.savingsBalance ?? 0)} />
       <main className="p-4 flex flex-col gap-4">
       <SpendingCalendar expenses={expenses} />
 

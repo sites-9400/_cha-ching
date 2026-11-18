@@ -7,6 +7,7 @@ import { activeLines, monthExpenses } from "../../lib/selectors";
 import { dailyTotals } from "../../lib/stats";
 import type { Category, Debt, Expense, MonthLine } from "../../lib/types";
 import EditExpenseDialog from "../EditExpenseDialog";
+import { ChevronLeft, ChevronRight } from "../HeaderBand";
 import ExpenseRow from "../ExpenseRow";
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -56,16 +57,16 @@ export default function SpendingCalendar({ expenses }: { expenses: Expense[] }) 
   }
 
   return (
-    <section className="bg-white rounded-2xl shadow p-4">
-      <h2 className="font-semibold text-sm mb-3">Spending calendar</h2>
+    <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
+      <h2 className="font-display font-bold text-[20px] leading-6 text-ink mb-3">Spending calendar</h2>
       <div className="flex items-center justify-center gap-2 mb-3">
-        <button onClick={() => goToMonth(-1)} className="h-8 w-8 rounded-full bg-white shadow text-emerald-700">‹</button>
+        <button onClick={() => goToMonth(-1)} className="h-10 w-10 flex items-center justify-center rounded-lg border border-rule text-ink" aria-label="Previous month"><ChevronLeft /></button>
         <span className="text-sm font-semibold min-w-[8rem] text-center">{monthLabel(monthKey)}</span>
-        <button onClick={() => goToMonth(1)} className="h-8 w-8 rounded-full bg-white shadow text-emerald-700">›</button>
+        <button onClick={() => goToMonth(1)} className="h-10 w-10 flex items-center justify-center rounded-lg border border-rule text-ink" aria-label="Next month"><ChevronRight /></button>
       </div>
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAYS.map((w, i) => (
-          <span key={i} className="text-[9px] text-stone-400 text-center uppercase">{w}</span>
+          <span key={i} className="text-[11px] text-ink-2 text-center">{w}</span>
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
@@ -91,7 +92,7 @@ export default function SpendingCalendar({ expenses }: { expenses: Expense[] }) 
         <span className="font-semibold">
           {openDay === null ? `All of ${monthLabel(monthKey)}` : `${monthLabel(monthKey)} · ${openDay}`}
         </span>
-        <span className="text-stone-400 tabular-nums">{shown.length} · {peso(shownTotal)}</span>
+        <span className="font-display text-stone-400 tabular-nums">{shown.length} · {peso(shownTotal)}</span>
       </div>
       <ul className="mt-1.5 flex flex-col gap-1.5">
         {shown.map((e) => (

@@ -21,12 +21,12 @@ export default function SavingsMoveDialog({ onClose }: { onClose: () => void }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold">Savings</h3>
         <div className="flex gap-2">
           {([["in", "Add"], ["out", "Withdraw"]] as const).map(([d, lbl]) => (
             <button key={d} onClick={() => setDirection(d)}
-              className={`flex-1 py-1.5 rounded-lg text-sm font-semibold ${direction === d ? "bg-emerald-600 text-white" : "bg-stone-100 text-stone-500"}`}>
+              className={`flex-1 py-1.5 rounded-lg text-sm font-semibold ${direction === d ? "bg-ink text-manila" : "bg-stone-100 text-stone-500"}`}>
               {lbl}
             </button>
           ))}
@@ -40,7 +40,7 @@ export default function SavingsMoveDialog({ onClose }: { onClose: () => void }) 
         </label>
         <div className="flex gap-2 mt-1">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-          <button onClick={() => void save()} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+          <button onClick={() => void save()} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Save</button>
         </div>
       </div>
     </div>

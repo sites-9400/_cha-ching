@@ -4,6 +4,7 @@ import { savingsMovesCol } from "../../lib/paths";
 import { deleteSavingsMove } from "../../lib/repo";
 import { savingsHistory, type SavingsExpense } from "../../lib/savings";
 import type { SavingsMove } from "../../lib/types";
+import { CloseIcon } from "../icons";
 
 export default function SavingsHistory({ expenses }: { expenses: readonly SavingsExpense[] }) {
   const moves = useCollection<SavingsMove>(savingsMovesCol());
@@ -13,7 +14,7 @@ export default function SavingsHistory({ expenses }: { expenses: readonly Saving
   if (rows.length === 0) return null;
 
   return (
-    <section className="bg-white rounded-2xl shadow p-4">
+    <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-semibold text-sm mb-2">Recent</h2>
       <ul className="flex flex-col gap-1.5">
         {rows.map((r) => (
@@ -26,8 +27,9 @@ export default function SavingsHistory({ expenses }: { expenses: readonly Saving
             {r.kind === "move" && (
               <button
                 onClick={() => { const m = byId.get(r.id); if (m) void deleteSavingsMove(m); }}
-                className="text-stone-300 text-xs pl-1"
-              >✕</button>
+                aria-label="Delete savings move"
+                className="text-stone-400 pl-1"
+              ><CloseIcon /></button>
             )}
           </li>
         ))}

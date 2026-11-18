@@ -62,7 +62,7 @@ export default function ExportData() {
           <li key={e.file}>
             <button onClick={e.run} className="w-full bg-white rounded-xl shadow p-3 flex items-center justify-between text-sm">
               {e.label}
-              <span className="text-emerald-700 font-semibold">Download</span>
+              <span className="text-ink font-semibold underline underline-offset-2">Download</span>
             </button>
           </li>
         ))}

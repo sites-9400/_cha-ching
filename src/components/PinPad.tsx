@@ -21,7 +21,7 @@ export default function PinPad() {
         setMode("confirm");
       } else {
         if (candidate !== firstPin) {
-          setError("PINs don't match — start over.");
+          setError("PINs don't match. Start over.");
           setMode("setup");
         } else {
           await setupPin(candidate);
@@ -31,7 +31,7 @@ export default function PinPad() {
       const code = (e as { code?: string }).code ?? "";
       setError(
         code === "auth/email-already-in-use"
-          ? "Already set up — enter your existing PIN."
+          ? "Already set up. Enter your existing PIN."
           : "Wrong PIN. Try again.",
       );
       if (code === "auth/email-already-in-use") setMode("enter");
@@ -52,18 +52,18 @@ export default function PinPad() {
     mode === "enter" ? "Enter PIN" : mode === "setup" ? "Set a 6-digit PIN" : "Confirm PIN";
 
   return (
-    <main className="min-h-screen bg-emerald-950 text-emerald-50 flex flex-col items-center justify-center gap-6 p-6">
-      <h1 className="text-2xl font-bold tracking-tight">Cha-Ching</h1>
-      <p className="text-emerald-300">{title}</p>
+    <main className="min-h-screen bg-board text-ink flex flex-col items-center justify-center gap-6 p-6">
+      <h1 className="font-display font-extrabold text-[40px] leading-10 text-ink">Cha-Ching</h1>
+      <p className="text-[16px] text-ink-2">{title}</p>
       <div className="flex gap-3" aria-label="PIN progress">
         {Array.from({ length: 6 }, (_, i) => (
           <span
             key={i}
-            className={`h-4 w-4 rounded-full ${i < pin.length ? "bg-emerald-300" : "bg-emerald-800"}`}
+            className={`h-4 w-4 rounded-full border-2 border-ink ${i < pin.length ? "bg-ink" : "bg-transparent"}`}
           />
         ))}
       </div>
-      {error && <p className="text-red-300 text-sm">{error}</p>}
+      {error && <p className="text-marker-red text-sm">{error}</p>}
       <div className="grid grid-cols-3 gap-4">
         {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((k, i) =>
           k === "" ? (
@@ -71,16 +71,22 @@ export default function PinPad() {
           ) : (
             <button
               key={i}
-              className="h-16 w-16 rounded-full bg-emerald-900 text-2xl font-semibold active:bg-emerald-700"
+              aria-label={k === "⌫" ? "Backspace" : undefined}
+              className="h-[72px] w-[72px] rounded-full bg-manila border border-rule font-display font-bold text-[28px] text-ink flex items-center justify-center active:bg-rule"
               onClick={() => (k === "⌫" ? setPin(pin.slice(0, -1)) : press(k))}
             >
-              {k}
+              {k === "⌫" ? (
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z" />
+                  <path d="M12.5 10l4 4M16.5 10l-4 4" />
+                </svg>
+              ) : k}
             </button>
           ),
         )}
       </div>
       {mode === "enter" && (
-        <button className="text-emerald-400 text-sm underline" onClick={() => setMode("setup")}>
+        <button className="text-ink-2 text-sm underline" onClick={() => setMode("setup")}>
           First time? Set up your PIN
         </button>
       )}

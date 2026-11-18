@@ -16,7 +16,7 @@ export default function SendPlan({
   monthKey: string; cutoff: 1 | 2;
   cycleMins?: ReadonlyMap<string, number>; cycleMinsGross?: ReadonlyMap<string, number>; closed?: boolean;
 }) {
-  const { chip, label } = useAccounts();
+  const { label } = useAccounts();
   const meta = useDoc<Meta>(metaDoc());
   const incomeChannel = meta?.incomeChannel;
   const [mode, setMode] = useState<"remaining" | "full">("remaining");
@@ -40,13 +40,13 @@ export default function SendPlan({
   return (
     <div className="mt-3 border-t border-stone-100 pt-3">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-stone-500">SEND TO ACCOUNTS</p>
+        <p className="font-display font-bold text-[16px] leading-5 text-ink">Send to accounts</p>
         <div className="flex rounded-full bg-stone-100 p-0.5 text-[10px] font-semibold">
           {(["remaining", "full"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`px-2 py-0.5 rounded-full ${mode === m ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
+              className={`px-2 py-0.5 rounded-full ${mode === m ? "bg-ink text-manila" : "text-ink-2"}`}
             >
               {m === "remaining" ? "Left to send" : "Full"}
             </button>
@@ -56,14 +56,14 @@ export default function SendPlan({
       <ul className="flex flex-col gap-1.5">
         {sends.map((s) => (
           <li key={s.channel} className="flex items-center justify-between gap-2 text-sm">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${chip(s.channel)}`}>{label(s.channel)}</span>
-            <span className="font-bold tabular-nums">{peso(s.total)}</span>
+            <span className="text-[12px] leading-4 font-semibold px-2 py-0.5 rounded-full border border-rule text-ink-2">{label(s.channel)}</span>
+            <span className="font-display font-bold tabular-nums">{peso(s.total)}</span>
           </li>
         ))}
       </ul>
       <p className="mt-2 text-xs flex justify-between text-stone-400">
         <span>{mode === "remaining" ? "Still to send" : "Cutoff total"}{incomeChannel ? ` (from ${label(incomeChannel)})` : ""}</span>
-        <span className="font-semibold tabular-nums text-stone-600">{peso(grandTotal)}</span>
+        <span className="font-display font-semibold tabular-nums text-stone-600">{peso(grandTotal)}</span>
       </p>
     </div>
   );

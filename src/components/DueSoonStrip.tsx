@@ -30,12 +30,12 @@ export default function DueSoonStrip() {
 
   return (
     <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-red-700 mb-1">Due soon</p>
+      <p className="text-[13px] font-semibold text-red-700 mb-1">Due soon</p>
       <ul className="flex flex-col gap-1 text-xs text-red-800">
         {due.map(({ d, days, minDue, paid }) => (
           <li key={d.id} className="flex justify-between gap-2">
             <span>{d.name} · due {days === 0 ? "today" : `in ${days}d`}</span>
-            <span className="tabular-nums shrink-0">{peso(paid)} of {peso(minDue)} min paid</span>
+            <span className="font-display tabular-nums shrink-0">{peso(paid)} of {peso(minDue)} min paid</span>
           </li>
         ))}
       </ul>

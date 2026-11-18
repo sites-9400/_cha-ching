@@ -5,6 +5,7 @@ import { fundsCol } from "../../lib/paths";
 import { addFund, updateFund, deleteFund } from "../../lib/repo";
 import type { SinkingFund } from "../../lib/types";
 import ConfirmDialog from "../ConfirmDialog";
+import { CloseIcon } from "../icons";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const BLANK: Omit<SinkingFund, "id"> = { name: "", monthlyDeposit: 0, releaseMonths: [], balance: 0 };
@@ -26,11 +27,11 @@ export default function FundsEditor() {
               <span className="truncate text-sm">{fund.name}</span>
               <span className="text-sm tabular-nums">{peso(fund.monthlyDeposit)}/mo</span>
             </button>
-            <button onClick={() => setConfirmId(fund.id)} className="text-red-500 text-xs px-1">✕</button>
+            <button onClick={() => setConfirmId(fund.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-emerald-700">+ Add fund</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add fund</button>
       {confirmId && (
         <ConfirmDialog title="Delete sinking fund?" message="Its schedule and balance are removed."
           onConfirm={async () => { await deleteFund(confirmId); setConfirmId(null); }}
