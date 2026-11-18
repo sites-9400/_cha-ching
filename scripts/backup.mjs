@@ -37,6 +37,7 @@ console.log(`${HH}: ${hhSnap.exists() ? 1 : 0} doc(s)`);
 
 // Collections directly under the household — mirrors src/lib/paths.ts.
 const collections = [
+  "statementCharges",
   "template-lines",
   "template-incomes",
   "categories",
