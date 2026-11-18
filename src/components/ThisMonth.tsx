@@ -103,19 +103,20 @@ export default function ThisMonth() {
 
   const focus = focusCutoff(lines, new Date().getDate()) ?? 2;
   const focusSummary = cutoffSummary(lines, incomes, focus, received);
+  const totalSurplus = cutoffSummary(lines, incomes, 1, received).surplus + cutoffSummary(lines, incomes, 2, received).surplus;
 
   return (
     <>
       <HeaderBand
-        title={"Going out, " + (focus === 1 ? "1st" : "2nd") + " cutoff"}
-        value={peso(focusSummary.planned)}
-        sub={<><span className="font-semibold text-ink">Came in {peso(focusSummary.income)}</span>{` · Left ${peso(focusSummary.surplus)}`}</>}
+        title="Total surplus"
+        value={peso(totalSurplus)}
         label={`${monthLabel(viewedKey)}${mode !== "current" ? ` · ${modeLabel}` : ""}`}
         left={navLeft}
         right={navRight}
       />
       <main className="p-4">
-      <WhereItGoes lines={lines} cutoff={focus} />
+
+      {mode === "current" && <DueSoonStrip />}
 
       {projected && (
         <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
@@ -123,6 +124,34 @@ export default function ThisMonth() {
           <button onClick={start} className="block mt-2 font-semibold text-ink">Start {monthLabel(viewedKey)} →</button>
         </div>
       )}
+
+      <section aria-label="Month tools">
+      {editable && (
+        <div className="mb-3">
+          <div className="flex gap-4 text-[14px]">
+            <button onClick={() => setAdding(true)} className="font-semibold text-ink">+ Add one-off</button>
+            {mode === "current" && (
+              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-medium text-ink-2">Sync from template</button>
+            )}
+            <button onClick={() => setConfirmRestart(true)} className="font-semibold text-marker-red">Restart month</button>
+          </div>
+          <p className="text-[12px] leading-4 text-ink-2 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-1.5 mb-3">
+        <span className="text-[12px] text-ink-2">Sort</span>
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+          {LINE_SORTS.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setLineSort(s.key)}
+              className={`px-2.5 py-0.5 rounded-full ${lineSort === s.key ? "bg-ink text-manila" : "text-ink-2"}`}
+            >{s.label}</button>
+          ))}
+        </div>
+      </div>
+      </section>
 
       {([1, 2] as const).map((cutoff) => (
         <CutoffSection
@@ -153,36 +182,15 @@ export default function ThisMonth() {
         />
       ))}
 
-      {mode === "current" && <DueSoonStrip />}
+      <WhereItGoes
+        lines={lines}
+        cutoff={focus}
+        title={"Going out, " + (focus === 1 ? "1st" : "2nd") + " cutoff"}
+        total={focusSummary.planned}
+        income={focusSummary.income}
+        left={focusSummary.surplus}
+      />
 
-      <section aria-label="Month tools" className="mt-2 mb-4 pt-4 border-t border-rule">
-        <h2 className="font-display font-bold text-[16px] leading-5 text-ink mb-2">Month tools</h2>
-      {editable && (
-        <div className="mb-3">
-          <div className="flex gap-4 text-[14px]">
-            <button onClick={() => setAdding(true)} className="font-semibold text-ink">+ Add one-off</button>
-            {mode === "current" && (
-              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-medium text-ink-2">Sync from template</button>
-            )}
-            <button onClick={() => setConfirmRestart(true)} className="font-semibold text-marker-red">Restart month</button>
-          </div>
-          <p className="text-[12px] leading-4 text-ink-2 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-1.5 mb-3">
-        <span className="text-[12px] text-ink-2">Sort</span>
-        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
-          {LINE_SORTS.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setLineSort(s.key)}
-              className={`px-2.5 py-0.5 rounded-full ${lineSort === s.key ? "bg-ink text-manila" : "text-ink-2"}`}
-            >{s.label}</button>
-          ))}
-        </div>
-      </div>
-      </section>
 
       {adding && <AddOneOff monthKey={viewedKey} lines={lines} onClose={() => setAdding(false)} />}
       {editingLine && (
