@@ -17,3 +17,22 @@ export function cardColor(debtId: string | undefined): string | undefined {
   if (debtId.startsWith("maya-")) return "#00B464";
   return undefined;
 }
+
+/** Brand colour per payment channel/account (Eve, 2026-11-18). */
+const BY_CHANNEL: Record<string, string> = {
+  "RCBC CREDIT": "#C9A227",   // RCBC Gold Visa: gold
+  "RCBC": "#1F4E9E",          // RCBC: blue
+  "RCBC SAVINGS": "#1F4E9E",  // RCBC Savings: blue
+  "CIMB": "#C8102E",          // CIMB: red
+  "GCASH": "#007DFE",         // GCash: blue
+  "MAYA": "#00B464",          // Maya: green
+  "MARIBANK": "#F26B21",      // MariBank: orange
+  "WISE": "#9FE870",          // Wise: lime green
+  "LANDBANK": "#00843D",      // Landbank: green
+  "UNIONBANK": "#FF8000",     // UnionBank: orange
+};
+
+/** Colour for a line: its card/loan colour when debt-linked, else its channel's. Pure. */
+export function lineColor(debtId: string | undefined, channel: string | undefined): string | undefined {
+  return cardColor(debtId) ?? (channel ? BY_CHANNEL[channel] : undefined);
+}

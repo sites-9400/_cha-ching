@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardColor } from "./cardColors";
+import { cardColor, lineColor } from "./cardColors";
 
 describe("cardColor", () => {
   it("maps the named cards", () => {
@@ -14,5 +14,15 @@ describe("cardColor", () => {
     expect(cardColor("maya-loan-220k")).toBe("#00B464");
     expect(cardColor("unknown")).toBeUndefined();
     expect(cardColor(undefined)).toBeUndefined();
+  });
+});
+
+describe("lineColor", () => {
+  it("prefers the debt colour, then the channel", () => {
+    expect(lineColor("maya-black", "MAYA")).toBe("#000000");
+    expect(lineColor(undefined, "CIMB")).toBe("#C8102E");
+    expect(lineColor(undefined, "RCBC CREDIT")).toBe("#C9A227");
+    expect(lineColor(undefined, "GCASH")).toBe("#007DFE");
+    expect(lineColor(undefined, "CASH")).toBeUndefined();
   });
 });

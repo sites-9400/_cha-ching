@@ -3,7 +3,7 @@ import { peso } from "../lib/format";
 import { toggleLinePaid } from "../lib/repo";
 import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
-import { cardColor } from "../lib/cardColors";
+import { lineColor } from "../lib/cardColors";
 
 export default function LineRow(
   { monthKey, line, readOnly = false, onEdit, spent, budgetTotal }:
@@ -36,7 +36,7 @@ export default function LineRow(
   const over = hasPool && (spent as number) > poolTotal;
 
   const helperGroup = line.budgetGroup ? ` (${line.budgetGroup})` : "";
-  const stripe = cardColor(line.debtId ?? line.debtSplits?.[0]?.debtId);
+  const stripe = lineColor(line.debtId ?? line.debtSplits?.[0]?.debtId, line.channel);
 
   return (
     <li className="py-2.5 flex items-start gap-2">
