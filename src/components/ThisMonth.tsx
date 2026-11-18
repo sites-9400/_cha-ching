@@ -8,6 +8,7 @@ import { LINE_SORTS, parseLineSortKey, type LineSortKey } from "../lib/lineSort"
 import { useCollection } from "../hooks/useCollection";
 import { useCollectionGroup } from "../hooks/useCollectionGroup";
 import { useDoc } from "../hooks/useDoc";
+import { useSwipe } from "../hooks/useSwipe";
 import { debtsCol, eventsCol, expensesCol, monthDoc, templateLines } from "../lib/paths";
 import { deleteMonthLine, deleteTemplateLine, restartMonth, skipLineForMonth, syncMonthFromTemplate, toggleLinePaid } from "../lib/repo";
 import { showToast } from "../lib/toast";
@@ -25,6 +26,8 @@ import ConfirmDialog from "./ConfirmDialog";
 
 export default function ThisMonth() {
   const { viewedKey, currentKey, mode, editable, lines, skippedLines, incomes, ready, goPrev, goNext, start } = useMonth();
+  // Swipe left = next month, right = previous month (phone).
+  const swipe = useSwipe(goNext, goPrev);
   const debts = useCollection<Debt>(debtsCol());
   const payments = useCollectionGroup<PaymentRec>("payments");
   const cycles = useCollectionGroup<DebtCycle>("cycles");
@@ -119,7 +122,7 @@ export default function ThisMonth() {
         left={navLeft}
         right={navRight}
       />
-      <main className="p-4">
+      <main className="p-4 min-h-[70vh]" style={{ touchAction: "pan-y" }} {...swipe}>
 
       {mode === "current" && <DueSoonStrip />}
 
