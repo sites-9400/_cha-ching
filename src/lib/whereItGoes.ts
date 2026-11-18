@@ -6,10 +6,12 @@ export interface OutflowGroup { key: LineGroup; label: string; amount: number; c
 /** Groups one cutoff's outgoing lines into ranked groups. Pure and
  *  deterministic: sorted by amount desc (ties keep LINE_GROUPS order),
  *  empty (zero-amount) groups dropped. Lines passed in are already active. */
-export function groupOutflow(lines: MonthLine[], cutoff: 1 | 2): OutflowGroup[] {
+export type OutflowScope = 1 | 2 | "month";
+
+export function groupOutflow(lines: MonthLine[], cutoff: OutflowScope): OutflowGroup[] {
   const acc = new Map<LineGroup, { amount: number; count: number }>();
   for (const l of lines) {
-    if (l.cutoff !== cutoff) continue;
+    if (cutoff !== "month" && l.cutoff !== cutoff) continue;
     const k = resolveGroup(l);
     const cur = acc.get(k) ?? { amount: 0, count: 0 };
     cur.amount += l.amount;

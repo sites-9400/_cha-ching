@@ -73,6 +73,21 @@ export interface Debt {
   active: boolean;
   installments?: number; // installment plans: total number of payments (e.g. 12)
   amortization?: number; // installment plans: amount per payment; paid count = installments − balance/amortization
+  openedMonth?: string; // "YYYY-MM": when the loan/installment/new card debt was taken on
+  openedAmount?: number; // principal financed; falls back to startingBalance when absent
+}
+
+/** A card charge (or credit, if negative) imported from a statement. Record only:
+ *  never changes any debt balance; written by scripts, not the app. */
+export interface StatementCharge {
+  id: string;
+  debtId: string;
+  date: string;     // "YYYY-MM-DD"
+  monthKey: string; // "YYYY-MM" of date
+  amount: number;   // positive charge, negative credit/refund
+  note: string;
+  source: "statement";
+  statement: string; // e.g. "eastwest-2026-08"
 }
 
 /** One credit-card statement cycle, stored at debts/{id}/cycles/{YYYY-MM}

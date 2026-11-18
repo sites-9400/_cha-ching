@@ -48,6 +48,7 @@ export default function ThisMonth() {
   const [confirmLine, setConfirmLine] = useState<MonthLine | null>(null);
   const [busyIncome, setBusyIncome] = useState<string | null>(null);
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const [scope, setScope] = useState<1 | 2 | "month" | null>(null);
   // Closed cutoffs start collapsed so the open cutoff sits on top. Initialized
   // on load / month change only — ticking a cutoff closed mid-session must not
   // snap it shut. null = not yet initialized (render falls back to live state).
@@ -102,8 +103,12 @@ export default function ThisMonth() {
   }
 
   const focus = focusCutoff(lines, new Date().getDate()) ?? 2;
-  const focusSummary = cutoffSummary(lines, incomes, focus, received);
   const totalSurplus = cutoffSummary(lines, incomes, 1, received).surplus + cutoffSummary(lines, incomes, 2, received).surplus;
+  const shown = scope ?? focus;
+  const s1 = cutoffSummary(lines, incomes, 1, received), s2 = cutoffSummary(lines, incomes, 2, received);
+  const shownSummary = shown === "month"
+    ? { planned: s1.planned + s2.planned, income: s1.income + s2.income, surplus: s1.surplus + s2.surplus }
+    : shown === 1 ? s1 : s2;
 
   return (
     <>
@@ -184,11 +189,12 @@ export default function ThisMonth() {
 
       <WhereItGoes
         lines={lines}
-        cutoff={focus}
-        title={"Going out, " + (focus === 1 ? "1st" : "2nd") + " cutoff"}
-        total={focusSummary.planned}
-        income={focusSummary.income}
-        left={focusSummary.surplus}
+        cutoff={shown}
+        title={shown === "month" ? "Going out, whole month" : "Going out, " + (shown === 1 ? "1st" : "2nd") + " cutoff"}
+        total={shownSummary.planned}
+        income={shownSummary.income}
+        left={shownSummary.surplus}
+        onScope={setScope}
       />
 
 

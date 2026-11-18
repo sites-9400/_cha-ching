@@ -3,6 +3,7 @@ import { peso } from "../lib/format";
 import { toggleLinePaid } from "../lib/repo";
 import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
+import { cardColor } from "../lib/cardColors";
 
 export default function LineRow(
   { monthKey, line, readOnly = false, onEdit, spent, budgetTotal }:
@@ -35,6 +36,7 @@ export default function LineRow(
   const over = hasPool && (spent as number) > poolTotal;
 
   const helperGroup = line.budgetGroup ? ` (${line.budgetGroup})` : "";
+  const stripe = cardColor(line.debtId ?? line.debtSplits?.[0]?.debtId);
 
   return (
     <li className="py-2.5 flex items-start gap-2">
@@ -49,6 +51,9 @@ export default function LineRow(
         className="flex-1 flex items-start gap-2 text-left min-w-0 select-none"
         aria-pressed={ticked}
       >
+        {stripe && (
+          <span aria-hidden="true" className="card-stripe w-1 self-stretch shrink-0 rounded-full" style={{ background: stripe }} />
+        )}
         <span
           className={`mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 flex items-center justify-center ${
             ticked ? "bg-ok border-ok text-manila" : "border-stone-300"

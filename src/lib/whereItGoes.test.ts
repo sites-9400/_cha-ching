@@ -51,3 +51,14 @@ describe("groupOutflow", () => {
     expect(groupOutflow([], 2)).toEqual([]);
   });
 });
+
+describe("groupOutflow month scope", () => {
+  it("combines both cutoffs", () => {
+    const ls = [
+      { id: "a", name: "Rent", amount: 100, cutoff: 1, channel: "CIMB", order: 1, status: "", oneOff: false, group: "home" },
+      { id: "b", name: "Bills", amount: 50, cutoff: 2, channel: "CIMB", order: 2, status: "", oneOff: false, group: "home" },
+    ] as unknown as Parameters<typeof groupOutflow>[0];
+    expect(groupOutflow(ls, "month")).toEqual([{ key: "home", label: "Home", amount: 150, count: 2 }]);
+    expect(groupOutflow(ls, 1)[0].amount).toBe(100);
+  });
+});

@@ -18,6 +18,7 @@ import StatementDialog from "./StatementDialog";
 import type { PaymentRec } from "./DebtPlan";
 import { useAccounts } from "./AccountsProvider";
 import HeaderBand from "./HeaderBand";
+import DebtFlow from "./DebtFlow";
 import { XIcon } from "./LineRow";
 import { CheckIcon, ChevronDownIcon, ChevronRightIcon, PencilIcon } from "./icons";
 
@@ -125,6 +126,7 @@ export default function Debts() {
         </div>
       </HeaderBand>
       <main className="p-4">
+      <DebtFlow />
       <DueSoonStrip />
       <ul className="flex flex-col gap-3">
         {active.map((d) => {

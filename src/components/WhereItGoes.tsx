@@ -1,11 +1,12 @@
 import { peso } from "../lib/format";
-import { groupOutflow } from "../lib/whereItGoes";
+import { groupOutflow, type OutflowScope } from "../lib/whereItGoes";
 import type { MonthLine } from "../lib/types";
 
 /** Ranked breakdown of where a cutoff's pesos go. Presentational only. */
 export default function WhereItGoes(
-  { lines, cutoff, title, total, income, left }:
-  { lines: MonthLine[]; cutoff: 1 | 2; title?: string; total?: number; income?: number; left?: number },
+  { lines, cutoff, title, total, income, left, onScope }:
+  { lines: MonthLine[]; cutoff: OutflowScope; title?: string; total?: number; income?: number; left?: number;
+    onScope?: (s: OutflowScope) => void },
 ) {
   const groups = groupOutflow(lines, cutoff);
   if (groups.length === 0) return null;
@@ -15,6 +16,19 @@ export default function WhereItGoes(
     <section aria-label="Where it goes" className="mb-4 rounded-xl border border-rule bg-manila p-4 shadow-card">
       {title != null && total != null && (
         <div className="mb-4 pb-4 border-b border-rule">
+          {onScope && (
+            <div role="tablist" aria-label="Which cutoff" className="mb-3 flex rounded-full border border-rule p-0.5 text-[12px] font-semibold">
+              {([[1, "1st cutoff"], [2, "2nd cutoff"], ["month", "Whole month"]] as const).map(([k, lbl]) => (
+                <button
+                  key={String(k)}
+                  role="tab"
+                  aria-selected={cutoff === k}
+                  onClick={() => onScope(k)}
+                  className={`flex-1 h-9 rounded-full ${cutoff === k ? "bg-ink text-manila" : "text-ink-2"}`}
+                >{lbl}</button>
+              ))}
+            </div>
+          )}
           <h2 className="text-[15px] leading-5 font-medium text-ink">{title}</h2>
           <p className="font-display font-extrabold text-[44px] leading-none text-ink tabular-nums mt-1">{peso(total)}</p>
           {income != null && left != null && (

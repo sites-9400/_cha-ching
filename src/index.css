@@ -133,3 +133,6 @@ input, textarea, select { caret-color: var(--color-ink); accent-color: var(--col
     font-size: 16px;
   }
 }
+
+/* Card-colour stripe on payment lines: keep black (Maya Black) visible at night */
+.dark .card-stripe { box-shadow: 0 0 0 1px #5A5048; }
