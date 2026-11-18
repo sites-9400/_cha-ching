@@ -24,24 +24,24 @@ export default function EventsEditor() {
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Planned one-offs</h2>
-      <p className="text-xs text-stone-400 mb-3">Suggested one-off lines when a month is generated.</p>
+      <p className="text-xs text-ink-2 mb-3">Suggested one-off lines when a month is generated.</p>
       <ul className="flex flex-col gap-2">
         {sorted.map((e) => (
           <li key={e.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-            <button onClick={() => setEditing(e)} className="flex-1 flex items-center justify-between min-w-0">
+            <button onClick={() => setEditing(e)} className="flex-1 min-h-11 flex items-center justify-between min-w-0">
               <span className="truncate text-sm">
                 {e.month} · C{e.cutoff ?? 2} · {e.name}
                 {e.debtSplits && e.debtSplits.length > 0
-                  ? <span className="text-stone-400"> · pays {e.debtSplits.length} debts</span>
-                  : debtName(e.debtId) && <span className="text-stone-400"> · pays {debtName(e.debtId)}</span>}
+                  ? <span className="text-ink-2"> · pays {e.debtSplits.length} debts</span>
+                  : debtName(e.debtId) && <span className="text-ink-2"> · pays {debtName(e.debtId)}</span>}
               </span>
               <span className="text-sm tabular-nums">{peso(e.amount)}</span>
             </button>
-            <button onClick={() => setConfirmId(e.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
+            <button onClick={() => setConfirmId(e.id)} aria-label="Remove" className="text-marker-red-text inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add event</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-1 text-sm font-semibold text-ink underline underline-offset-2 inline-flex items-center min-h-11 px-2 -mx-2">+ Add event</button>
       {confirmId && (
         <ConfirmDialog title="Delete event?" message="It will no longer be suggested."
           onConfirm={async () => { await deleteEvent(confirmId); setConfirmId(null); }}
@@ -81,33 +81,33 @@ function Form({ ev, onDone }: { ev: EventItem | Omit<EventItem, "id">; onDone: (
   return (
     <div className="flex flex-col gap-3">
       <h2 className="font-bold text-lg">{id ? "Edit event" : "Add event"}</h2>
-      <input placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm border-b border-stone-300 outline-none pb-1" />
-      <label className="flex items-center justify-between text-sm">Amount
-        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <input aria-label="Name" placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
+      <label className="flex items-center justify-between text-sm min-h-11">Amount
+        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm">Month (YYYY-MM)
-        <input placeholder="2026-08" value={f.month} onChange={(e) => set("month", e.target.value)} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <label className="flex items-center justify-between text-sm min-h-11">Month (YYYY-MM)
+        <input aria-label="2026-08" placeholder="2026-08" value={f.month} onChange={(e) => set("month", e.target.value)} className="w-28 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm">Cutoff
-        <select value={f.cutoff ?? 2} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm border-b border-stone-300 outline-none">
+      <label className="flex items-center justify-between text-sm min-h-11">Cutoff
+        <select value={f.cutoff ?? 2} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           <option value={1}>1st cutoff</option>
           <option value={2}>2nd cutoff</option>
         </select>
       </label>
-      <label className="flex items-center justify-between text-sm">Channel (optional)
-        <select value={f.channel ?? ""} onChange={(e) => set("channel", (e.target.value || undefined) as Channel | undefined)} className="text-sm border-b border-stone-300 outline-none">
+      <label className="flex items-center justify-between text-sm min-h-11">Channel (optional)
+        <select value={f.channel ?? ""} onChange={(e) => set("channel", (e.target.value || undefined) as Channel | undefined)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           <option value="">—</option>
           {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
-      <input placeholder="Note (optional)" value={f.note ?? ""} onChange={(e) => set("note", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none pb-1" />
+      <input aria-label="Note (optional)" placeholder="Note (optional)" value={f.note ?? ""} onChange={(e) => set("note", e.target.value || undefined)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
       <DebtSplitsEditor
         debts={debts} amount={f.amount} debtId={f.debtId} debtSplits={f.debtSplits}
         onChange={(v) => setF({ ...f, debtId: v.debtId, debtSplits: v.debtSplits })}
       />
       <div className="flex gap-2 mt-2">
-        <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-        <button onClick={() => void save()} disabled={!f.name.trim() || !validMonth} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+        <button onClick={onDone} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+        <button onClick={() => void save()} disabled={!f.name.trim() || !validMonth} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
       </div>
     </div>
   );

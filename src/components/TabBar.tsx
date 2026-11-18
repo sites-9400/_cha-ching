@@ -33,7 +33,7 @@ export default function TabBar({
           <button
             key={id}
             onClick={() => onChange(id)}
-            className={`relative flex-1 flex flex-col items-center gap-1 py-2 text-[11px] leading-3 ${
+            className={`relative flex-1 min-h-11 flex flex-col items-center gap-1 py-2 text-[11px] leading-3 ${
               active === id ? "text-ink font-semibold" : "text-ink-2 font-medium"
             }`}
             aria-current={active === id ? "page" : undefined}

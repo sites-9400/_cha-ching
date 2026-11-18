@@ -24,7 +24,7 @@ export default function AccountsEditor() {
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Accounts</h2>
-      <p className="text-xs text-stone-400 mb-3">
+      <p className="text-xs text-ink-2 mb-3">
         Account numbers for transfers — tap to edit. Tap ★ to mark where your income lands
         (it's netted out of the send calculator).
       </p>
@@ -33,23 +33,23 @@ export default function AccountsEditor() {
           const isIncome = incomeChannel === String(a.name);
           return (
             <li key={String(a.name)} className="bg-white rounded-xl shadow flex items-center">
-              <button onClick={() => setEditing(a)} className="flex-1 p-3 flex items-center gap-3 text-left min-w-0">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${a.chip}`}>{channelLabel(String(a.name))}</span>
-                <span className={`flex-1 text-sm tabular-nums truncate ${a.number ? "text-stone-700" : "text-stone-400"}`}>
+              <button onClick={() => setEditing(a)} className="flex-1 p-3 min-h-11 flex items-center gap-3 text-left min-w-0">
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${a.chip}`}>{channelLabel(String(a.name))}</span>
+                <span className={`flex-1 text-sm tabular-nums truncate ${a.number ? "text-stone-700" : "text-ink-2"}`}>
                   {a.number ?? "add number"}
                 </span>
-                <span className="text-stone-300 text-xs">edit</span>
+                <span className="text-ink-2 text-xs">edit</span>
               </button>
               <button
                 onClick={() => toggleIncome(String(a.name))}
                 aria-label="Mark as income account"
-                className={`px-3 py-3 text-lg ${isIncome ? "text-amber-500" : "text-stone-200"}`}
+                className={`px-3 py-3 min-h-11 min-w-11 text-lg ${isIncome ? "text-amber-500" : "text-stone-200"}`}
               >★</button>
             </li>
           );
         })}
       </ul>
-      <button onClick={() => setEditing("new")} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add account</button>
+      <button onClick={() => setEditing("new")} className="mt-1 text-sm font-semibold text-ink underline underline-offset-2 inline-flex items-center min-h-11 px-2 -mx-2">+ Add account</button>
     </div>
   );
 }
@@ -85,13 +85,13 @@ function Form({ target, accounts, onDone }: { target: AccountInfo | "new"; accou
       <h2 className="font-bold text-lg">{isNew ? "Add account" : `Edit ${info!.name}`}</h2>
 
       {custom ? (
-        <input placeholder="Account name (e.g. SEABANK)" value={name} onChange={(e) => setName(e.target.value.toUpperCase())}
+        <input aria-label="Account name (e.g. SEABANK)" placeholder="Account name (e.g. SEABANK)" value={name} onChange={(e) => setName(e.target.value.toUpperCase())}
           className="text-sm border-b border-stone-300 outline-none pb-1" />
       ) : (
         <p className="text-sm text-stone-500">Built-in account — edit its number below.</p>
       )}
 
-      <label className="flex items-center justify-between text-sm">Account number
+      <label className="flex items-center justify-between text-sm min-h-11">Account number
         <input inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)}
           className="w-44 text-right border-b border-stone-300 outline-none tabular-nums" />
       </label>
@@ -102,23 +102,23 @@ function Form({ target, accounts, onDone }: { target: AccountInfo | "new"; accou
           <div className="flex flex-wrap gap-2">
             {CHIP_PALETTE.map((p) => (
               <button key={p.key} onClick={() => setColor(p.key)}
-                className={`h-8 w-8 rounded-full ${p.className.split(" ")[0]} ${color === p.key ? "ring-2 ring-offset-2 ring-stone-800" : ""}`}
+                className={`h-11 w-11 rounded-full ${p.className.split(" ")[0]} ${color === p.key ? "ring-2 ring-offset-2 ring-stone-800" : ""}`}
                 aria-label={p.key} />
             ))}
           </div>
-          <p className="mt-2 text-xs text-stone-400">Preview:
-            <span className={`ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full ${paletteChip(color)}`}>{name || "NAME"}</span>
+          <p className="mt-2 text-xs text-ink-2">Preview:
+            <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${paletteChip(color)}`}>{name || "NAME"}</span>
           </p>
         </div>
       )}
 
       <div className="flex gap-2 mt-2">
-        <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-        <button onClick={() => void save()} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+        <button onClick={onDone} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+        <button onClick={() => void save()} disabled={!valid} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
       </div>
 
       {!isNew && info!.custom && (
-        <button onClick={() => setConfirmDel(true)} className="text-sm text-red-500 font-medium mt-1">Delete account</button>
+        <button onClick={() => setConfirmDel(true)} className="text-sm text-marker-red-text font-semibold inline-flex items-center min-h-11 px-2 -mx-2">Delete account</button>
       )}
       {confirmDel && info && info.custom && (
         <ConfirmDialog

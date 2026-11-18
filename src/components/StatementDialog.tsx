@@ -17,14 +17,14 @@ export default function StatementDialog({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onCancel}>
       <div className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold">{debtName} · {cycleKey} statement</h3>
-        <label className="flex items-center justify-between text-sm">Statement balance
+        <label className="flex items-center justify-between text-sm min-h-11">Statement balance
           <input
             type="number" inputMode="decimal" autoFocus value={balance}
             onChange={(e) => setBalance(e.target.value)}
             className="w-28 text-right border-b border-stone-300 outline-none tabular-nums"
           />
         </label>
-        <label className="flex items-center justify-between text-sm">Minimum due
+        <label className="flex items-center justify-between text-sm min-h-11">Minimum due
           <input
             type="number" inputMode="decimal" value={min}
             onChange={(e) => setMin(e.target.value)}
@@ -32,10 +32,10 @@ export default function StatementDialog({
           />
         </label>
         <div className="flex gap-2 mt-1">
-          <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+          <button onClick={onCancel} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
           <button
             onClick={() => void onConfirm(b, m)} disabled={!valid}
-            className="flex-1 py-2 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40"
+            className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40"
           >Save</button>
         </div>
       </div>

@@ -32,15 +32,15 @@ export default function CategoriesEditor() {
         {sorted.map((c, i) => (
           <li key={c.id} className="bg-white rounded-xl shadow p-3 flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <span className="flex flex-col">
-                <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move up"><ChevronUpIcon className="h-3.5 w-3.5" /></button>
-                <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move down"><ChevronDownIcon className="h-3.5 w-3.5" /></button>
+              <span className="flex">
+                <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-ink-2 disabled:opacity-20 leading-none inline-flex items-center justify-center min-h-11 min-w-11" aria-label="Move up"><ChevronUpIcon className="h-3.5 w-3.5" /></button>
+                <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-ink-2 disabled:opacity-20 leading-none inline-flex items-center justify-center min-h-11 min-w-11" aria-label="Move down"><ChevronDownIcon className="h-3.5 w-3.5" /></button>
               </span>
-              <input defaultValue={c.name} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.name) void updateCategory(c.id, { name: e.target.value.trim() }); }}
-                className="flex-1 text-sm outline-none border-b border-transparent focus:border-stone-300" />
-              <button onClick={() => setConfirmId(c.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
+              <input aria-label={`Category name, ${c.name}`} defaultValue={c.name} onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.name) void updateCategory(c.id, { name: e.target.value.trim() }); }}
+                className="flex-1 min-h-11 text-sm outline-none border-b border-transparent focus:border-stone-300" />
+              <button onClick={() => setConfirmId(c.id)} aria-label="Remove" className="text-marker-red-text inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
             </div>
-            <label className="flex items-center justify-between text-xs text-stone-400 pl-5">
+            <label className="flex items-center justify-between text-xs text-ink-2 pl-5">
               Monthly budget
               <input
                 type="number" inputMode="decimal" placeholder="—"
@@ -59,8 +59,8 @@ export default function CategoriesEditor() {
         ))}
       </ul>
       <div className="mt-3 flex gap-2">
-        <input placeholder="New category" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1 text-sm border-b border-stone-300 outline-none" />
-        <button onClick={() => void add()} disabled={!newName.trim()} className="text-sm font-semibold text-ink underline underline-offset-2 disabled:opacity-40">Add</button>
+        <input aria-label="New category" placeholder="New category" value={newName} onChange={(e) => setNewName(e.target.value)} className="flex-1 text-sm min-h-11 border-b border-stone-300 outline-none" />
+        <button onClick={() => void add()} disabled={!newName.trim()} className="text-sm font-semibold text-ink underline underline-offset-2 disabled:opacity-40 inline-flex items-center min-h-11 px-2 -mx-2">Add</button>
       </div>
       {confirmId && (
         <ConfirmDialog title="Delete category?" message="Quick Add will no longer suggest it."

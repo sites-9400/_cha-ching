@@ -62,21 +62,21 @@ export default function EditLineDialog(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold">Edit line · this month</h3>
-        <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)}
+        <input aria-label="Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)}
           className="text-sm border-b border-stone-300 outline-none pb-1" />
-        <label className="flex items-center justify-between text-sm">Amount
+        <label className="flex items-center justify-between text-sm min-h-11">Amount
           <input type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
             className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
         </label>
-        <label className="flex items-center justify-between text-sm">Channel
-          <select value={channel} onChange={(e) => setChannel(e.target.value)} className="text-sm border-b border-stone-300 outline-none">
+        <label className="flex items-center justify-between text-sm min-h-11">Channel
+          <select value={channel} onChange={(e) => setChannel(e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
             {names.map((c) => <option key={String(c)} value={String(c)}>{c}</option>)}
           </select>
         </label>
-        <label className="flex items-center justify-between text-sm">Budget
+        <label className="flex items-center justify-between text-sm min-h-11">Budget
           <input type="checkbox" checked={isEnvelope} onChange={(e) => setIsEnvelope(e.target.checked)} />
         </label>
-        <label className="flex items-center justify-between text-sm gap-2">Budget group
+        <label className="flex items-center justify-between text-sm min-h-11 gap-2">Budget group
           <input
             placeholder="e.g. Allowance" value={budgetGroup}
             onChange={(e) => setBudgetGroup(e.target.value)}
@@ -92,19 +92,19 @@ export default function EditLineDialog(
         <div className="flex flex-col gap-1">
           <span className="text-sm">Group</span>
           <GroupChips value={shownGroup} disabled={debtLinked} onChange={(g) => setLineGroupState(g)} />
-          {debtLinked && <p className="text-[11px] text-stone-400">Card and loan payments always count as Cards &amp; debts.</p>}
+          {debtLinked && <p className="text-xs text-ink-2">Card and loan payments always count as Cards &amp; debts.</p>}
         </div>
-        <p className="text-[11px] text-stone-400">Changes apply to {monthKey} only — the template stays as-is.</p>
+        <p className="text-xs text-ink-2">Changes apply to {monthKey} only — the template stays as-is.</p>
         {onRemove && (
           <button
             type="button"
             onClick={() => { onClose(); onRemove(); }}
-            className="self-start text-sm font-semibold text-marker-red underline underline-offset-2"
+            className="self-start inline-flex items-center min-h-11 text-sm font-semibold text-marker-red-text underline underline-offset-2"
           >Remove from this month</button>
         )}
         <div className="flex gap-2 mt-1">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-          <button onClick={() => void save()} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Save</button>
+          <button onClick={onClose} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+          <button onClick={() => void save()} disabled={!valid} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Save</button>
         </div>
       </div>
     </div>

@@ -26,24 +26,24 @@ export default function SubscriptionsEditor() {
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Subscriptions</h2>
-      <p className="text-xs text-stone-400 mb-3">
+      <p className="text-xs text-ink-2 mb-3">
         {peso(total)}/month across {subs.length} subscriptions
       </p>
       <ul className="flex flex-col gap-2">
         {sorted.map((s) => (
           <li key={s.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-            <button onClick={() => setEditing(s)} className="flex-1 flex items-center gap-2 min-w-0">
+            <button onClick={() => setEditing(s)} className="flex-1 min-h-11 flex items-center gap-2 min-w-0">
               <span className="truncate text-sm flex-1 text-left">{s.name}</span>
               {s.channel && (
-                <span className="text-[11px] leading-4 font-semibold px-1.5 py-0.5 rounded-full shrink-0 border border-rule text-ink-2">{label(s.channel)}</span>
+                <span className="text-xs leading-4 font-semibold px-1.5 py-0.5 rounded-full shrink-0 border border-rule text-ink-2">{label(s.channel)}</span>
               )}
               <span className="text-sm tabular-nums shrink-0">{peso(s.amount)}</span>
             </button>
-            <button onClick={() => setConfirmId(s.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
+            <button onClick={() => setConfirmId(s.id)} aria-label="Remove" className="text-marker-red-text inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add subscription</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-1 text-sm font-semibold text-ink underline underline-offset-2 inline-flex items-center min-h-11 px-2 -mx-2">+ Add subscription</button>
       {confirmId && (
         <ConfirmDialog title="Delete subscription?" message="It will no longer appear in this registry."
           onConfirm={async () => { await deleteSubscription(confirmId); setConfirmId(null); }}
@@ -68,20 +68,20 @@ function Form({ sub, onDone }: { sub: Subscription | Omit<Subscription, "id">; o
   return (
     <div className="flex flex-col gap-3">
       <h2 className="font-bold text-lg">{id ? "Edit subscription" : "Add subscription"}</h2>
-      <input placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm border-b border-stone-300 outline-none pb-1" />
-      <label className="flex items-center justify-between text-sm">Amount
-        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <input aria-label="Name" placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
+      <label className="flex items-center justify-between text-sm min-h-11">Amount
+        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm">Channel (optional)
-        <select value={f.channel ?? ""} onChange={(e) => set("channel", (e.target.value || undefined) as Channel | undefined)} className="text-sm border-b border-stone-300 outline-none">
+      <label className="flex items-center justify-between text-sm min-h-11">Channel (optional)
+        <select value={f.channel ?? ""} onChange={(e) => set("channel", (e.target.value || undefined) as Channel | undefined)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           <option value="">—</option>
           {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
-      <input placeholder="Note (optional)" value={f.note ?? ""} onChange={(e) => set("note", e.target.value || undefined)} className="text-sm border-b border-stone-300 outline-none pb-1" />
+      <input aria-label="Note (optional)" placeholder="Note (optional)" value={f.note ?? ""} onChange={(e) => set("note", e.target.value || undefined)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
       <div className="flex gap-2 mt-2">
-        <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-        <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+        <button onClick={onDone} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+        <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
       </div>
     </div>
   );

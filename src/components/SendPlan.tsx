@@ -41,12 +41,12 @@ export default function SendPlan({
     <div className="mt-3 border-t border-stone-100 pt-3">
       <div className="flex items-center justify-between mb-2">
         <p className="font-display font-bold text-[16px] leading-5 text-ink">Send to accounts</p>
-        <div className="flex rounded-full bg-stone-100 p-0.5 text-[10px] font-semibold">
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-xs font-semibold">
           {(["remaining", "full"] as const).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`px-2 py-0.5 rounded-full ${mode === m ? "bg-ink text-manila" : "text-ink-2"}`}
+              className={`px-3 min-h-11 rounded-full ${mode === m ? "bg-ink text-manila" : "text-ink-2"}`}
             >
               {m === "remaining" ? "Left to send" : "Full"}
             </button>
@@ -61,7 +61,7 @@ export default function SendPlan({
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs flex justify-between text-stone-400">
+      <p className="mt-2 text-xs flex justify-between text-ink-2">
         <span>{mode === "remaining" ? "Still to send" : "Cutoff total"}{incomeChannel ? ` (from ${label(incomeChannel)})` : ""}</span>
         <span className="font-display font-semibold tabular-nums text-stone-600">{peso(grandTotal)}</span>
       </p>

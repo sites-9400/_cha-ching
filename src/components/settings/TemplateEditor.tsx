@@ -65,21 +65,21 @@ export default function TemplateEditor() {
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Recurring</h2>
-      <p className="text-xs text-stone-400 mb-3">Edits sync into the current month's open cutoffs, keeping your ticks. Closed cutoffs are frozen.</p>
+      <p className="text-xs text-ink-2 mb-3">Edits sync into the current month's open cutoffs, keeping your ticks. Closed cutoffs are frozen.</p>
       {notice && (
         <p className="mb-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 flex justify-between gap-2">
           <span>{notice}</span>
-          <button onClick={() => setNotice(null)} aria-label="Dismiss" className="shrink-0"><CloseIcon /></button>
+          <button onClick={() => setNotice(null)} aria-label="Dismiss" className="shrink-0 inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
         </p>
       )}
       <div className="flex items-center gap-1.5 mb-3">
-        <span className="text-[11px] text-stone-400">Sort</span>
-        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+        <span className="text-xs text-ink-2">Sort</span>
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-xs font-semibold">
           {SORTS.map((s) => (
             <button
               key={s.key}
               onClick={() => setSort(s.key)}
-              className={`px-2.5 py-0.5 rounded-full ${sort === s.key ? "bg-white shadow text-stone-700" : "text-stone-400"}`}
+              className={`px-3 min-h-11 rounded-full ${sort === s.key ? "bg-white shadow text-stone-700" : "text-ink-2"}`}
             >{s.label}</button>
           ))}
         </div>
@@ -90,24 +90,24 @@ export default function TemplateEditor() {
           return (
             <Fragment key={l.id}>
               {groupHeader && (
-                <li className="pt-2 first:pt-0 text-[10px] font-bold uppercase tracking-wide text-stone-400">
+                <li className="pt-2 first:pt-0 text-xs font-bold uppercase tracking-wide text-ink-2">
                   {label(l.channel)}
                 </li>
               )}
               <li className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-                <button onClick={() => setEditing(l)} className="flex-1 flex items-center gap-2 min-w-0">
-                  <span className="text-[10px] text-stone-400 shrink-0">C{l.cutoff}</span>
+                <button onClick={() => setEditing(l)} className="flex-1 min-h-11 flex items-center gap-2 min-w-0">
+                  <span className="text-xs text-ink-2 shrink-0">C{l.cutoff}</span>
                   <span className="truncate text-sm flex-1 text-left">{l.name}</span>
-                  <span className="text-[11px] leading-4 font-semibold px-1.5 py-0.5 rounded-full shrink-0 border border-rule text-ink-2">{label(l.channel)}</span>
+                  <span className="text-xs leading-4 font-semibold px-1.5 py-0.5 rounded-full shrink-0 border border-rule text-ink-2">{label(l.channel)}</span>
                   <span className="text-sm tabular-nums shrink-0">{peso(l.amount)}</span>
                 </button>
-                <button onClick={() => setConfirmId(l.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
+                <button onClick={() => setConfirmId(l.id)} aria-label="Remove" className="text-marker-red-text inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
               </li>
             </Fragment>
           );
         })}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add line</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-1 text-sm font-semibold text-ink underline underline-offset-2 inline-flex items-center min-h-11 px-2 -mx-2">+ Add line</button>
       {confirmId && (
         <ConfirmDialog
           title="Delete template line?"
@@ -166,32 +166,32 @@ function Form({ line, onDone, onCancel }: {
   return (
     <div className="flex flex-col gap-3">
       <h2 className="font-bold text-lg">{id ? "Edit line" : "Add line"}</h2>
-      <input placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm border-b border-stone-300 outline-none pb-1" />
-      <label className="flex items-center justify-between text-sm">Amount
-        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <input aria-label="Name" placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
+      <label className="flex items-center justify-between text-sm min-h-11">Amount
+        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm">Cutoff
-        <select value={f.cutoff} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm border-b border-stone-300 outline-none">
+      <label className="flex items-center justify-between text-sm min-h-11">Cutoff
+        <select value={f.cutoff} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           <option value={1}>1</option><option value={2}>2</option>
         </select>
       </label>
-      <label className="flex items-center justify-between text-sm">Channel
-        <select value={f.channel} onChange={(e) => set("channel", e.target.value as Channel)} className="text-sm border-b border-stone-300 outline-none">
+      <label className="flex items-center justify-between text-sm min-h-11">Channel
+        <select value={f.channel} onChange={(e) => set("channel", e.target.value as Channel)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
-      <label className="flex items-center justify-between text-sm">Order
-        <input type="number" value={f.order} onChange={(e) => set("order", Number(e.target.value))} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <label className="flex items-center justify-between text-sm min-h-11">Order
+        <input type="number" value={f.order} onChange={(e) => set("order", Number(e.target.value))} className="w-20 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
       <DebtSplitsEditor
         debts={debts} amount={f.amount} debtId={f.debtId} debtSplits={f.debtSplits}
         onChange={(v) => setF({ ...f, debtId: v.debtId, debtSplits: v.debtSplits })}
       />
-      <label className="flex items-center justify-between text-sm">Budget
+      <label className="flex items-center justify-between text-sm min-h-11">Budget
         <input type="checkbox" checked={!!f.isEnvelope} onChange={(e) => set("isEnvelope", e.target.checked)} />
       </label>
-      <p className="text-[11px] text-stone-400 -mt-1">Quick Add can draw spending from this budget line instead of free cash.</p>
-      <label className="flex items-center justify-between text-sm gap-2">Budget group
+      <p className="text-xs text-ink-2 -mt-1">Quick Add can draw spending from this budget line instead of free cash.</p>
+      <label className="flex items-center justify-between text-sm min-h-11 gap-2">Budget group
         <input
           placeholder="e.g. Allowance"
           value={f.budgetGroup ?? ""}
@@ -199,7 +199,7 @@ function Form({ line, onDone, onCancel }: {
           className="w-32 text-right border-b border-stone-300 outline-none"
         />
       </label>
-      <p className="text-[11px] text-stone-400 -mt-1">Lines with the same group name share ONE combined pool. Setting a group makes this a budget line automatically.</p>
+      <p className="text-xs text-ink-2 -mt-1">Lines with the same group name share ONE combined pool. Setting a group makes this a budget line automatically.</p>
       <div className="flex flex-col gap-1">
         <span className="text-sm">Group</span>
         <GroupChips
@@ -207,12 +207,12 @@ function Form({ line, onDone, onCancel }: {
           onChange={(g) => set("group", g)}
         />
         {(!!f.debtId || !!f.debtSplits?.length) && (
-          <p className="text-[11px] text-stone-400">Card and loan payments always count as Cards &amp; debts.</p>
+          <p className="text-xs text-ink-2">Card and loan payments always count as Cards &amp; debts.</p>
         )}
       </div>
       <div className="flex gap-2 mt-2">
-        <button onClick={onCancel} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-        <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+        <button onClick={onCancel} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+        <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
       </div>
     </div>
   );

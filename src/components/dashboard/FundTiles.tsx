@@ -17,7 +17,7 @@ export default function FundTiles({ funds, monthIndex }: { funds: SinkingFund[];
             <div key={f.id} className="rounded-lg bg-stone-50 p-3.5">
               <p className="text-xs text-stone-500 truncate">{f.name}</p>
               <p className="font-display text-lg font-bold tabular-nums">{peso(f.balance)}</p>
-              <p className="text-[11px] text-stone-400">
+              <p className="text-xs text-ink-2">
                 {rel ? `releases ${MONTH_ABBR[rel - 1]}` : "no release set"}
               </p>
             </div>

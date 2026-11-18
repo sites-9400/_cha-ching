@@ -9,7 +9,7 @@ import type { Debt } from "../lib/types";
 import ConfirmPayDialog from "./ConfirmPayDialog";
 import { CheckIcon } from "./icons";
 
-const CHIP_PLAIN = "text-[11px] leading-4 font-semibold px-1.5 py-0.5 rounded-full border border-rule text-ink-2 whitespace-nowrap";
+const CHIP_PLAIN = "text-xs leading-4 font-semibold px-1.5 py-0.5 rounded-full border border-rule text-ink-2 whitespace-nowrap";
 
 export interface PaymentRec {
   id: string; debtId: string; amount: number; monthKey: string; cutoff: 1 | 2; date: string;
@@ -48,22 +48,22 @@ export default function DebtPlan({
     <div className="mt-3 border-t border-stone-100 pt-3">
       <p className="font-display font-bold text-[16px] leading-5 text-ink mb-2">
         Debt plan · free cash {peso(freeCash)}
-        {unplanned > 0 && <span className="font-normal text-stone-400"> (after {peso(unplanned)} unplanned)</span>}
+        {unplanned > 0 && <span className="font-normal text-ink-2"> (after {peso(unplanned)} unplanned)</span>}
         {closed
-          ? <span className="font-normal text-stone-400"> · closed</span>
+          ? <span className="font-normal text-ink-2"> · closed</span>
           : paidTotal > 0 && <span className="font-normal text-emerald-600"> · {peso(remaining)} left</span>}
       </p>
       <ul className="flex flex-col gap-1.5">
         {/* Already paid this cutoff — fixed, ticked, not re-derived. */}
         {paidLines.map(({ debt, amount }) => (
           <li key={`paid-${debt.id}`} className="flex items-center justify-between gap-2 text-sm">
-            <span className="flex items-center gap-2 min-w-0">
+            <span className="flex items-center gap-2 min-w-0 min-h-11">
               <CheckIcon className="h-3.5 w-3.5 text-ok shrink-0" />
-              <span className="truncate line-through text-stone-400">{debt.name}</span>
+              <span className="truncate line-through text-ink-2">{debt.name}</span>
               <span className={CHIP_PLAIN}>{label(debt.channel)}</span>
-              <span className="text-[10px] text-emerald-600">paid</span>
+              <span className="text-xs text-emerald-600">paid</span>
             </span>
-            <span className="font-display font-bold tabular-nums text-stone-400 shrink-0">{peso(amount)}</span>
+            <span className="font-display font-bold tabular-nums text-ink-2 shrink-0">{peso(amount)}</span>
           </li>
         ))}
         {/* Still to send — the remaining free cash, allocated live. */}
@@ -72,17 +72,17 @@ export default function DebtPlan({
             <button
               disabled={readOnly}
               onClick={readOnly ? undefined : () => setPayDebt(debts.find((d) => d.id === l.debtId) ?? null)}
-              className="flex items-center gap-2 min-w-0"
+              className="flex items-center gap-2 min-w-0 min-h-11"
             >
               <CheckIcon className="h-3.5 w-3.5 text-stone-300 shrink-0" />
               <span className="truncate font-medium">{l.name}</span>
               <span className={CHIP_PLAIN}>{label(l.channel)}</span>
-              <span className="text-[10px] text-stone-400">{KIND_LABEL[l.kind]}</span>
+              <span className="text-xs text-ink-2">{KIND_LABEL[l.kind]}</span>
             </button>
             <span className="text-right shrink-0">
               <span className="font-display font-bold tabular-nums">{peso(l.amount)}</span>
               {l.minIncluded != null && (
-                <span className="block text-[10px] text-stone-400">incl. {peso(l.minIncluded)} min</span>
+                <span className="block text-xs text-ink-2">incl. {peso(l.minIncluded)} min</span>
               )}
             </span>
           </li>

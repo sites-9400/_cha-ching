@@ -51,7 +51,7 @@ export default function Settings() {
   if (section) {
     return (
       <main className="p-4 pt-[calc(env(safe-area-inset-top)+1rem)]">
-        <button onClick={() => setSection(null)} className="text-sm text-ink font-semibold mb-4 inline-flex items-center gap-1"><ChevronLeftIcon className="h-4 w-4" /><span className="underline underline-offset-2">Settings</span></button>
+        <button onClick={() => setSection(null)} className="text-sm text-ink font-semibold mb-2 inline-flex items-center gap-1 min-h-11"><ChevronLeftIcon className="h-4 w-4" /><span className="underline underline-offset-2">Settings</span></button>
         <Editor section={section} />
       </main>
     );
@@ -63,12 +63,12 @@ export default function Settings() {
       <main className="p-4">
       <div className="bg-manila rounded-xl border border-rule shadow-card px-4 py-3 mb-4 flex items-center justify-between">
         <span className="text-sm">Appearance</span>
-        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+        <div className="flex rounded-full bg-stone-100 p-0.5 text-xs font-semibold">
           {THEMES.map((t) => (
             <button
               key={t.id}
               onClick={() => pickTheme(t.id)}
-              className={`px-2.5 py-1 rounded-full ${theme === t.id ? "bg-ink text-manila" : "text-ink-2"}`}
+              className={`px-3 min-h-11 rounded-full ${theme === t.id ? "bg-ink text-manila" : "text-ink-2"}`}
             >{t.label}</button>
           ))}
         </div>
@@ -76,16 +76,16 @@ export default function Settings() {
       <ul className="bg-manila rounded-xl border border-rule shadow-card divide-y divide-stone-100 mb-6">
         {ROWS.map((r) => (
           <li key={r.id}>
-            <button onClick={() => setSection(r.id)} className="w-full flex items-center justify-between px-4 py-3 text-sm">
+            <button onClick={() => setSection(r.id)} className="w-full min-h-11 flex items-center justify-between px-4 py-3 text-sm">
               {r.label}
-              <ChevronRightIcon className="h-4 w-4 text-stone-400" />
+              <ChevronRightIcon className="h-4 w-4 text-ink-2" />
             </button>
           </li>
         ))}
       </ul>
       <button
         onClick={() => void lock()}
-        className="w-full py-3 rounded-xl bg-manila border border-rule shadow-card text-sm font-semibold text-marker-red"
+        className="w-full min-h-11 py-3 rounded-xl bg-manila border border-rule shadow-card text-sm font-semibold text-marker-red-text"
       >
         Sign out
       </button>

@@ -54,7 +54,7 @@ export default function EditExpenseDialog(
       <div className="bg-manila rounded-xl border border-rule shadow-card w-full max-w-xs p-5 flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-bold">Edit expense</h3>
 
-        <label className="flex items-center justify-between text-sm">Amount
+        <label className="flex items-center justify-between text-sm min-h-11">Amount
           <input type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
             className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
         </label>
@@ -65,7 +65,7 @@ export default function EditExpenseDialog(
             {cats.map((c) => (
               <button
                 key={c.id} onClick={() => setCategory(c.name)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                className={`text-xs px-3 min-h-11 rounded-full transition-colors ${
                   category === c.name ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
                 }`}
               >{c.name}</button>
@@ -79,7 +79,7 @@ export default function EditExpenseDialog(
             {CHANNELS.map((c) => (
               <button
                 key={String(c)} onClick={() => setChannel(c)}
-                className={`text-[12px] font-semibold px-2.5 py-1 rounded-full ${
+                className={`text-[12px] font-semibold px-3 min-h-11 rounded-full ${
                   channel === c ? "bg-ink text-manila border border-ink" : "bg-board text-stone-600 border border-rule"
                 }`}
               >{c}</button>
@@ -92,17 +92,17 @@ export default function EditExpenseDialog(
           <PaidFromPicker value={envelope} onPick={setEnvelope} groups={groups} envelopes={envelopes} debts={debts} />
         </div>
 
-        <input placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)}
+        <input aria-label="Note" placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)}
           className="text-sm border-b border-stone-300 outline-none pb-1" />
 
-        <label className="flex items-center justify-between text-sm">Date
+        <label className="flex items-center justify-between text-sm min-h-11">Date
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
             className="text-sm border-b border-stone-300 outline-none" />
         </label>
 
         <div className="flex gap-2 mt-1">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-          <button onClick={save} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Save</button>
+          <button onClick={onClose} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+          <button onClick={save} disabled={!valid} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Save</button>
         </div>
       </div>
     </div>

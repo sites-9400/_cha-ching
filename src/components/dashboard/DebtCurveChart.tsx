@@ -15,7 +15,7 @@ export default function DebtCurveChart({ points }: { points: CurvePoint[] }) {
     <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-semibold text-sm mb-2">Debt over time</h2>
       {points.length === 0 ? (
-        <p className="text-xs text-stone-400">Log a payment to see the curve.</p>
+        <p className="text-xs text-ink-2">Log a payment to see the curve.</p>
       ) : (
         <Plot points={points} />
       )}

@@ -69,7 +69,7 @@ export default function DebtFlow() {
         </div>
         <div className="border-t border-rule mt-3 pt-3 flex items-center justify-between">
           <span className="font-display font-bold text-[17px] text-ink">Net change</span>
-          <span className={`flex items-center gap-1 font-display font-bold text-[17px] tabular-nums text-right ${grew ? "text-marker-red" : "text-ink"}`}>
+          <span className={`flex items-center gap-1 font-display font-bold text-[17px] tabular-nums text-right ${grew ? "text-marker-red-text" : "text-ink"}`}>
             {sel.net !== 0 && (
               <svg {...arrowProps}>
                 {grew ? <path d="M12 19V5M5 12l7-7 7 7" /> : <path d="M12 5v14M5 12l7 7 7-7" />}
@@ -91,7 +91,7 @@ export default function DebtFlow() {
                 onClick={() => setMonth(m.monthKey)}
                 aria-label={`${monthLabel(m.monthKey)}: added ${peso(m.added)}, paid ${peso(m.paid)}`}
                 aria-pressed={active}
-                className={`w-full rounded-lg px-1 py-1.5 border ${active ? "border-ink" : "border-transparent"}`}
+                className={`w-full min-h-11 rounded-lg px-1 py-1.5 border ${active ? "border-ink" : "border-transparent"}`}
               >
                 <span className="block h-1.5 rounded-full bg-rule overflow-hidden">
                   <span className="block h-full bg-marker-red" style={{ width: `${pct(m.added)}%` }} />

@@ -17,7 +17,7 @@ export default function ExpenseRow(
   const { chip, label } = useAccounts();
   return (
     <li className="bg-stone-50 rounded-2xl px-3 py-2.5 flex items-center justify-between gap-2.5">
-      <button onClick={onClick} className="flex items-center justify-between gap-2.5 min-w-0 flex-1 text-left">
+      <button onClick={onClick} className="flex items-center justify-between gap-2.5 min-w-0 min-h-11 flex-1 text-left">
         <span className="flex items-center gap-2.5 min-w-0">
           <ChannelIcon
             channel={String(expense.channel)}
@@ -29,7 +29,7 @@ export default function ExpenseRow(
               {showDate ? `${expense.date.slice(5, 10)} · ` : ""}
               {expense.category}{expense.note ? ` · ${expense.note}` : ""}
             </span>
-            <span className="block text-[10px] text-stone-400">{label(expense.channel)}</span>
+            <span className="block text-xs text-ink-2">{label(expense.channel)}</span>
           </span>
         </span>
         <span className="font-display text-sm font-semibold tabular-nums shrink-0">{peso(expense.amount)}</span>

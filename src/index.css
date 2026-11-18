@@ -16,6 +16,7 @@
   --color-ink-2: #5A5048;
   --color-rule: #E3D5BC;
   --color-marker-red: #D62718;
+  --color-marker-red-text: #B81F12;
   --color-marker-blue: #1F5FBF;
   --color-ok: #2F7D4F;
 
@@ -80,7 +81,7 @@ input, textarea, select { caret-color: var(--color-ink); accent-color: var(--col
 .dark .text-stone-700 { color: #E3D5BC; }
 .dark .text-ink-2, .dark .text-stone-600 { color: #CDBB9C; }
 .dark .text-stone-500 { color: #B3A58E; }
-.dark .text-stone-400 { color: #8F8068; }
+.dark .text-stone-400 { color: #B8A88D; }
 .dark .text-stone-300 { color: #5A4E40; }
 .dark .text-stone-200 { color: #3A322A; }
 .dark .text-manila { color: #211C17; }
@@ -117,7 +118,7 @@ input, textarea, select { caret-color: var(--color-ink); accent-color: var(--col
 .dark .bg-red-50 { background-color: #3D1713; }
 .dark .border-red-200 { border-color: #7A2A22; }
 .dark .text-red-800 { color: #FFB1A8; }
-.dark .text-red-700, .dark .text-red-600, .dark .text-marker-red { color: #FF6B5E; }
+.dark .text-red-700, .dark .text-red-600, .dark .text-marker-red, .dark .text-marker-red-text { color: #FF6B5E; }
 .dark .decoration-marker-red { text-decoration-color: #FF6B5E; }
 
 /* Shadows read as glow on dark: flatten them */

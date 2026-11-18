@@ -19,7 +19,7 @@ export default function SavingsHistory({ expenses }: { expenses: readonly Saving
       <ul className="flex flex-col gap-1.5">
         {rows.map((r) => (
           <li key={`${r.kind}-${r.id}`} className="flex items-center justify-between gap-2 text-sm">
-            <span className="text-stone-400 text-xs w-14 shrink-0 tabular-nums">{r.date.slice(5, 10)}</span>
+            <span className="text-ink-2 text-xs w-14 shrink-0 tabular-nums">{r.date.slice(5, 10)}</span>
             <span className="truncate flex-1">{r.source}</span>
             <span className={`tabular-nums shrink-0 ${r.direction === "in" ? "text-emerald-700" : "text-stone-500"}`}>
               {r.direction === "in" ? "+" : "−"}{peso(r.amount)}
@@ -28,7 +28,7 @@ export default function SavingsHistory({ expenses }: { expenses: readonly Saving
               <button
                 onClick={() => { const m = byId.get(r.id); if (m) void deleteSavingsMove(m); }}
                 aria-label="Delete savings move"
-                className="text-stone-400 pl-1"
+                className="text-ink-2 inline-flex items-center justify-center min-h-11 min-w-11 -my-2 -mr-2"
               ><CloseIcon /></button>
             )}
           </li>

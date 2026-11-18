@@ -129,32 +129,32 @@ export default function ThisMonth() {
       {projected && (
         <div className="mb-4 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800">
           Projected from your template + this month's events. Nothing here is saved.
-          <button onClick={start} className="block mt-2 font-semibold text-ink">Start {monthLabel(viewedKey)} →</button>
+          <button onClick={start} className="flex items-center min-h-11 mt-1 font-semibold text-ink">Start {monthLabel(viewedKey)} →</button>
         </div>
       )}
 
       <section aria-label="Month tools">
       {editable && (
         <div className="mb-3">
-          <div className="flex gap-4 text-[14px]">
-            <button onClick={() => setAdding(true)} className="font-semibold text-ink">+ Add one-off</button>
+          <div className="flex gap-3 text-[14px] flex-wrap">
+            <button onClick={() => setAdding(true)} className="inline-flex items-center min-h-11 px-2 -mx-2 font-semibold text-ink">+ Add one-off</button>
             {mode === "current" && (
-              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="font-medium text-ink-2">Sync from template</button>
+              <button onClick={() => void syncMonthFromTemplate(viewedKey)} className="inline-flex items-center min-h-11 px-2 -mx-2 font-medium text-ink-2">Sync from template</button>
             )}
-            <button onClick={() => setConfirmRestart(true)} className="font-semibold text-marker-red">Restart month</button>
+            <button onClick={() => setConfirmRestart(true)} className="inline-flex items-center min-h-11 px-2 -mx-2 font-semibold text-[15px] text-marker-red-text">Restart month</button>
           </div>
           <p className="text-[12px] leading-4 text-ink-2 mt-1">Tip: long-press a line to rename or change its amount for this month.</p>
         </div>
       )}
 
-      <div className="flex items-center gap-1.5 mb-3">
-        <span className="text-[12px] text-ink-2">Sort</span>
-        <div className="flex rounded-full bg-stone-100 p-0.5 text-[11px] font-semibold">
+      <div className="flex items-center gap-1.5 mb-3 min-w-0">
+        <span className="text-[12px] text-ink-2 shrink-0">Sort</span>
+        <div data-no-swipe className="flex min-w-0 max-w-full overflow-x-auto rounded-full bg-stone-100 p-0.5 text-xs font-semibold [scrollbar-width:none]">
           {LINE_SORTS.map((s) => (
             <button
               key={s.key}
               onClick={() => setLineSort(s.key)}
-              className={`px-2.5 py-0.5 rounded-full ${lineSort === s.key ? "bg-ink text-manila" : "text-ink-2"}`}
+              className={`shrink-0 whitespace-nowrap px-3 min-h-11 inline-flex items-center rounded-full ${lineSort === s.key ? "bg-ink text-manila" : "text-ink-2"}`}
             >{s.label}</button>
           ))}
         </div>

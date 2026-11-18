@@ -2,7 +2,7 @@ import type { Debt, MonthLine } from "../lib/types";
 import { CreditCardIcon } from "./icons";
 
 const chipCls = (on: boolean) =>
-  `text-xs px-3 py-1.5 rounded-full transition-colors inline-flex items-center gap-1.5 ${
+  `text-xs px-3 min-h-11 rounded-full transition-colors inline-flex items-center gap-1.5 ${
     on ? "bg-ink text-manila border border-ink" : "bg-manila text-stone-600 border border-rule"
   }`;
 

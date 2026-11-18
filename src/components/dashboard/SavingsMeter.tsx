@@ -29,13 +29,14 @@ export default function SavingsMeter({
             <input
               type="number" inputMode="decimal" autoFocus value={raw}
               onChange={(e) => setRaw(e.target.value)}
-              className="w-28 text-right text-sm border-b border-stone-300 outline-none tabular-nums"
+              aria-label="Savings balance"
+              className="w-28 min-h-11 text-right text-sm border-b border-stone-300 outline-none tabular-nums"
             />
-            <button onClick={() => void save()} className="text-xs font-semibold text-ink underline underline-offset-2 px-1">Save</button>
-            <button onClick={() => { setEditing(false); setRaw(String(balance)); }} aria-label="Cancel edit" className="text-stone-500 px-1"><CloseIcon /></button>
+            <button onClick={() => void save()} className="text-xs font-semibold text-ink underline underline-offset-2 px-2 inline-flex items-center min-h-11">Save</button>
+            <button onClick={() => { setEditing(false); setRaw(String(balance)); }} aria-label="Cancel edit" className="text-stone-500 inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
           </span>
         ) : (
-          <button onClick={() => { setEditing(true); setRaw(String(balance)); }} className="text-sm font-bold tabular-nums">
+          <button onClick={() => { setEditing(true); setRaw(String(balance)); }} className="text-sm font-bold tabular-nums inline-flex items-center gap-1 min-h-11 pl-2 -mr-2">
             {peso(balance)} <span className="text-xs font-semibold text-ink underline underline-offset-2">edit</span>
           </button>
         )}
@@ -45,12 +46,12 @@ export default function SavingsMeter({
         {/* floor threshold marker */}
         <div className="absolute top-0 bottom-0 w-0.5 bg-red-600" style={{ left: `${floorPct}%` }} />
       </div>
-      <p className={`mt-2 text-xs ${below ? "text-red-600 font-semibold" : "text-stone-400"}`}>
+      <p className={`mt-2 text-xs ${below ? "text-red-600 font-semibold" : "text-ink-2"}`}>
         {below
           ? `Below floor by ${peso(floor - balance)}`
           : `${peso(balance - floor)} above the ${peso(floor)} floor`}
       </p>
-      <button onClick={onAdd} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add to savings</button>
+      <button onClick={onAdd} className="mt-1 inline-flex items-center min-h-11 px-2 -mx-2 text-sm font-semibold text-ink underline underline-offset-2">+ Add to savings</button>
     </section>
   );
 }

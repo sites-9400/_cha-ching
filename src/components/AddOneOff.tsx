@@ -43,52 +43,52 @@ export default function AddOneOff({ monthKey, lines, onClose }: { monthKey: stri
         <div className="flex gap-2">
           {(["expense", "income"] as const).map((k) => (
             <button key={k} onClick={() => setKind(k)}
-              className={`flex-1 py-1.5 rounded-lg text-sm font-semibold ${kind === k ? "bg-ink text-manila" : "bg-stone-100 text-stone-500"}`}>
+              className={`flex-1 min-h-11 rounded-lg text-sm font-semibold ${kind === k ? "bg-ink text-manila" : "bg-stone-100 text-stone-500"}`}>
               {k === "expense" ? "Expense" : "Income"}
             </button>
           ))}
         </div>
-        <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className="text-sm border-b border-stone-300 outline-none pb-1" />
-        <label className="flex items-center justify-between text-sm">Amount
-          <input type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+        <input aria-label="Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
+        <label className="flex items-center justify-between text-sm min-h-11">Amount
+          <input type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-28 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
         </label>
-        <label className="flex items-center justify-between text-sm">Cutoff
-          <select value={cutoff} onChange={(e) => setCutoff(Number(e.target.value) as 1 | 2)} className="text-sm border-b border-stone-300 outline-none">
+        <label className="flex items-center justify-between text-sm min-h-11">Cutoff
+          <select value={cutoff} onChange={(e) => setCutoff(Number(e.target.value) as 1 | 2)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
             <option value={1}>1{isCutoffClosed(lines, 1) ? " (closed)" : ""}</option>
             <option value={2}>2{isCutoffClosed(lines, 2) ? " (closed)" : ""}</option>
           </select>
         </label>
         {kind === "expense" ? (
           <>
-            <label className="flex items-center justify-between text-sm">Channel
-              <select value={channel} onChange={(e) => setChannel(e.target.value as Channel)} className="text-sm border-b border-stone-300 outline-none">
+            <label className="flex items-center justify-between text-sm min-h-11">Channel
+              <select value={channel} onChange={(e) => setChannel(e.target.value as Channel)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
                 {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </label>
-            <label className="flex items-center justify-between text-sm gap-2">
+            <label className="flex items-center justify-between text-sm min-h-11 gap-2">
               <span className="shrink-0">Pays debt</span>
-              <select value={debtId} onChange={(e) => setDebtId(e.target.value)} className="text-sm border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
+              <select value={debtId} onChange={(e) => setDebtId(e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none min-w-0 flex-1 text-right">
                 <option value="">— none —</option>
                 {[...debts].filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder).map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </label>
-            <p className="text-[11px] text-stone-400 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
+            <p className="text-xs text-ink-2 -mt-1">Ticking this line PAID logs a payment to that debt.</p>
           </>
         ) : (
           <>
-            <label className="flex items-center justify-between text-sm">Day (1–31)
-              <input type="number" value={day} onChange={(e) => setDay(e.target.value)} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
+            <label className="flex items-center justify-between text-sm min-h-11">Day (1–31)
+              <input type="number" value={day} onChange={(e) => setDay(e.target.value)} className="w-20 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
             </label>
-            <label className="flex items-center justify-between text-sm">Goes to savings
+            <label className="flex items-center justify-between text-sm min-h-11">Goes to savings
               <input type="checkbox" checked={toSavings} onChange={(e) => setToSavings(e.target.checked)} />
             </label>
           </>
         )}
         <div className="flex gap-2 mt-1">
-          <button onClick={onClose} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-          <button onClick={save} disabled={!valid} className="flex-1 py-2 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Add</button>
+          <button onClick={onClose} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+          <button onClick={save} disabled={!valid} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-manila bg-ink disabled:opacity-40">Add</button>
         </div>
       </div>
     </div>

@@ -121,7 +121,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-center justify-between">
           <h3 className="font-bold">Import from screenshot</h3>
-          <button onClick={onClose} className="text-stone-400 text-sm">Cancel</button>
+          <button onClick={onClose} className="text-ink-2 text-sm inline-flex items-center min-h-11 px-2 -mr-2">Cancel</button>
         </div>
 
         {phase === "pick" && (
@@ -129,7 +129,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
             <p className="text-sm text-stone-500 text-center">
               Upload a bank-app "Recent Transactions" screenshot. Processing happens on your device — no bank data leaves your phone.
             </p>
-            <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="text-sm" />
+            <input ref={fileRef} type="file" aria-label="Choose screenshot" accept="image/*" onChange={onFile} className="text-sm min-h-11" />
           </div>
         )}
 
@@ -150,7 +150,7 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
                 {cats.map((c) => (
                   <button
                     key={c.id} onClick={() => setCategory(c.name)}
-                    className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                    className={`text-xs px-3 min-h-11 rounded-full transition-colors ${
                       category === c.name ? "bg-ink text-manila" : "bg-stone-100 text-stone-600"
                     }`}
                   >{c.name}</button>
@@ -167,39 +167,39 @@ export default function ImportExpenses({ onClose }: { onClose: () => void }) {
               {rows.map((row, i) => (
                 <li key={i} className="flex items-center gap-1.5 bg-stone-50 rounded-xl px-2.5 py-2">
                   <input
-                    type="checkbox" checked={row.include}
+                    type="checkbox" checked={row.include} aria-label={`Include row ${i + 1}`}
                     onChange={(e) => updateRow(i, { include: e.target.checked })}
                     className="shrink-0"
                   />
                   <input
-                    type="date" value={row.date ?? ""}
+                    type="date" aria-label={`Date, row ${i + 1}`} value={row.date ?? ""}
                     onChange={(e) => updateRow(i, { date: e.target.value })}
-                    className="text-xs bg-white rounded-lg px-1.5 py-1 w-[8.25rem] shrink-0 outline-none"
+                    className="text-xs bg-white rounded-lg px-1.5 min-h-11 w-[8.25rem] shrink-0 outline-none"
                   />
                   <input
-                    value={row.note} placeholder="merchant"
+                    value={row.note} placeholder="merchant" aria-label={`Merchant, row ${i + 1}`}
                     onChange={(e) => updateRow(i, { note: e.target.value })}
-                    className="text-xs flex-1 min-w-0 bg-white rounded-lg px-1.5 py-1 outline-none"
+                    className="text-xs flex-1 min-w-0 bg-white rounded-lg px-1.5 min-h-11 outline-none"
                   />
                   <input
-                    type="number" inputMode="decimal" value={row.amount}
+                    type="number" inputMode="decimal" aria-label={`Amount, row ${i + 1}`} value={row.amount}
                     onChange={(e) => updateRow(i, { amount: Number(e.target.value) })}
-                    className="text-xs w-16 shrink-0 bg-white rounded-lg px-1.5 py-1 outline-none tabular-nums"
+                    className="text-xs w-16 shrink-0 bg-white rounded-lg px-1.5 min-h-11 outline-none tabular-nums"
                   />
                   {row.credit && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">credit</span>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">credit</span>
                   )}
                   {row.duplicate && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 shrink-0">dup?</span>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 shrink-0">dup?</span>
                   )}
                 </li>
               ))}
-              {rows.length === 0 && <li className="text-sm text-stone-400 px-1">No transactions found in this screenshot.</li>}
+              {rows.length === 0 && <li className="text-sm text-ink-2 px-1">No transactions found in this screenshot.</li>}
             </ul>
 
             <button
               onClick={addAll} disabled={includedCount === 0}
-              className="bg-ink disabled:bg-stone-300 text-manila font-semibold rounded-xl py-3 text-sm mt-1"
+              className="bg-ink disabled:bg-stone-300 text-manila font-semibold rounded-xl min-h-11 py-3 text-sm mt-1"
             >Add {includedCount} expenses</button>
           </>
         )}

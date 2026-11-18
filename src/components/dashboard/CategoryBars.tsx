@@ -18,7 +18,7 @@ export default function CategoryBars(
     <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-semibold text-sm mb-3">Spending by category</h2>
       {totals.length === 0 ? (
-        <p className="text-xs text-stone-400">No spending logged this month.</p>
+        <p className="text-xs text-ink-2">No spending logged this month.</p>
       ) : (
         <ul className="flex flex-col gap-2.5">
           {totals.map((t) => {
@@ -34,13 +34,13 @@ export default function CategoryBars(
             const prev = prevTotals.get(t.category);
             return (
               <li key={t.category}>
-                <button onClick={() => setOpen(isOpen ? null : t.category)} className="w-full text-left">
+                <button onClick={() => setOpen(isOpen ? null : t.category)} className="w-full min-h-11 text-left">
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="font-medium">{t.category}</span>
                     <span className="tabular-nums">
                       {rightLabel}
                       {prev != null && prev > 0 && (
-                        <span className={`ml-1.5 text-[10px] ${t.total > prev ? "text-red-600" : "text-emerald-600"}`}>
+                        <span className={`ml-1.5 text-xs ${t.total > prev ? "text-red-600" : "text-emerald-600"}`}>
                           {t.total > prev ? "↑" : "↓"}{Math.abs(Math.round(((t.total - prev) / prev) * 100))}%
                         </span>
                       )}
@@ -53,7 +53,7 @@ export default function CategoryBars(
                 {isOpen && (
                   <ul className="mt-1.5 mb-1 pl-2 flex flex-col gap-0.5">
                     {items.map((e) => (
-                      <li key={e.id} className="flex items-center justify-between text-[11px] text-stone-500">
+                      <li key={e.id} className="flex items-center justify-between text-xs text-stone-500">
                         <span className="truncate">
                           {e.date.slice(5, 10)}{e.note ? ` · ${e.note}` : ""}
                         </span>

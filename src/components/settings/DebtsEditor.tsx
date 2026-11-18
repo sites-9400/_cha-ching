@@ -34,19 +34,19 @@ export default function DebtsEditor() {
       <ul className="flex flex-col gap-2">
         {sorted.map((d, i) => (
           <li key={d.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-            <span className="flex flex-col">
-              <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move up"><ChevronUpIcon className="h-3.5 w-3.5" /></button>
-              <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-stone-400 disabled:opacity-20 leading-none" aria-label="Move down"><ChevronDownIcon className="h-3.5 w-3.5" /></button>
+            <span className="flex">
+              <button onClick={() => void move(i, -1)} disabled={i === 0} className="text-ink-2 disabled:opacity-20 leading-none inline-flex items-center justify-center min-h-11 min-w-11" aria-label="Move up"><ChevronUpIcon className="h-3.5 w-3.5" /></button>
+              <button onClick={() => void move(i, 1)} disabled={i === sorted.length - 1} className="text-ink-2 disabled:opacity-20 leading-none inline-flex items-center justify-center min-h-11 min-w-11" aria-label="Move down"><ChevronDownIcon className="h-3.5 w-3.5" /></button>
             </span>
-            <button onClick={() => setEditing(d)} className="flex-1 flex items-center justify-between min-w-0">
+            <button onClick={() => setEditing(d)} className="flex-1 min-h-11 flex items-center justify-between min-w-0">
               <span className="truncate text-sm font-medium">{d.name}{d.isBNPL ? " · BNPL" : ""}{d.active ? "" : " · archived"}</span>
               <span className="text-sm tabular-nums">{peso(d.currentBalance)}</span>
             </button>
-            <button onClick={() => setConfirmId(d.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
+            <button onClick={() => setConfirmId(d.id)} aria-label="Remove" className="text-marker-red-text inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add debt</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-1 text-sm font-semibold text-ink underline underline-offset-2 inline-flex items-center min-h-11 px-2 -mx-2">+ Add debt</button>
       {confirmId && (
         <ConfirmDialog
           title="Delete debt?"
@@ -78,7 +78,7 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
   // Plain helper that RETURNS JSX (not a nested component) — a nested component
   // would get a new identity each render and remount the input, losing focus.
   const numberField = (label: string, k: "startingBalance" | "currentBalance" | "payoffOrder" | "dueDay" | "statementDay" | "minimum" | "creditLimit") => (
-    <label className="flex items-center justify-between text-sm">
+    <label className="flex items-center justify-between text-sm min-h-11">
       {label}
       <input
         type="number" inputMode="decimal"
@@ -92,7 +92,7 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
   return (
     <div className="flex flex-col gap-3">
       <h2 className="font-bold text-lg">{id ? "Edit debt" : "Add debt"}</h2>
-      <input placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)}
+      <input aria-label="Name" placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)}
         className="text-sm border-b border-stone-300 outline-none pb-1" />
       {numberField("Starting balance", "startingBalance")}
       {numberField("Current balance", "currentBalance")}
@@ -101,22 +101,22 @@ function DebtForm({ debt, onDone }: { debt: Debt | Omit<Debt, "id">; onDone: () 
       {numberField("Statement day (1–31)", "statementDay")}
       {numberField("Minimum", "minimum")}
       {numberField("Credit limit", "creditLimit")}
-      <label className="flex items-center justify-between text-sm">
+      <label className="flex items-center justify-between text-sm min-h-11">
         Channel
-        <select value={f.channel} onChange={(e) => set("channel", e.target.value as Channel)} className="text-sm border-b border-stone-300 outline-none">
+        <select value={f.channel} onChange={(e) => set("channel", e.target.value as Channel)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
-      <label className="flex items-center justify-between text-sm">Installment plan
+      <label className="flex items-center justify-between text-sm min-h-11">Installment plan
         <input type="checkbox" checked={f.isBNPL} onChange={(e) => set("isBNPL", e.target.checked)} />
       </label>
-      <label className="flex items-center justify-between text-sm">Active
+      <label className="flex items-center justify-between text-sm min-h-11">Active
         <input type="checkbox" checked={f.active} onChange={(e) => set("active", e.target.checked)} />
       </label>
       <div className="flex gap-2 mt-2">
-        <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+        <button onClick={onDone} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
         <button onClick={() => void save()} disabled={!f.name.trim()}
-          className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+          className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
       </div>
     </div>
   );

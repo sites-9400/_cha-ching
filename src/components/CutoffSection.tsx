@@ -11,7 +11,7 @@ import SendPlan from "./SendPlan";
 import { XIcon } from "./LineRow";
 
 function ClosedPill() {
-  return <span className="font-sans text-[11px] leading-4 font-semibold px-2 py-0.5 rounded-full border border-ink-2 text-ink-2">Closed</span>;
+  return <span className="font-sans text-xs leading-4 font-semibold px-2 py-0.5 rounded-full border border-ink-2 text-ink-2">Closed</span>;
 }
 
 /** Due-day window each cutoff covers, per cutoffForDueDay: days 13-24 are the 1st cutoff, the rest the 2nd. */
@@ -81,7 +81,7 @@ export default function CutoffSection(
       <section className="mb-6">
         <button
           onClick={() => toggleCutoff(cutoff)}
-          className="w-full bg-manila rounded-xl border border-rule shadow-card px-4 py-3 flex items-center justify-between"
+          className="w-full min-h-11 bg-manila rounded-xl border border-rule shadow-card px-4 py-3 flex items-center justify-between"
         >
           <span className="flex flex-col items-start text-left">
             <span className="font-display font-bold text-[22px] leading-7 text-ink flex items-center gap-2 whitespace-nowrap">
@@ -102,7 +102,7 @@ export default function CutoffSection(
   return (
     <section className="mb-6 bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-display font-bold text-[22px] leading-7 text-ink mb-2">
-        <button onClick={() => toggleCutoff(cutoff)} className="flex items-center gap-2">
+        <button onClick={() => toggleCutoff(cutoff)} className="flex items-center gap-2 min-h-11">
           {cutoff === 1 ? "1st cutoff" : "2nd cutoff"}
           <span className="font-sans text-[13px] leading-5 font-medium text-ink-2">· {cutoffRange(cutoff, viewedKey)}</span>
           {editable && closed && <ClosedPill />}
@@ -166,7 +166,7 @@ export default function CutoffSection(
               {editable && (
                 <button
                   onClick={() => void unskipLine(viewedKey, l.id)}
-                  className="shrink-0 font-semibold text-ink"
+                  className="shrink-0 font-semibold text-ink inline-flex items-center min-h-11 px-2 -mx-2"
                 >undo</button>
               )}
             </li>
@@ -186,7 +186,7 @@ export default function CutoffSection(
           <ul className="flex flex-col gap-1 text-sm">
             {projAlloc.lines.map((l) => (
               <li key={l.debtId} className="flex justify-between">
-                <span className="text-ink-2">{l.name} <span className="text-[11px] text-ink-2">{l.kind}</span></span>
+                <span className="text-ink-2">{l.name} <span className="text-xs text-ink-2">{l.kind}</span></span>
                 <span className="font-display text-[17px] tabular-nums font-bold">{peso(l.amount)}</span>
               </li>
             ))}
@@ -220,7 +220,7 @@ function IncomeRow(
           {editable && i.oneOff && (
             <>
               {" · "}
-              <button onClick={() => void deleteMonthIncome(viewedKey, i)} aria-label={`Remove ${i.name}`} className="inline-flex items-center gap-0.5 font-semibold text-marker-red align-middle"><XIcon />Remove</button>
+              <button onClick={() => void deleteMonthIncome(viewedKey, i)} aria-label={`Remove ${i.name}`} className="inline-flex items-center gap-0.5 min-h-11 px-2 -mx-2 font-semibold text-marker-red-text align-middle"><XIcon />Remove</button>
             </>
           )}
         </p>
@@ -234,7 +234,7 @@ function IncomeRow(
               setBusyIncome(i.id);
               void setIncomeReceived(viewedKey, i, !on).finally(() => setBusyIncome(null));
             }}
-            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${on ? "bg-marker-blue text-manila" : "border border-rule text-ink-2"}`}
+            className={`text-xs font-semibold px-3 min-h-11 rounded-full ${on ? "bg-marker-blue text-manila" : "border border-rule text-ink-2"}`}
           >{on ? "Received" : "Receive"}</button>
         )}
       </div>

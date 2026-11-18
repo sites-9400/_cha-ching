@@ -23,15 +23,15 @@ export default function IncomesEditor() {
       <ul className="flex flex-col gap-2">
         {sorted.map((i) => (
           <li key={i.id} className="bg-white rounded-xl shadow p-3 flex items-center gap-2">
-            <button onClick={() => setEditing(i)} className="flex-1 flex items-center justify-between min-w-0">
+            <button onClick={() => setEditing(i)} className="flex-1 min-h-11 flex items-center justify-between min-w-0">
               <span className="truncate text-sm">C{i.cutoff} · day {i.day} · {i.name}</span>
               <span className="text-sm tabular-nums">{peso(i.amount)}</span>
             </button>
-            <button onClick={() => setConfirmId(i.id)} aria-label="Remove" className="text-marker-red px-1"><CloseIcon /></button>
+            <button onClick={() => setConfirmId(i.id)} aria-label="Remove" className="text-marker-red-text inline-flex items-center justify-center min-h-11 min-w-11"><CloseIcon /></button>
           </li>
         ))}
       </ul>
-      <button onClick={() => setEditing({ ...BLANK })} className="mt-3 text-sm font-semibold text-ink underline underline-offset-2">+ Add income</button>
+      <button onClick={() => setEditing({ ...BLANK })} className="mt-1 text-sm font-semibold text-ink underline underline-offset-2 inline-flex items-center min-h-11 px-2 -mx-2">+ Add income</button>
       {confirmId && (
         <ConfirmDialog title="Delete income source?" message="Removed from future months."
           onConfirm={async () => { await deleteTemplateIncome(confirmId); setConfirmId(null); }}
@@ -55,25 +55,25 @@ function Form({ income, onDone }: { income: Income | Omit<Income, "id">; onDone:
   return (
     <div className="flex flex-col gap-3">
       <h2 className="font-bold text-lg">{id ? "Edit income" : "Add income"}</h2>
-      <input placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm border-b border-stone-300 outline-none pb-1" />
-      <label className="flex items-center justify-between text-sm">Amount
-        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <input aria-label="Name" placeholder="Name" value={f.name} onChange={(e) => set("name", e.target.value)} className="text-sm min-h-11 border-b border-stone-300 outline-none pb-1" />
+      <label className="flex items-center justify-between text-sm min-h-11">Amount
+        <input type="number" inputMode="decimal" value={f.amount || ""} onChange={(e) => set("amount", Number(e.target.value))} className="w-28 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm">Day (1–31)
-        <input type="number" value={f.day} onChange={(e) => set("day", Number(e.target.value))} className="w-20 text-right border-b border-stone-300 outline-none tabular-nums" />
+      <label className="flex items-center justify-between text-sm min-h-11">Day (1–31)
+        <input type="number" value={f.day} onChange={(e) => set("day", Number(e.target.value))} className="w-20 text-right min-h-11 border-b border-stone-300 outline-none tabular-nums" />
       </label>
-      <label className="flex items-center justify-between text-sm">Cutoff
-        <select value={f.cutoff} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm border-b border-stone-300 outline-none">
+      <label className="flex items-center justify-between text-sm min-h-11">Cutoff
+        <select value={f.cutoff} onChange={(e) => set("cutoff", Number(e.target.value) as 1 | 2)} className="text-sm min-h-11 border-b border-stone-300 outline-none">
           <option value={1}>1</option><option value={2}>2</option>
         </select>
       </label>
-      <label className="flex items-center justify-between text-sm">Goes to savings
+      <label className="flex items-center justify-between text-sm min-h-11">Goes to savings
         <input type="checkbox" checked={!!f.toSavings} onChange={(e) => set("toSavings", e.target.checked)} />
       </label>
-      <p className="text-[11px] text-stone-400 -mt-1">Receiving this income moves it into savings instead of spendable cash.</p>
+      <p className="text-xs text-ink-2 -mt-1">Receiving this income moves it into savings instead of spendable cash.</p>
       <div className="flex gap-2 mt-2">
-        <button onClick={onDone} className="flex-1 py-2 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
-        <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
+        <button onClick={onDone} className="flex-1 min-h-11 rounded-lg text-sm text-stone-500 bg-stone-100">Cancel</button>
+        <button onClick={() => void save()} disabled={!f.name.trim()} className="flex-1 min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Save</button>
       </div>
     </div>
   );

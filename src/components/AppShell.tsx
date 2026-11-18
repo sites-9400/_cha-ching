@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import TabBar, { type TabId } from "./TabBar";
 import MonthProvider from "./MonthProvider";
 import ThisMonth from "./ThisMonth";
 import QuickAdd from "./QuickAdd";
 import Debts from "./Debts";
-import Settings from "./Settings";
-import Dashboard from "./Dashboard";
+const Settings = lazy(() => import("./Settings"));
+const Dashboard = lazy(() => import("./Dashboard"));
+
+const Loading = () => <p className="p-6 text-center text-ink-2">Loading…</p>;
 
 export default function AppShell() {
   const [tab, setTab] = useState<TabId>("month");
@@ -18,8 +20,8 @@ export default function AppShell() {
         {tab === "month" && <ThisMonth />}
         {tab === "debts" && <Debts />}
         {tab === "add" && <QuickAdd />}
-        {tab === "dashboard" && <Dashboard />}
-        {tab === "settings" && <Settings />}
+        {tab === "dashboard" && <Suspense fallback={<Loading />}><Dashboard /></Suspense>}
+        {tab === "settings" && <Suspense fallback={<Loading />}><Settings /></Suspense>}
         <TabBar active={tab} onChange={setTab} />
       </div>
     </MonthProvider>

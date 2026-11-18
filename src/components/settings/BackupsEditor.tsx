@@ -20,14 +20,14 @@ export default function BackupsEditor() {
   return (
     <div>
       <h2 className="font-bold text-lg mb-1">Backups</h2>
-      <p className="text-xs text-stone-400 mb-3">
+      <p className="text-xs text-ink-2 mb-3">
         Snapshots taken automatically before anything rewrites a month's lines. Restoring
         replaces the month's lines, one-offs, and ticks with the snapshot.
       </p>
       <div className="flex items-center justify-center gap-2 mb-3">
-        <button onClick={() => setMonthKey((k) => addMonths(k, -1))} aria-label="Previous month" className="h-8 w-8 rounded-full bg-manila border border-rule flex items-center justify-center text-ink"><ChevronLeftIcon /></button>
+        <button onClick={() => setMonthKey((k) => addMonths(k, -1))} aria-label="Previous month" className="h-11 w-11 rounded-full bg-manila border border-rule flex items-center justify-center text-ink"><ChevronLeftIcon /></button>
         <span className="text-sm font-semibold min-w-[8rem] text-center">{monthLabel(monthKey)}</span>
-        <button onClick={() => setMonthKey((k) => addMonths(k, 1))} aria-label="Next month" className="h-8 w-8 rounded-full bg-manila border border-rule flex items-center justify-center text-ink"><ChevronRightIcon /></button>
+        <button onClick={() => setMonthKey((k) => addMonths(k, 1))} aria-label="Next month" className="h-11 w-11 rounded-full bg-manila border border-rule flex items-center justify-center text-ink"><ChevronRightIcon /></button>
       </div>
       <ul className="flex flex-col gap-2">
         {sorted.map((b) => {
@@ -36,19 +36,19 @@ export default function BackupsEditor() {
             <li key={b.id} className="bg-white rounded-xl shadow p-3 flex items-center justify-between gap-2">
               <span className="min-w-0">
                 <span className="block text-sm">{new Date(b.id).toLocaleString()}</span>
-                <span className="block text-[11px] text-stone-400">
+                <span className="block text-xs text-ink-2">
                   before {b.reason} · {b.lines.length} lines · {ticked} ticked
                 </span>
               </span>
               <button
                 onClick={() => setConfirmId(b.id)}
                 disabled={busy}
-                className="text-xs font-semibold text-ink underline underline-offset-2 shrink-0 disabled:opacity-40"
+                className="text-xs font-semibold text-ink underline underline-offset-2 shrink-0 disabled:opacity-40 inline-flex items-center min-h-11 px-2 -mr-2"
               >Restore</button>
             </li>
           );
         })}
-        {sorted.length === 0 && <li className="text-sm text-stone-400 px-1">No snapshots for {monthLabel(monthKey)} yet.</li>}
+        {sorted.length === 0 && <li className="text-sm text-ink-2 px-1">No snapshots for {monthLabel(monthKey)} yet.</li>}
       </ul>
       {confirmId && (
         <ConfirmDialog

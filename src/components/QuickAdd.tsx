@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useCollection } from "../hooks/useCollection";
 import { currentMonthKey, localIso } from "../lib/clock";
 import { peso } from "../lib/format";
@@ -26,6 +26,8 @@ export default function QuickAdd() {
   const lines = activeLines(allLines);
   const debts = useCollection<Debt>(debtsCol());
   const activeDebts = debts.filter((d) => d.active).sort((a, b) => a.payoffOrder - b.payoffOrder);
+  const amountId = useId();
+  const noteId = useId();
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [channel, setChannel] = useState<Channel>("CASH");
@@ -85,8 +87,10 @@ export default function QuickAdd() {
     });
   }
 
-  const Label = ({ children }: { children: React.ReactNode }) => (
-    <p className="text-[13px] font-semibold text-ink-2 mb-1.5">{children}</p>
+  const Label = ({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) => (
+    htmlFor
+      ? <label htmlFor={htmlFor} className="block text-[13px] font-semibold text-ink-2 mb-1.5">{children}</label>
+      : <p className="text-[13px] font-semibold text-ink-2 mb-1.5">{children}</p>
   );
 
   return (
@@ -96,11 +100,11 @@ export default function QuickAdd() {
       <DueSoonStrip />
       <div className="bg-manila rounded-xl border border-rule shadow-card p-5 flex flex-col gap-5">
         <div>
-          <Label>Amount</Label>
+          <Label htmlFor={amountId}>Amount</Label>
           <div className="flex items-baseline gap-1 border-b-2 border-stone-200 focus-within:border-ink pb-1">
             <span className="font-display text-2xl font-bold text-ink-2">₱</span>
             <input
-              type="number" inputMode="decimal" placeholder="0"
+              id={amountId} type="number" inputMode="decimal" placeholder="0"
               value={amount} onChange={(e) => setAmount(e.target.value)}
               className="flex-1 min-w-0 font-display text-3xl font-bold tabular-nums outline-none bg-transparent"
             />
@@ -113,7 +117,7 @@ export default function QuickAdd() {
             {cats.map((c) => (
               <button
                 key={c.id} onClick={() => setCategory(c.name)}
-                className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+                className={`text-xs px-3 min-h-11 rounded-full transition-colors ${
                   category === c.name ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
                 }`}
               >{c.name}</button>
@@ -127,7 +131,7 @@ export default function QuickAdd() {
             {CHANNELS.map((c) => (
               <button
                 key={String(c)} onClick={() => setChannel(c)}
-                className={`text-[12px] font-semibold px-2.5 py-1 rounded-full ${
+                className={`text-[12px] font-semibold px-3 min-h-11 rounded-full ${
                   channel === c ? "bg-ink text-manila border border-ink" : "bg-board text-stone-600 border border-rule"
                 }`}
               >{c}</button>
@@ -141,9 +145,9 @@ export default function QuickAdd() {
         </div>
 
         <div>
-          <Label>Note</Label>
+          <Label htmlFor={noteId}>Note</Label>
           <input
-            placeholder="optional" value={note} onChange={(e) => setNote(e.target.value)}
+            id={noteId} placeholder="optional" value={note} onChange={(e) => setNote(e.target.value)}
             className="w-full text-base border-b border-stone-200 pb-1 outline-none focus:border-ink"
           />
         </div>
@@ -153,23 +157,24 @@ export default function QuickAdd() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setWhen("")}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+              className={`text-xs px-3 min-h-11 rounded-full transition-colors ${
                 when === "" ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
               }`}
             >Today</button>
             <button
               onClick={() => setWhen(localIso(new Date(Date.now() - 86400000)).slice(0, 10))}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors ${
+              className={`text-xs px-3 min-h-11 rounded-full transition-colors ${
                 when !== "" && when === localIso(new Date(Date.now() - 86400000)).slice(0, 10)
                   ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
               }`}
             >Yesterday</button>
             <input
               type="date"
+              aria-label="Expense date"
               value={when}
               max={localIso().slice(0, 10)}
               onChange={(e) => setWhen(e.target.value)}
-              className="text-xs bg-board text-stone-600 border border-rule rounded-full px-3 py-1.5 outline-none"
+              className="text-xs bg-board text-stone-600 border border-rule rounded-full px-3 min-h-11 outline-none"
             />
           </div>
         </div>
@@ -182,7 +187,7 @@ export default function QuickAdd() {
 
       <div className="flex items-center justify-between mt-6 mb-2">
         <h2 className="font-semibold text-sm text-stone-600">Recent</h2>
-        <button onClick={() => setImporting(true)} className="text-xs font-semibold text-ink underline underline-offset-2 inline-flex items-center gap-1.5"><CameraIcon className="h-4 w-4" />Import</button>
+        <button onClick={() => setImporting(true)} className="text-xs font-semibold text-ink underline underline-offset-2 inline-flex items-center gap-1.5 min-h-11 px-2 -mr-2"><CameraIcon className="h-4 w-4" />Import</button>
       </div>
       <ul className="flex flex-col gap-1.5">
         {recent.map((e) => (
@@ -203,15 +208,15 @@ export default function QuickAdd() {
                     )}
                     {e.note ? ` · ${e.note}` : ""}
                   </span>
-                  <span className="block text-[10px] text-stone-400">{label(e.channel)}</span>
+                  <span className="block text-xs text-ink-2">{label(e.channel)}</span>
                 </span>
               </span>
               <span className="font-display text-sm font-semibold tabular-nums shrink-0">{peso(e.amount)}</span>
             </button>
-            <button onClick={() => removeExpense(e)} aria-label="Remove expense" className="h-11 w-8 flex items-center justify-center text-ink-2 shrink-0"><XIcon /></button>
+            <button onClick={() => removeExpense(e)} aria-label="Remove expense" className="h-11 w-11 -mr-2 flex items-center justify-center text-ink-2 shrink-0"><XIcon /></button>
           </li>
         ))}
-        {recent.length === 0 && <li className="text-sm text-stone-400 px-3">No expenses logged yet.</li>}
+        {recent.length === 0 && <li className="text-sm text-ink-2 px-3">No expenses logged yet.</li>}
       </ul>
 
       {editing && (

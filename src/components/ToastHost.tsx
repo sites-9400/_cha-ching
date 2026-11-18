@@ -41,7 +41,7 @@ export default function ToastHost() {
           {t.action && (
             <button
               onClick={(e) => { e.stopPropagation(); t.action!.run(); dismiss(t.id); }}
-              className="font-semibold text-emerald-400"
+              className="font-semibold text-emerald-400 inline-flex items-center min-h-11 px-3 -my-2 -mr-2"
             >{t.action.label}</button>
           )}
         </div>

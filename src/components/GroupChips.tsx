@@ -14,7 +14,7 @@ export default function GroupChips(
           <button
             key={g.key} type="button" role="radio" aria-checked={on} disabled={disabled}
             onClick={() => onChange(g.key)}
-            className={`rounded-full px-3 py-1.5 text-[12px] leading-4 font-semibold disabled:opacity-50 ${
+            className={`rounded-full px-3 min-h-11 text-[12px] leading-4 font-semibold disabled:opacity-50 ${
               on ? "bg-ink text-manila" : "bg-board text-stone-600 border border-rule"
             }`}
           >{g.label}</button>

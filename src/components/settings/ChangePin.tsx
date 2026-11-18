@@ -25,16 +25,16 @@ export default function ChangePin() {
     }
   }
 
-  const box = "w-full text-lg tracking-widest text-center tabular-nums border-b-2 border-stone-300 outline-none focus:border-ink py-1";
+  const box = "w-full text-lg tracking-widest text-center tabular-nums border-b-2 border-stone-300 outline-none focus:border-ink min-h-11 py-1";
 
   return (
     <div className="flex flex-col gap-4 max-w-xs">
       <h2 className="font-bold text-lg">Change PIN</h2>
-      <input type="password" inputMode="numeric" maxLength={6} placeholder="Current PIN" value={current} onChange={(e) => setCurrent(e.target.value.replace(/\D/g, ""))} className={box} />
-      <input type="password" inputMode="numeric" maxLength={6} placeholder="New 6-digit PIN" value={next} onChange={(e) => setNext(e.target.value.replace(/\D/g, ""))} className={box} />
-      <input type="password" inputMode="numeric" maxLength={6} placeholder="Confirm new PIN" value={confirm} onChange={(e) => setConfirm(e.target.value.replace(/\D/g, ""))} className={box} />
+      <input aria-label="Current PIN" type="password" inputMode="numeric" maxLength={6} placeholder="Current PIN" value={current} onChange={(e) => setCurrent(e.target.value.replace(/\D/g, ""))} className={box} />
+      <input aria-label="New 6-digit PIN" type="password" inputMode="numeric" maxLength={6} placeholder="New 6-digit PIN" value={next} onChange={(e) => setNext(e.target.value.replace(/\D/g, ""))} className={box} />
+      <input aria-label="Confirm new PIN" type="password" inputMode="numeric" maxLength={6} placeholder="Confirm new PIN" value={confirm} onChange={(e) => setConfirm(e.target.value.replace(/\D/g, ""))} className={box} />
       {msg && <p className={`text-sm ${msg.ok ? "text-emerald-700" : "text-red-600"}`}>{msg.text}</p>}
-      <button onClick={() => void save()} disabled={!valid || busy} className="py-2 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Change PIN</button>
+      <button onClick={() => void save()} disabled={!valid || busy} className="min-h-11 rounded-lg text-sm font-semibold text-white bg-emerald-600 disabled:opacity-40">Change PIN</button>
     </div>
   );
 }

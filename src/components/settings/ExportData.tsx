@@ -60,7 +60,7 @@ export default function ExportData() {
       <ul className="flex flex-col gap-2">
         {exports.map((e) => (
           <li key={e.file}>
-            <button onClick={e.run} className="w-full bg-white rounded-xl shadow p-3 flex items-center justify-between text-sm">
+            <button onClick={e.run} className="w-full min-h-11 bg-white rounded-xl shadow p-3 flex items-center justify-between text-sm">
               {e.label}
               <span className="text-ink font-semibold underline underline-offset-2">Download</span>
             </button>

@@ -24,7 +24,7 @@ export default function WhereItGoes(
                   role="tab"
                   aria-selected={cutoff === k}
                   onClick={() => onScope(k)}
-                  className={`flex-1 h-9 rounded-full ${cutoff === k ? "bg-ink text-manila" : "text-ink-2"}`}
+                  className={`flex-1 h-11 rounded-full ${cutoff === k ? "bg-ink text-manila" : "text-ink-2"}`}
                 >{lbl}</button>
               ))}
             </div>

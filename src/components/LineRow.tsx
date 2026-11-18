@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { peso } from "../lib/format";
 import { toggleLinePaid } from "../lib/repo";
+import { showToast } from "../lib/toast";
 import type { MonthLine } from "../lib/types";
 import { useAccounts } from "./AccountsProvider";
 import { lineColor } from "../lib/cardColors";
@@ -29,7 +30,24 @@ export default function LineRow(
     if (longPressed.current) { longPressed.current = false; return; } // swallow the click after a long-press
     if (readOnly || busy) return;
     setBusy(true);
-    void toggleLinePaid(monthKey, line).finally(() => setBusy(false));
+    const goingPaid = line.status === "";
+    void toggleLinePaid(monthKey, line)
+      .then(() => {
+        if (!goingPaid) return;
+        // Undo flips the paid line back; pass it as already paid so the toggle un-ticks.
+        const paidLine: MonthLine = { ...line, status: "PAID" };
+        showToast(`Marked "${line.name}" paid`, {
+          action: { label: "Undo", run: () => void toggleLinePaid(monthKey, paidLine).catch(() => showToast("Undo failed. Check connection")) },
+          duration: 6000,
+        });
+      })
+      .finally(() => setBusy(false));
+  };
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === "e" || e.key === "E") && onEdit && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      onEdit();
+    }
   };
 
   const hasPool = line.isEnvelope && spent != null && poolTotal > 0;
@@ -46,9 +64,10 @@ export default function LineRow(
         onPointerUp={clearPress}
         onPointerLeave={clearPress}
         onPointerCancel={clearPress}
+        onKeyDown={handleKeyDown}
         disabled={readOnly && !onEdit}
         style={{ WebkitTouchCallout: "none" }}
-        className="flex-1 flex items-start gap-2 text-left min-w-0 select-none"
+        className="flex-1 flex items-start gap-2 text-left min-w-0 min-h-11 select-none"
         aria-pressed={ticked}
       >
         {stripe && (
@@ -77,7 +96,7 @@ export default function LineRow(
                 budget not on hand yet, tick to fund{helperGroup}
               </span>
             ) : over ? (
-              <span className="block text-[12px] leading-4 font-semibold text-marker-red tabular-nums">
+              <span className="block text-[12px] leading-4 font-semibold text-marker-red-text tabular-nums">
                 Over by {peso((spent as number) - poolTotal)}
                 {helperGroup}
               </span>
@@ -98,10 +117,18 @@ export default function LineRow(
           )}
         </span>
       </button>
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          className="sr-only focus:not-sr-only focus:inline-flex focus:items-center focus:min-h-11 focus:px-3 text-sm font-semibold text-ink underline"
+          aria-label={`Edit ${line.name}`}
+        >Edit</button>
+      )}
       <span className="w-[7.5rem] shrink-0 text-right">
         {over ? (
           <>
-            <span className="block font-display text-[17px] leading-5 font-bold tabular-nums text-marker-red">{peso(spent as number)}</span>
+            <span className="block font-display text-[17px] leading-5 font-bold tabular-nums text-marker-red-text">{peso(spent as number)}</span>
             <span className="block font-display text-[13px] leading-4 font-semibold tabular-nums line-through decoration-2 decoration-marker-red text-ink-2">{peso(poolTotal)}</span>
           </>
         ) : (

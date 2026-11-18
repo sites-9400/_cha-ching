@@ -15,14 +15,18 @@ export default function HeaderBand(
       <div className="max-w-md mx-auto px-4 pt-3 pb-4 text-left">
         {hasNav && (
           <div className="flex items-center justify-between gap-2">
-            <div className="w-10 shrink-0 flex justify-start">{left}</div>
-            {label && <p className="flex-1 min-w-0 text-center truncate font-display font-semibold text-[18px] leading-6 text-ink">{label}</p>}
-            <div className="w-10 shrink-0 flex justify-end">{right}</div>
+            <div className="w-11 shrink-0 flex justify-start">{left}</div>
+            {label && <h1 className="flex-1 min-w-0 text-center truncate font-display font-semibold text-[18px] leading-6 text-ink">{label}</h1>}
+            <div className="w-11 shrink-0 flex justify-end">{right}</div>
           </div>
         )}
         {value != null ? (
           <>
-            <p className="mt-2 text-[15px] leading-5 font-medium text-ink">{title}</p>
+            {label ? (
+              <p className="mt-2 text-[15px] leading-5 font-medium text-ink">{title}</p>
+            ) : (
+              <h1 className="mt-2 text-[15px] leading-5 font-medium text-ink">{title}</h1>
+            )}
             <p className="font-display font-extrabold text-[44px] leading-none text-ink tabular-nums"><HeroValue value={value} /></p>
           </>
         ) : (
@@ -54,6 +58,6 @@ const chevron = {
   strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true,
 };
 
-export const NAV_BTN = "h-10 w-10 flex items-center justify-center rounded-lg border border-ink/30 bg-transparent text-ink active:bg-kraft-deep/30";
+export const NAV_BTN = "h-11 w-11 flex items-center justify-center rounded-lg border border-ink/30 bg-transparent text-ink active:bg-kraft-deep/30";
 export const ChevronLeft = () => (<svg {...chevron}><path d="M15 5l-7 7 7 7" /></svg>);
 export const ChevronRight = () => (<svg {...chevron}><path d="M9 5l7 7-7 7" /></svg>);

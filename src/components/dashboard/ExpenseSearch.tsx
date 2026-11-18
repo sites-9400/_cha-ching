@@ -37,18 +37,19 @@ export default function ExpenseSearch({ expenses }: { expenses: Expense[] }) {
     <section className="bg-manila rounded-xl border border-rule shadow-card p-4">
       <h2 className="font-semibold text-sm mb-3">Search expenses</h2>
       <input
+        aria-label="Search expenses"
         placeholder="Search expenses — note, category, account…"
         value={query} onChange={(e) => setQuery(e.target.value)}
-        className="w-full text-sm border-b border-stone-200 pb-1 outline-none focus:border-ink mb-3"
+        className="w-full min-h-11 text-sm border-b border-stone-200 pb-1 outline-none focus:border-ink mb-3"
       />
       {q !== "" && (
         <ul className="flex flex-col gap-1.5">
           {shown.map((e) => (
             <ExpenseRow key={e.id} expense={e} onClick={() => setEditing(e)} showDate />
           ))}
-          {shown.length === 0 && <li className="text-xs text-stone-400 px-1">No matching expenses.</li>}
+          {shown.length === 0 && <li className="text-xs text-ink-2 px-1">No matching expenses.</li>}
           {results.length > MAX_RESULTS && (
-            <li className="text-[11px] text-stone-400 px-1 pt-1">showing {MAX_RESULTS} of {results.length}</li>
+            <li className="text-xs text-ink-2 px-1 pt-1">showing {MAX_RESULTS} of {results.length}</li>
           )}
         </ul>
       )}

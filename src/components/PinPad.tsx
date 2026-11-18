@@ -63,7 +63,7 @@ export default function PinPad() {
           />
         ))}
       </div>
-      {error && <p className="text-marker-red text-sm">{error}</p>}
+      {error && <p className="text-marker-red-text text-sm">{error}</p>}
       <div className="grid grid-cols-3 gap-4">
         {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"].map((k, i) =>
           k === "" ? (
@@ -86,7 +86,7 @@ export default function PinPad() {
         )}
       </div>
       {mode === "enter" && (
-        <button className="text-ink-2 text-sm underline" onClick={() => setMode("setup")}>
+        <button className="text-ink-2 text-sm underline inline-flex items-center min-h-11 px-3" onClick={() => setMode("setup")}>
           First time? Set up your PIN
         </button>
       )}
